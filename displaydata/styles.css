@@ -1,0 +1,10 @@
+body {
+	background-color: black;
+}
+.logstring {
+	display: block;
+	width: 100%;
+	margin: auto;
+	padding: 0;
+	color: lightgrey;
+}

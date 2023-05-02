@@ -1,0 +1,24 @@
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="styles.css">
+	</head>
+	<body>
+		<script src="jquery.min.js"></script>
+		<script>
+			$( document ).ready(function() {
+			    loadLog();
+				setInterval(loadLog, 2500);
+			});
+
+			function loadLog(){
+				$.post('/', {action: 'log'}, function(data){
+					$( ".out" ).html( data );
+				});
+			}
+		</script>
+		<div class="out">
+			This is Out Text
+		</div>
+	</body>
+</html>
+

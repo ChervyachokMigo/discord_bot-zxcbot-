@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="jquery.min.js"></script>
+
+<script>
+  var settings = {};
+
+  function save_settings(){
+    let settings_json = JSON.stringify(settings);
+    console.log('sended ', settings); 
+    console.log('sended settings_json', settings_json);
+    $.ajax({
+      type: "POST",
+      contentType: "application/json",
+      url: '/save_settings',
+      data: settings_json,
+      dataType: "json"
+   });
+  }
+
+  function onEnterArray (elem) {
+    if(event.key === 'Enter') {
+      let array_name = elem.getAttribute('array_name');
+      let keyid = elem.getAttribute('keyid');
+      settings[array_name][keyid] = elem.value;
+      console.log(settings[array_name][keyid]);
+      save_settings();
+    }
+  }
+
+  function onEnter (elem) {
+    if(event.key === 'Enter') {
+      if(isNaN(Number(elem.value))){
+        settings[elem.id] = elem.value;
+      } else {
+        settings[elem.id] = Number(elem.value);
+      }
+      save_settings();
+    }
+  }
+
+  function onToggle (elem) {
+    settings[elem.id] = elem.checked;
+    save_settings();
+  }
+
+  function addValue(arr){
+    settings[arr.id].push('');
+    let idx = settings[arr.id].length-1;
+    $('#'+arr.id+' div.array_options').append(
+      `<div id="${arr.id}_${idx}" class="div_option"><input class="option_array_value" type="text" value="" array_name="${arr.id}" keyid="${idx}" onkeydown="onEnterArray(this);"></input>
+      <button class="option_del_value" type="button" onclick="deleteValue( ${arr.id}, ${idx} );">del</button></div>`
+    );
+    save_settings();
+  }
+
+  function deleteValue(arr, value_idx){
+
+    $('#'+arr.id+'_'+value_idx).remove();
+    settings[arr.id] = settings[arr.id].filter( (val, idx, arr) => idx !== value_idx );
+
+    $('.div_option').each((i,elem)=>{
+      elem.setAttribute('id', arr.id+'_'+i);
+      elem.childNodes.forEach(childVal=>{
+        if (childVal.nodeType === 1 && childVal.nodeName === 'INPUT'){
+          childVal.setAttribute('keyid', i);
+        }
+        if (childVal.nodeType === 1 && childVal.nodeName === 'BUTTON'){
+          childVal.setAttribute('onclick', `deleteValue( ${arr.id}, ${i} )`);
+        }
+      });
+      
+      
+    });
+    
+    save_settings();
+
+  }
+
+  $(document).ready(function(){
+      
+    $.post('/load_all_settings', (all_settings)=> {
+      settings = all_settings
+      for (const [key, value] of Object.entries(settings)) {
+        switch(typeof value){
+          case 'boolean':
+          $('.container').append(
+            `<div class="setting_option"><label>${key}</label><input type="checkbox" id="${key}" onclick="onToggle(this);" ${value?'checked':''}></input></div>`);
+            break;
+          case 'number':
+          $('.container').append(`<div class="setting_option"><label>${key}</label><input type="number" id="${key}" value=${value} onkeydown="onEnter(this);"></input></div>`);
+            break;
+          case 'string':
+          $('.container').append(`<div class="setting_option"><label>${key}</label><input type="text" id="${key}" value="${value}" onkeydown="onEnter(this);"></input></div>`);
+            break;
+          case 'object':
+            
+                $('.container').append(`<div class="setting_option" id="${key}"><label>${key}</label><div class="array_options">`);
+                if(value.length>0){
+                  for (let i in value){
+                      $('#'+key+' div.array_options').append(
+                        `<div id="${key}_${i}" class="div_option"><input class="option_array_value" type="text" value="${value[i]}" array_name="${key}" keyid="${i}" onkeydown="onEnterArray(this);"></input>
+                        <button class="option_del_value" type="button" onclick="deleteValue( ${key}, ${i} );">del</button></div>`
+                      );
+                  }
+                }
+                $('#'+key).append(
+                  `<div class="option_add_value"><button class="option_add_value" type="button" onclick="addValue( ${key} );">add</button></div>`
+                );
+                $('.container').append(`</div></div>`);
+            
+            break;
+        }
+          console.log('load_all_settings',key, typeof value, value);
+      }
+    });
+
+  });
+</script>
+<link rel="stylesheet" href="styles.css">
+
+    <title>Discord Bot Dashboard</title>
+
+  </head>
+  <body>
+    <header>
+      <h1><a href="/">Discord Bot Dashboard</a></h1>
+    </header>
+    <h2>Settings</h2>
+    <div class="content">
+        <div class="container">
+          
+        </div>
+    </div>
+  </body>
+</html>
