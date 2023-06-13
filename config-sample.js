@@ -1,6 +1,9 @@
 module.exports = {
-    DISCORD_TOKEN: '',  //discord token //https://discord.com/developers/applications
+    //discord token //https://discord.com/developers/applications
+    //https://discord.com/oauth2/authorize?client_id=943593025068732476&permissions=8&redirect_uri=https%3A%2F%2Fdiscord.com%2Fchannels%2F1118103232082882610%2F1118103233999667314&scope=bot
+    DISCORD_TOKEN: '',
 
+    //https://developer.trovo.live/
     TROVO_CLIENT_ID: '',
     TROVO_CLIENT_SECRET: '',
     
@@ -11,6 +14,7 @@ module.exports = {
     //to get TOKEN use https://dev.vk.com/api/access-token/implicit-flow-user
     VK_TOKEN: '',
 
+    //https://steamcommunity.com/dev/apikey
     STREAM_API_KEY: '',
 
     OSU_LOGIN: '',
@@ -21,8 +25,8 @@ module.exports = {
 
     DB_HOST: `localhost`, 
     DB_PORT: `3306`, 
-    DB_USER: ``,    //your user
-    DB_PASSWORD: ``,    //your pass
+    DB_USER: ``, 
+    DB_PASSWORD: ``, 
     DB_NAME: `zxcbot`,
 
     YOUTUBE_APIKEY: '', //unused
