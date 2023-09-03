@@ -552,7 +552,6 @@ async function MYSQL_GET_ALL(action, params = {}){
         break 
         case `vkuser`:
             condition = params?params:{};
-            condition.tracking = true;
             MysqlModel = VKUserData;
         break 
         case `vkfriend`:
@@ -572,7 +571,6 @@ async function MYSQL_GET_ALL(action, params = {}){
         break
         case 'youtubechannel':
             condition = params?params:{};
-            condition.tracking = true;
             MysqlModel = YoutubeChannelsData
         break
         case 'guildServicesTracking':

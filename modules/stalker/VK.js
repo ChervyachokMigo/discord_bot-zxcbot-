@@ -112,7 +112,7 @@ module.exports = {
         try{
             //load from db
           
-            var AllTrackingUsersVKData = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('vkuser'));
+            var AllTrackingUsersVKData = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('vkuser', {tracking: true}));
             
             if (AllTrackingUsersVKData.length > 0){
                 log('Проверка ВК профилей', moduleName);
@@ -195,7 +195,7 @@ module.exports = {
     checkVKfriends: async function (stalkerEvents){
         try{
           
-            var AllTrackingUsersVKData = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('vkuser', {friendsTracking: true}));
+            var AllTrackingUsersVKData = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('vkuser', {tracking: true, friendsTracking: true}));
             
             if (AllTrackingUsersVKData.length > 0){
                 log('Проверка ВК друзей', moduleName);

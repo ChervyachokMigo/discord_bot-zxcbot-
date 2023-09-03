@@ -30,8 +30,43 @@ var only_tracking = {
     twitch_followers: false,
     twitch_records: false,
     twitch_clips: false,
-    twitch_clips_records: false
+    twitch_clips_records: false,
+    vk_users: false,
+    vk_friends: false,
+    youtube: false
 }
+
+const tracking_change_deps = [
+    {action: 'osuprofile_tracking_change', table_name: 'osuprofile', user_key: 'userid', value_key: 'tracking'},
+    {action: 'steamuser_tracking_change', table_name: 'steamuser', user_key: 'steamid', value_key: 'tracking'},
+    {action: 'trovo_user_tracking_change', table_name: 'trovodata', user_key: 'userid', value_key: 'tracking'},
+    {action: 'trovo_followers_tracking_change', table_name: 'trovodata', user_key: 'userid', value_key: 'followersTracking'},
+    {action: 'trovo_user_records_change', table_name: 'trovodata', user_key: 'userid', value_key: 'records'},
+    {action: 'twitch_user_tracking_change', table_name: 'twitchdata', user_key: 'userid', value_key: 'tracking'},
+    {action: 'twitch_followers_tracking_change', table_name: 'twitchdata', user_key: 'userid', value_key: 'followersTracking'},
+    {action: 'twitch_user_records_change', table_name: 'twitchdata', user_key: 'userid', value_key: 'records'},
+    {action: 'twitch_user_clips_tracking_change', table_name: 'twitchdata', user_key: 'userid', value_key: 'clipsTracking'},
+    {action: 'twitch_user_clips_records_change', table_name: 'twitchdata', user_key: 'userid', value_key: 'clipsRecords'},
+    {action: 'vk_user_tracking_change', table_name: 'vkuser', user_key: 'userid', value_key: 'tracking'},
+    {action: 'vk_friends_tracking_change', table_name: 'vkuser', user_key: 'userid', value_key: 'friendsTracking'},
+    {action: 'youtube_tracking_change', table_name: 'youtubechannel', user_key: 'id', value_key: 'tracking'}
+];
+
+const traching_filter_deps = [
+    {action: 'osuprofiles_only_tracking', value_key: 'osuprofiles'},
+    {action: 'steamuser_only_tracking', value_key: 'steamusers'},
+    {action: 'trovo_user_only_tracking', value_key: 'trovo_users'},
+    {action: 'trovo_user_only_followers_tracking', value_key: 'trovo_followers'},
+    {action: 'trovo_user_only_records', value_key: 'trovo_records'},
+    {action: 'twitch_only_tracking', value_key: 'twitch_users'},
+    {action: 'twitch_only_followers_tracking', value_key: 'twitch_followers'},
+    {action: 'twitch_only_records', value_key: 'twitch_records'},
+    {action: 'twitch_only_clips_tracking', value_key: 'twitch_clips'},
+    {action: 'twitch_only_clips_records', value_key: 'twitch_clips_records'},
+    {action: 'vk_users_only_tracking', value_key: 'vk_users'},
+    {action: 'vk_friends_only_tracking', value_key: 'vk_friends'},
+    {action: 'youtube_only_tracking', value_key: 'youtube'}
+];
 
 module.exports = {
     init: async () => {
@@ -92,81 +127,30 @@ module.exports = {
                 if (isJSON(data)){
                     var data_json = JSON.parse(data);
                     var db_data = data_json.data;
-                    console.log('action', data_json.action);
                     if (data_json.action){
+                        for (let val of tracking_change_deps) {
+                            if (val.action === data_json.action) {
+                                await update_db_user_value(val.table_name, val.action, db_data, val.user_key, val.value_key);
+                                break;
+                            }
+                        }
+
+                        for (let val of traching_filter_deps) {
+                            if (val.action === data_json.action) {
+                                set_only_tracking(val.value_key, db_data);
+                                break;
+                            }
+                        }
+
                         switch (data_json.action){
                             case 'botchannel_delete':
-                                if (db_data.id !== undefined){
+                                if (typeof db_data.id !== 'undefined' && db_data.id !== null){
                                     console.log('delete bot channel', db_data.id);
                                     await db.MYSQL_DELETE('botchannel', {id: db_data.id});
                                 }
                                 break;
-                            case 'osuprofile_tracking_change':
-                                await update_db_user_value('osuprofile', data_json.action, db_data, 'userid', 'tracking');
-                                break;
-                            case 'osuprofiles_only_tracking':                                
-                                set_only_tracking('osuprofiles', db_data);
-                                break;
-                            case 'steamuser_tracking_change':
-                                await update_db_user_value('steamuser', data_json.action, db_data, 'steamid', 'tracking');
-                                break;
-                            case 'steamuser_only_tracking':
-                                set_only_tracking('steamusers', db_data);
-                                break;
-                            case 'trovo_user_tracking_change':
-                                await update_db_user_value('trovodata', data_json.action, db_data, 'userid', 'tracking');
-                                break;
-                            case 'trovo_user_only_tracking':
-                                set_only_tracking('trovo_users', db_data);
-                                break;
-                            case 'trovo_followers_tracking_change':
-                                await update_db_user_value('trovodata', data_json.action, db_data, 'userid', 'followersTracking');
-                                break;
-                            case 'trovo_user_only_followers_tracking':
-                                set_only_tracking('trovo_followers', db_data);
-                                break;
-                            case 'trovo_user_records_change':
-                                await update_db_user_value('trovodata', data_json.action, db_data, 'userid', 'records');
-                                break;
-                            case 'trovo_user_only_records':
-                                set_only_tracking('trovo_records', db_data);
-                                break;
-                            case 'twitch_only_tracking':
-                                set_only_tracking('twitch_users', db_data);
-                                break;
-                            case 'twitch_only_followers_tracking':
-                                set_only_tracking('twitch_followers', db_data);
-                                break;
-                            case 'twitch_only_records':
-                                set_only_tracking('twitch_records', db_data);
-                                break;
-                            case 'twitch_only_clips_tracking':
-                                set_only_tracking('twitch_clips', db_data);
-                                break;
-                            case 'twitch_only_clips_records':
-                                set_only_tracking('twitch_clips_records', db_data);
-                                break;
-                            case 'twitch_user_tracking_change':
-                                await update_db_user_value('twitchdata', data_json.action, db_data, 'userid', 'tracking');
-                                break;
-                            case 'twitch_followers_tracking_change':
-                                await update_db_user_value('twitchdata', data_json.action, db_data, 'userid', 'followersTracking');
-                                break;
-                            case 'twitch_user_records_change':
-                                await update_db_user_value('twitchdata', data_json.action, db_data, 'userid', 'records');
-                                break;
-                            case 'twitch_user_clips_tracking_change':
-                                await update_db_user_value('twitchdata', data_json.action, db_data, 'userid', 'clipsTracking');
-                                break;
-                            case 'twitch_user_clips_records_change':
-                                await update_db_user_value('twitchdata', data_json.action, db_data, 'userid', 'clipsRecords');
-                                break;
-
                             case 'connect':
                                 main_loop = setInterval( response, 5000 );
-                                break;
-                            default:
-                                console.log('undefined action');
                                 break;
                         }
                         response();
@@ -186,51 +170,42 @@ module.exports = {
                 botchannels = groupBy(botchannels, 'guildid');
                 ws.send(JSON.stringify({action:'botchannels', data: botchannels}));
 
-                var osuprofiles_tracking = {};
-                if (only_tracking.osuprofiles == true) {
-                    osuprofiles_tracking.tracking = true;
-                }
-                var osuprofiles = db.MYSQL_GET_ALL_RESULTS_TO_ARRAY (await db.MYSQL_GET_ALL('osuprofile', osuprofiles_tracking) );
+                var osuprofiles = db.MYSQL_GET_ALL_RESULTS_TO_ARRAY (await db.MYSQL_GET_ALL('osuprofile', get_tracking_multiply(only_tracking, { 
+                    osuprofiles: 'tracking'
+                }) ));
                 ws.send(JSON.stringify({action:'osuprofiles', data: osuprofiles}));
 
-                var steamusers_tracking = {};
-                if (only_tracking.steamusers == true) {
-                    steamusers_tracking = {tracking: true}
-                }
-                var steamusers = db.MYSQL_GET_ALL_RESULTS_TO_ARRAY (await db.MYSQL_GET_ALL('steamuser', steamusers_tracking) );
+                var steamusers = db.MYSQL_GET_ALL_RESULTS_TO_ARRAY (await db.MYSQL_GET_ALL('steamuser', get_tracking_multiply(only_tracking, { 
+                    steamusers: 'tracking'
+                }) ));
                 ws.send(JSON.stringify({action:'steamusers', data: steamusers}));
 
-                var trovo_users_tracking = {};
-                if (only_tracking.trovo_users == true) {
-                    trovo_users_tracking.tracking = true;
-                }
-                if (only_tracking.trovo_followers == true) {
-                    trovo_users_tracking.followersTracking = true;
-                }
-                if(only_tracking.trovo_records == true) {
-                    trovo_users_tracking.records = true;
-                }
-                var trovousers = db.MYSQL_GET_ALL_RESULTS_TO_ARRAY (await db.MYSQL_GET_ALL('streamersTrovo', trovo_users_tracking) );
+                var trovousers = db.MYSQL_GET_ALL_RESULTS_TO_ARRAY (await db.MYSQL_GET_ALL('streamersTrovo', get_tracking_multiply(only_tracking, { 
+                    trovo_users: 'tracking', 
+                    trovo_followers: 'followersTracking',
+                    trovo_records: 'records'
+                }) ));
                 ws.send(JSON.stringify({action:'trovousers', data: trovousers}));
 
-                var twitch_users_tracking = {};
-                if (only_tracking.twitch_users == true) {
-                    twitch_users_tracking.tracking = true;
-                }
-                if (only_tracking.twitch_followers == true) {
-                    twitch_users_tracking.followersTracking = true;
-                }
-                if(only_tracking.twitch_records == true) {
-                    twitch_users_tracking.records = true;
-                }
-                if(only_tracking.twitch_clips == true) {
-                    twitch_users_tracking.clipsTracking = true;
-                }
-                if(only_tracking.twitch_clips_records == true) {
-                    twitch_users_tracking.clipsRecords = true;
-                }
-                var twitchusers = db.MYSQL_GET_ALL_RESULTS_TO_ARRAY (await db.MYSQL_GET_ALL('streamersTwitch', twitch_users_tracking) );
+                var twitchusers = db.MYSQL_GET_ALL_RESULTS_TO_ARRAY (await db.MYSQL_GET_ALL('streamersTwitch', get_tracking_multiply(only_tracking, { 
+                    twitch_users: 'tracking', 
+                    twitch_followers: 'followersTracking',
+                    twitch_records: 'records',
+                    twitch_clips: 'clipsTracking',
+                    twitch_clips_records: 'clipsRecords' 
+                }) ));
                 ws.send(JSON.stringify({action:'twitchusers', data: twitchusers}));
+
+                var vkusers = db.MYSQL_GET_ALL_RESULTS_TO_ARRAY (await db.MYSQL_GET_ALL('vkuser', get_tracking_multiply(only_tracking, { 
+                    vk_users: 'tracking', 
+                    vk_friends: 'friendsTracking'
+                }) ));
+                ws.send(JSON.stringify({action: 'vkusers', data: vkusers}));
+
+                var youtube_users = db.MYSQL_GET_ALL_RESULTS_TO_ARRAY (await db.MYSQL_GET_ALL('youtubechannel', get_tracking_multiply(only_tracking, { 
+                    youtube: 'tracking'
+                }) ));
+                ws.send(JSON.stringify({action: 'youtube_users', data: youtube_users}));
             }
         
         });
@@ -261,15 +236,31 @@ function groupBy(collection, property) {
 }
 
 async function update_db_user_value(tablename, action, db_data, user_key, value_key) {
-    if (db_data.userid !== undefined && db_data.value !== undefined){
-        console.log(action,  db_data.userid, db_data.value);
-        await db.MYSQL_SAVE(tablename, { [user_key]: db_data.userid }, {[value_key]: db_data.value} );
+    if (typeof db_data.userid === 'undefined' || typeof db_data.value === 'undefined' || 
+    db_data.userid === null || db_data.value === null ||
+    typeof value_key === 'undefined' || value_key === null ||
+    typeof user_key === 'undefined' || user_key === null ){
+        console.error('undefined data', db_data, user_key, value_key);
+        return false;
     }
+    console.log(action,  db_data.userid, db_data.value);
+    await db.MYSQL_SAVE(tablename, { [user_key]: db_data.userid }, {[value_key]: db_data.value} );
+
 }
 
 function set_only_tracking (value_key, data) {
-    if (data.value !== undefined) {
-        only_tracking[value_key] = data.value;
+    if (typeof data.value === 'undefined' || data.value === null || typeof value_key === 'undefined' || value_key === null) {
+        console.error('undefined data', data, value_key);
     }
+    only_tracking[value_key] = data.value;
 }
 
+function get_tracking_multiply(obj, props){
+    var res = {};
+    Object.entries(props).forEach( val => {
+        if (obj[val[0]] == true){
+            res[val[1]] = true;
+        }
+    });
+    return res;
+}

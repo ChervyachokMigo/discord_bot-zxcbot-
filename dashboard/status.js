@@ -9,6 +9,8 @@ function isJSON(str) {
 
 let connection = new WebSocket("ws://localhost:8888");
 
+
+
 var botchannels_guilds = [];
 var botchannels_guildid_selected = 0;
 
@@ -34,11 +36,14 @@ var is_only_tracking = {
     twitch_followers: false,
     twitch_records: false,
     twitch_clips: false,
-    twitch_clips_records: false
+    twitch_clips_records: false,
+    vk_users: false,
+    vk_friends: false,
+    youtube: false
 }
 
 var osuprofiles = [];
-var osuprofiles_selected = '0';
+var osuprofiles_selected = 0;
 
 function osuprofiles_select() {
     osuprofiles_selected = Number($('#osuprofiles_userids').find(":selected").val());
@@ -101,6 +106,34 @@ function twitch_user_select(){
     }
 }
 
+var vk_users_selected = 0;
+var vk_users = [];
+
+function vkusers_select(){
+    vk_users_selected = Number($('#vk_ids').find(":selected").val());
+    $('#vk_users_tracking option:selected').removeAttr('selected');
+    $('#vk_friends_tracking option:selected').removeAttr('selected');
+    for (let user of vk_users){
+        if (user.userid === vk_users_selected){
+            $('#vk_users_tracking option[value='+ user.tracking +']').prop('selected', true);
+            $('#vk_friends_tracking option[value='+ user.friendsTracking +']').prop('selected', true);
+        }
+    }
+}
+
+var youtube_selected = 0;
+var youtube_users = [];
+
+function youtube_select(){
+    youtube_selected = Number($('#youtube_ids').find(":selected").val());
+    $('#youtube_tracking option:selected').removeAttr('selected');
+    for (let user of youtube_users){
+        if (user.id === youtube_selected){
+            $('#youtube_tracking option[value='+ user.tracking +']').prop('selected', true);
+        }
+    }
+}
+
 
 function send_selected_option (obj, action, userid ) {
     let value = $(obj).find(':selected').val().toString() === 'true';
@@ -119,6 +152,11 @@ function createOption(select, text, value){
         var newOption = new Option(text, value, true, true);
         $(select).append(newOption);
     } 
+}
+
+function createBooleanOptions(selector){
+    createOption(selector, 'false', false );
+    createOption(selector, 'true', true );
 }
 
 function deleteOption(action, data) {
@@ -147,7 +185,19 @@ $(document).ready(function(){
     });
 });
 
-connection.onopen = () => connection.send(JSON.stringify({action: "connect"}));
+connection.onopen = () => {
+    connection.onclose = (ev=>{
+        console.error('connection close');
+        console.log(ev);
+    });
+    
+    connection.onerror = (err=>{
+        console.error('connection error');
+        console.log(err);
+    });
+
+    connection.send(JSON.stringify({action: "connect"}));
+};
 
 connection.onmessage = (data) => {
 
@@ -185,8 +235,7 @@ connection.onmessage = (data) => {
             for (let user of osuprofiles){
                 createOption('#osuprofiles_userids', user.username, user.userid );
             }
-            createOption('#osuprofiles_tracking', 'false', false );
-            createOption('#osuprofiles_tracking', 'true', true );
+            createBooleanOptions('#osuprofiles_tracking');
             selectLastSelectedOption( '#osuprofiles_userids', osuprofiles_selected );
             if (osuprofiles_selected == 0){
                 $('#osuprofiles_userids').trigger('change');
@@ -199,8 +248,7 @@ connection.onmessage = (data) => {
             for (let user of steamusers){
                 createOption('#steam_ids', user.username, user.steamid );
             }
-            createOption('#steam_tracking', 'false', false );
-            createOption('#steam_tracking', 'true', true );
+            createBooleanOptions('#steam_tracking');
             selectLastSelectedOption( '#steam_ids', steamusers_selected );
             if (steamusers_selected == 0){
                 $('#steam_ids').trigger('change');
@@ -213,12 +261,9 @@ connection.onmessage = (data) => {
             for (let user of trovo_users){
                 createOption('#trovo_user_ids', user.username, user.userid );
             }
-            createOption('#trovo_user_tracking', 'false', false );
-            createOption('#trovo_user_tracking', 'true', true );
-            createOption('#trovo_followers_tracking', 'false', false );
-            createOption('#trovo_followers_tracking', 'true', true );
-            createOption('#trovo_user_records', 'false', false );
-            createOption('#trovo_user_records', 'true', true );
+            createBooleanOptions('#trovo_user_tracking');
+            createBooleanOptions('#trovo_followers_tracking');
+            createBooleanOptions('#trovo_user_records');
             selectLastSelectedOption( '#trovo_user_ids', trovo_user_selected );
             if (trovo_user_selected == 0){
                 $('#trovo_user_ids').trigger('change');
@@ -231,21 +276,43 @@ connection.onmessage = (data) => {
             for (let user of twitch_users){
                 createOption('#twitch_user_ids', user.username, user.userid );
             }
-            createOption('#twitch_user_tracking', 'false', false );
-            createOption('#twitch_user_tracking', 'true', true );
-            createOption('#twitch_followers_tracking', 'false', false );
-            createOption('#twitch_followers_tracking', 'true', true );
-            createOption('#twitch_user_records', 'false', false );
-            createOption('#twitch_user_records', 'true', true );
-            createOption('#twitch_user_clips_tracking', 'false', false );
-            createOption('#twitch_user_clips_tracking', 'true', true );
-            createOption('#twitch_user_clips_records', 'false', false );
-            createOption('#twitch_user_clips_records', 'true', true );
+            createBooleanOptions('#twitch_user_tracking');
+            createBooleanOptions('#twitch_followers_tracking');
+            createBooleanOptions('#twitch_user_records');
+            createBooleanOptions('#twitch_user_clips_tracking');
+            createBooleanOptions('#twitch_user_clips_records');
             selectLastSelectedOption( '#twitch_user_ids', twitch_user_selected );
             if (twitch_user_selected == 0){
                 $('#twitch_user_ids').trigger('change');
             }
             twitch_user_select();
+            break;
+        case 'vkusers':
+            clearSelect('#vk_ids');
+            vk_users = db_data;
+            for (let user of vk_users){
+                createOption('#vk_ids', `${user.name1} ${user.name2}`, user.userid );
+            }
+            createBooleanOptions('#vk_users_tracking');
+            createBooleanOptions('#vk_friends_tracking');
+            selectLastSelectedOption( '#vk_ids', vk_users_selected );
+            if (vk_users_selected == 0){
+                $('#vk_ids').trigger('change');
+            }
+            vkusers_select();
+            break;
+        case 'youtube_users':
+            clearSelect('#youtube_ids');
+            youtube_users = db_data;
+            for (let user of youtube_users){
+                createOption('#youtube_ids', user.channelname, user.id );
+            }
+            createBooleanOptions('#youtube_tracking');
+            selectLastSelectedOption( '#youtube_ids', youtube_selected );
+            if (youtube_selected == 0){
+                $('#youtube_ids').trigger('change');
+            }
+            youtube_select();
             break;
         default:
             console.log('no action');

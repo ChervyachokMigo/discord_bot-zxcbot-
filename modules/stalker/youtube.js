@@ -333,7 +333,7 @@ module.exports = {
 
     checkYoutubeVideos: async function (stalkerEvents){
         
-        var AllUsersYoutubeDataFromDB = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('youtubechannel'));
+        var AllUsersYoutubeDataFromDB = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('youtubechannel', {tracking: true}));
         if (AllUsersYoutubeDataFromDB.length > 0){
             log('Проверка статуса Youtube каналов', moduleName);
             for (let YoutubeChannelData of AllUsersYoutubeDataFromDB){
