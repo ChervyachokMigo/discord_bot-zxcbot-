@@ -9,23 +9,6 @@ function isJSON(str) {
 
 let connection = new WebSocket("ws://localhost:8888");
 
-
-
-var botchannels_guilds = [];
-var botchannels_guildid_selected = 0;
-
-function botchannels_select (){
-    botchannels_guildid_selected = $('#botchannels_guildids').find(":selected").val();
-    for (let botchannels of botchannels_guilds){
-        if (botchannels[0].guildid === botchannels_guildid_selected){
-        clearSelect('#botchannels_channels');
-        for (let botchannel of botchannels){
-            createOption('#botchannels_channels', botchannel.channeltype, botchannel.id );
-        }
-        };
-    }
-}
-
 var is_only_tracking = {
     osu_profiles: false,
     steamusers: false,
@@ -42,102 +25,124 @@ var is_only_tracking = {
     youtube: false
 }
 
-var osuprofiles = [];
-var osuprofiles_selected = 0;
+var users = {
+    osu: [],
+    steam: [],
+    twitch: [],
+    trovo: [],
+    vk: [],
+    youtube: []
+}
 
-function osuprofiles_select() {
-    osuprofiles_selected = Number($('#osuprofiles_userids').find(":selected").val());
-    $('#osuprofiles_tracking option:selected').removeAttr('selected');
-    for (let user of osuprofiles){
-        if (user.userid === osuprofiles_selected){
-        $('#osuprofiles_tracking option[value='+ user.tracking +']').prop('selected', true);
+var selected_user = {
+    osu: 0,
+    steam: 0,
+    twitch: 0,
+    trovo: 0,
+    vk: 0,
+    youtube: 0
+}
+
+const options_deps = [
+    {platform: 'osu', select: '#osuprofiles_userids', is_id_number: true, username_key: 'username', user_key: 'userid', options: [
+        {selector: '#osuprofiles_tracking', value_key: 'tracking', action: 'osuprofile_tracking_change'}
+    ]},
+    {platform: 'steam', select: '#steam_ids', is_id_number: false, username_key: 'username', user_key: 'steamid', options: [
+        {selector: '#steam_tracking', value_key: 'tracking', action: 'steamuser_tracking_change'}
+    ]},
+    {platform: 'twitch', select: '#twitch_user_ids', is_id_number: true, username_key: 'username', user_key: 'userid', options: [
+        {selector: '#twitch_user_tracking', value_key: 'tracking', action: 'twitch_user_tracking_change' },
+        {selector: '#twitch_followers_tracking', value_key: 'followersTracking', action: 'twitch_followers_tracking_change'  },
+        {selector: '#twitch_user_records', value_key: 'records', action: 'twitch_user_records_change'  },
+        {selector: '#twitch_user_clips_tracking', value_key: 'clipsTracking', action: 'twitch_user_clips_tracking_change'  },
+        {selector: '#twitch_user_clips_records', value_key: 'clipsRecords', action: 'twitch_user_clips_records_change'  },
+    ]},
+    {platform: 'trovo', select: '#trovo_user_ids', is_id_number: true, username_key: 'username', user_key: 'userid', options: [
+        {selector: '#trovo_user_tracking', value_key: 'tracking', action: 'trovo_user_tracking_change'},
+        {selector: '#trovo_followers_tracking', value_key: 'followersTracking', action: 'trovo_followers_tracking_change'},
+        {selector: '#trovo_user_records', value_key: 'records', action: 'trovo_user_records_change'}
+    ]},
+    {platform: 'vk', select: '#vk_ids', is_id_number: true, username_key: ['name1', 'name2'], user_key: 'userid', options: [
+        {selector: '#vk_users_tracking', value_key: 'tracking', action: 'vk_user_tracking_change'},
+        {selector: '#vk_friends_tracking', value_key: 'friendsTracking', action: 'vk_friends_tracking_change'}
+    ]},
+    {platform: 'youtube', select: '#youtube_ids', is_id_number: true, username_key: 'channelname', user_key: 'id', options: [
+        {selector: '#youtube_tracking', value_key: 'tracking', action: 'youtube_tracking_change'}
+    ]},
+];
+
+var botchannels_guilds = [];
+var botchannels_guildid_selected = 0;
+
+function botchannels_select (){
+    botchannels_guildid_selected = $('#botchannels_guildids').find(":selected").val();
+    for (let botchannels of botchannels_guilds){
+        if (botchannels[0].guildid === botchannels_guildid_selected){
+        clearSelect('#botchannels_channels');
+        for (let botchannel of botchannels){
+            createOption('#botchannels_channels', botchannel.channeltype, botchannel.id );
         }
+        };
     }
 }
 
-var steamusers = [];
-var steamusers_selected = 0;
+//баг: передать трекинг фильтры с сервера
 
-function steamuser_select() {
-    steamusers_selected = $('#steam_ids').find(":selected").val();
-    $('#steam_tracking option:selected').removeAttr('selected');
-    for (let user of steamusers){
-        if (user.steamid === steamusers_selected){
-            $('#steam_tracking option[value='+ user.tracking +']').prop('selected', true);
+function create_user_block(platform, data){
+    let options = options_deps.filter( val => val.platform === platform).pop();
+    clearSelect(options.select);
+    users[platform] = data;
+    for (let user of users[platform]){
+        let username = user[options.username_key];
+        if (platform.startsWith('vk')){
+            username = [user[options.username_key[0]], user[options.username_key[1]]].join(' ');
         }
+        createOption(options.select, username, user[options.user_key] );
     }
+    for (let option of options.options){
+        createBooleanOptions(option.selector);
+    }
+    selectLastSelectedOption( options.select, selected_user[platform] );
+    if (selected_user[platform] == 0){
+        $(options.select).trigger('change');
+    }
+    user_select(platform);
 }
 
-var trovo_user_selected = 0;
-var trovo_users = [];
-
-function trovo_user_select() {
-    trovo_user_selected = Number($('#trovo_user_ids').find(":selected").val());
-    $('#trovo_user_tracking option:selected').removeAttr('selected');
-    $('#trovo_followers_tracking option:selected').removeAttr('selected');
-    $('#trovo_user_records option:selected').removeAttr('selected');
-    for (let user of trovo_users){
-        if (user.userid === trovo_user_selected){
-            $('#trovo_user_tracking option[value='+ user.tracking +']').prop('selected', true);
-            $('#trovo_followers_tracking option[value='+ user.followersTracking +']').prop('selected', true);
-            $('#trovo_user_records option[value='+ user.records +']').prop('selected', true);
+function send_selected_option (obj) {
+    let selector = '#' + $(obj).prop('id');
+    let selected_option_id = -1;
+    let options = options_deps.filter( val => {
+        for (let id in val.options){
+            if (val.options[id].selector.startsWith(selector)) {
+                selected_option_id = id;
+                return true;
+            }
         }
-    }
+    }).pop();
+    let value = ($(obj).find(':selected').val().toString()) === 'true';
+    let action = options.options[selected_option_id].action;
+    let data = { userid: selected_user[options.platform], value }
+    connection.send( JSON.stringify({ action , data } ));
 }
 
-var twitch_user_selected = 0
-var twitch_users = [];
-
-function twitch_user_select(){
-    twitch_user_selected = Number($('#twitch_user_ids').find(":selected").val());
-    $('#twitch_user_tracking option:selected').removeAttr('selected');
-    $('#twitch_followers_tracking option:selected').removeAttr('selected');
-    $('#twitch_user_records option:selected').removeAttr('selected');
-    $('#twitch_user_clips_tracking option:selected').removeAttr('selected');
-    $('#twitch_user_clips_records option:selected').removeAttr('selected');
-    for (let user of twitch_users){
-        if (user.userid === twitch_user_selected){
-            $('#twitch_user_tracking option[value='+ user.tracking +']').prop('selected', true);
-            $('#twitch_followers_tracking option[value='+ user.followersTracking +']').prop('selected', true);
-            $('#twitch_user_records option[value='+ user.records +']').prop('selected', true);
-            $('#twitch_user_clips_tracking option[value='+ user.clipsTracking +']').prop('selected', true);
-            $('#twitch_user_clips_records option[value='+ user.clipsRecords +']').prop('selected', true);
+function user_select(platform){
+    let options = options_deps.filter( val => val.platform === platform).pop();
+    if (options.is_id_number == true){
+        selected_user[platform] = Number($(options.select).find(":selected").val());
+    } else {
+        selected_user[platform] = $(options.select).find(":selected").val();
+    }
+    for (let option of options.options){
+        $(option.selector + ' option:selected').removeAttr('selected');
+    }
+    for (let user of users[platform]){
+        if (user[options.user_key] === selected_user[platform]){
+            for (let option of options.options){
+                $(option.selector + ' option[value='+ user[option.value_key] +']').prop('selected', true);
+            }
         }
     }
-}
-
-var vk_users_selected = 0;
-var vk_users = [];
-
-function vkusers_select(){
-    vk_users_selected = Number($('#vk_ids').find(":selected").val());
-    $('#vk_users_tracking option:selected').removeAttr('selected');
-    $('#vk_friends_tracking option:selected').removeAttr('selected');
-    for (let user of vk_users){
-        if (user.userid === vk_users_selected){
-            $('#vk_users_tracking option[value='+ user.tracking +']').prop('selected', true);
-            $('#vk_friends_tracking option[value='+ user.friendsTracking +']').prop('selected', true);
-        }
-    }
-}
-
-var youtube_selected = 0;
-var youtube_users = [];
-
-function youtube_select(){
-    youtube_selected = Number($('#youtube_ids').find(":selected").val());
-    $('#youtube_tracking option:selected').removeAttr('selected');
-    for (let user of youtube_users){
-        if (user.id === youtube_selected){
-            $('#youtube_tracking option[value='+ user.tracking +']').prop('selected', true);
-        }
-    }
-}
-
-
-function send_selected_option (obj, action, userid ) {
-    let value = $(obj).find(':selected').val().toString() === 'true';
-    connection.send( JSON.stringify({ action, data: {userid, value }} ));
 }
 
 function toggle_only_tracking(action, value){
@@ -230,93 +235,25 @@ connection.onmessage = (data) => {
             }
             break;
         case 'osuprofiles':
-            clearSelect('#osuprofiles_userids');
-            osuprofiles = db_data;
-            for (let user of osuprofiles){
-                createOption('#osuprofiles_userids', user.username, user.userid );
-            }
-            createBooleanOptions('#osuprofiles_tracking');
-            selectLastSelectedOption( '#osuprofiles_userids', osuprofiles_selected );
-            if (osuprofiles_selected == 0){
-                $('#osuprofiles_userids').trigger('change');
-            }
-            osuprofiles_select();
+            create_user_block('osu', db_data);
             break;
         case 'steamusers':
-            clearSelect('#steam_ids');
-            steamusers = db_data;
-            for (let user of steamusers){
-                createOption('#steam_ids', user.username, user.steamid );
-            }
-            createBooleanOptions('#steam_tracking');
-            selectLastSelectedOption( '#steam_ids', steamusers_selected );
-            if (steamusers_selected == 0){
-                $('#steam_ids').trigger('change');
-            }
-            steamuser_select();
+            create_user_block('steam', db_data);
             break;
         case 'trovousers':
-            clearSelect('#trovo_user_ids');
-            trovo_users = db_data;
-            for (let user of trovo_users){
-                createOption('#trovo_user_ids', user.username, user.userid );
-            }
-            createBooleanOptions('#trovo_user_tracking');
-            createBooleanOptions('#trovo_followers_tracking');
-            createBooleanOptions('#trovo_user_records');
-            selectLastSelectedOption( '#trovo_user_ids', trovo_user_selected );
-            if (trovo_user_selected == 0){
-                $('#trovo_user_ids').trigger('change');
-            }
-            trovo_user_select();
+            create_user_block('trovo', db_data);
             break;
         case 'twitchusers':
-            clearSelect('#twitch_user_ids');
-            twitch_users = db_data;
-            for (let user of twitch_users){
-                createOption('#twitch_user_ids', user.username, user.userid );
-            }
-            createBooleanOptions('#twitch_user_tracking');
-            createBooleanOptions('#twitch_followers_tracking');
-            createBooleanOptions('#twitch_user_records');
-            createBooleanOptions('#twitch_user_clips_tracking');
-            createBooleanOptions('#twitch_user_clips_records');
-            selectLastSelectedOption( '#twitch_user_ids', twitch_user_selected );
-            if (twitch_user_selected == 0){
-                $('#twitch_user_ids').trigger('change');
-            }
-            twitch_user_select();
+            create_user_block('twitch', db_data);
             break;
         case 'vkusers':
-            clearSelect('#vk_ids');
-            vk_users = db_data;
-            for (let user of vk_users){
-                createOption('#vk_ids', `${user.name1} ${user.name2}`, user.userid );
-            }
-            createBooleanOptions('#vk_users_tracking');
-            createBooleanOptions('#vk_friends_tracking');
-            selectLastSelectedOption( '#vk_ids', vk_users_selected );
-            if (vk_users_selected == 0){
-                $('#vk_ids').trigger('change');
-            }
-            vkusers_select();
+            create_user_block('vk', db_data);
             break;
         case 'youtube_users':
-            clearSelect('#youtube_ids');
-            youtube_users = db_data;
-            for (let user of youtube_users){
-                createOption('#youtube_ids', user.channelname, user.id );
-            }
-            createBooleanOptions('#youtube_tracking');
-            selectLastSelectedOption( '#youtube_ids', youtube_selected );
-            if (youtube_selected == 0){
-                $('#youtube_ids').trigger('change');
-            }
-            youtube_select();
+            create_user_block('youtube', db_data);
             break;
         default:
             console.log('no action');
             break;
     }
-
 };

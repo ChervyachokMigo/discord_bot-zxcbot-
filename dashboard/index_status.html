@@ -26,16 +26,16 @@
             <div class="checkboxes">
               <input type="checkbox" id="osuprofiles_only_tracking" onchange="toggle_only_tracking('osuprofiles_only_tracking', 'osu_profiles');">only tracking
             </div>
-            user<select name="osuprofiles_userids" id="osuprofiles_userids" onchange="osuprofiles_select();"></select>
-            tracking<select name="osuprofiles_tracking" id="osuprofiles_tracking" onchange="send_selected_option(this, 'osuprofile_tracking_change', osuprofiles_selected);"></select>
+            user<select name="osuprofiles_userids" id="osuprofiles_userids" onchange="user_select('osu');"></select>
+            tracking<select name="osuprofiles_tracking" id="osuprofiles_tracking" onchange="send_selected_option(this);"></select>
           </div>
           <div class="steam_users">
             <h2>Steam users</h2>
             <div class="checkboxes">
               <input type="checkbox" id="steam_only_tracking" onchange="toggle_only_tracking('steamuser_only_tracking', 'steamusers');">only tracking
             </div>
-            user<select name="steam_ids" id="steam_ids" onchange="steamuser_select();"></select>
-            tracking<select name="steam_tracking" id="steam_tracking" onchange="send_selected_option(this, 'steamuser_tracking_change', steamusers_selected);"></select>
+            user<select name="steam_ids" id="steam_ids" onchange="user_select('steam');"></select>
+            tracking<select name="steam_tracking" id="steam_tracking" onchange="send_selected_option(this);"></select>
           </div>
           <div class="vk_users">
             <h2>VK users</h2>
@@ -43,9 +43,9 @@
               <input type="checkbox" id="vk_users_only_tracking" onchange="toggle_only_tracking('vk_users_only_tracking', 'vk_users');">only tracking
               <input type="checkbox" id="vk_friends_only_tracking" onchange="toggle_only_tracking('vk_friends_only_tracking', 'vk_friends');">only friends tracking
             </div>
-            user<select name="vk_ids" id="vk_ids" onchange="vkusers_select();"></select>
-            tracking<select name="vk_users_tracking" id="vk_users_tracking" onchange="send_selected_option(this, 'vk_user_tracking_change', vk_users_selected);"></select>
-            friends tracking<select name="vk_friends_tracking" id="vk_friends_tracking" onchange="send_selected_option(this, 'vk_friends_tracking_change', vk_users_selected);"></select>
+            user<select name="vk_ids" id="vk_ids" onchange="user_select('vk');"></select>
+            tracking<select name="vk_users_tracking" id="vk_users_tracking" onchange="send_selected_option(this);"></select>
+            friends tracking<select name="vk_friends_tracking" id="vk_friends_tracking" onchange="send_selected_option(this);"></select>
           </div>
           <div class="trovo">
             <h2>Trovo</h2>
@@ -54,10 +54,10 @@
               <input type="checkbox" id="trovo_only_followers_tracking" onchange="toggle_only_tracking('trovo_user_only_followers_tracking', 'trovo_followers');">only followers tracking
               <input type="checkbox" id="trovo_only_records" onchange="toggle_only_tracking('trovo_user_only_records', 'trovo_records');">only records
             </div>
-            user<select name="trovo_user_ids" id="trovo_user_ids" onchange="trovo_user_select();"></select>
-            tracking<select name="trovo_user_tracking" id="trovo_user_tracking" onchange="send_selected_option(this, 'trovo_user_tracking_change', trovo_user_selected);"></select>
-            tracking followers<select name="trovo_followers_tracking" id="trovo_followers_tracking" onchange="send_selected_option(this, 'trovo_followers_tracking_change', trovo_user_selected);"></select>
-            records<select name="trovo_user_records" id="trovo_user_records" onchange="send_selected_option(this, 'trovo_user_records_change', trovo_user_selected);"></select>
+            user<select name="trovo_user_ids" id="trovo_user_ids" onchange="user_select('trovo');"></select>
+            tracking<select name="trovo_user_tracking" id="trovo_user_tracking" onchange="send_selected_option(this);"></select>
+            tracking followers<select name="trovo_followers_tracking" id="trovo_followers_tracking" onchange="send_selected_option(this);"></select>
+            records<select name="trovo_user_records" id="trovo_user_records" onchange="send_selected_option(this);"></select>
           </div>
           <div class="twitch">
             <h2>Twitch</h2>
@@ -68,20 +68,20 @@
               <input type="checkbox" id="twitch_only_clips_tracking" onchange="toggle_only_tracking('twitch_only_clips_tracking', 'twitch_clips');">only clips tracking
               <input type="checkbox" id="twitch_only_clips_records" onchange="toggle_only_tracking('twitch_only_clips_records', 'twitch_clips_records');">only clips records
             </div>
-            user<select name="twitch_user_ids" id="twitch_user_ids" onchange="twitch_user_select();"></select>
-            tracking<select name="twitch_user_tracking" id="twitch_user_tracking" onchange="send_selected_option(this, 'twitch_user_tracking_change', twitch_user_selected);"></select>
-            tracking followers<select name="twitch_followers_tracking" id="twitch_followers_tracking" onchange="send_selected_option(this, 'twitch_followers_tracking_change', twitch_user_selected);"></select>
-            records<select name="twitch_user_records" id="twitch_user_records" onchange="send_selected_option(this, 'twitch_user_records_change', twitch_user_selected);"></select>
-            clips tracking<select name="twitch_user_clips_tracking" id="twitch_user_clips_tracking" onchange="send_selected_option(this, 'twitch_user_clips_tracking_change', twitch_user_selected);"></select>
-            clips records<select name="twitch_user_clips_records" id="twitch_user_clips_records" onchange="send_selected_option(this, 'twitch_user_clips_records_change', twitch_user_selected);"></select>
+            user<select name="twitch_user_ids" id="twitch_user_ids" onchange="user_select('twitch');"></select>
+            tracking<select name="twitch_user_tracking" id="twitch_user_tracking" onchange="send_selected_option(this);"></select>
+            tracking followers<select name="twitch_followers_tracking" id="twitch_followers_tracking" onchange="send_selected_option(this);"></select>
+            records<select name="twitch_user_records" id="twitch_user_records" onchange="send_selected_option(this);"></select>
+            clips tracking<select name="twitch_user_clips_tracking" id="twitch_user_clips_tracking" onchange="send_selected_option(this);"></select>
+            clips records<select name="twitch_user_clips_records" id="twitch_user_clips_records" onchange="send_selected_option(this);"></select>
           </div>
           <div class="youtube">
             <h2>Youtube</h2>
             <div class="checkboxes">
               <input type="checkbox" id="youtube_only_tracking" onchange="toggle_only_tracking('youtube_only_tracking', 'youtube');">only tracking
             </div>
-            channel<select name="youtube_ids" id="youtube_ids" onchange="youtube_select();"></select>
-            tracking<select name="youtube_tracking" id="youtube_tracking" onchange="send_selected_option(this, 'youtube_tracking_change', youtube_selected);"></select>
+            channel<select name="youtube_ids" id="youtube_ids" onchange="user_select('youtube');"></select>
+            tracking<select name="youtube_tracking" id="youtube_tracking" onchange="send_selected_option(this);"></select>
           </div>
         </div>
     </div>

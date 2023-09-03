@@ -243,9 +243,7 @@ async function update_db_user_value(tablename, action, db_data, user_key, value_
         console.error('undefined data', db_data, user_key, value_key);
         return false;
     }
-    console.log(action,  db_data.userid, db_data.value);
     await db.MYSQL_SAVE(tablename, { [user_key]: db_data.userid }, {[value_key]: db_data.value} );
-
 }
 
 function set_only_tracking (value_key, data) {
