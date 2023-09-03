@@ -517,21 +517,20 @@ async function MYSQL_GET_ALL(action, params = {}){
             }
         break
         case `botchannel`:
-            if (typeof params.guildid === 'undefined') throw new Error('unknown guildid')
+            //if (typeof params.guildid === 'undefined') throw new Error('unknown guildid')
             MysqlModel = BotChannel
-            condition = {
+            condition = params?params:{};
+            /*condition = {
                 guildid: params.guildid
-            }
+            }*/
         break
         case `streamersTwitch`:
             MysqlModel = TwitchData
             condition = params?params:{};
-            condition.tracking = true;
         break
         case `streamersTrovo`:
             MysqlModel = TrovoData
             condition = params?params:{};
-            condition.tracking = true;
         break
         case `twitchclips`:
             if (typeof params.userid === 'undefined') throw new Error('unknown userid')
@@ -550,7 +549,6 @@ async function MYSQL_GET_ALL(action, params = {}){
         case `steamuser`:
             MysqlModel = SteamUserData;
             condition = params?params:{};
-            condition.tracking = true;
         break 
         case `vkuser`:
             condition = params?params:{};
@@ -570,7 +568,6 @@ async function MYSQL_GET_ALL(action, params = {}){
         break 
         case `osuprofile`:
             condition = params?params:{};
-            condition.tracking = true;
             MysqlModel = OsuProfileData;
         break
         case 'youtubechannel':
@@ -636,7 +633,7 @@ async function MYSQL_UPDATE(action, values){
 
 async function MYSQL_DELETE(action, condition){
     var MysqlModel;
-    
+
     switch (action){
         case `role`:
             MysqlModel = Role;
@@ -661,6 +658,7 @@ async function MYSQL_DELETE(action, condition){
             return false;
     }
     try{
+        console.log('delete mysql:', action, condition)
         return await MysqlModel.destroy({
             where: condition, logging: ''
         });

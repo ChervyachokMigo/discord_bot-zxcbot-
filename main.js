@@ -73,13 +73,7 @@
 const log = console.log.bind(console)
 const {DISCORD_TOKEN} = require('./config.js');
 
-const webserver = require('./modules/webserver/index.js');
-
 var settings = require('./settings.js');
-
-if (settings.modules.webserver) {
-    webserver.init();
-}
 
 const { Client } = require("discord.js");
 

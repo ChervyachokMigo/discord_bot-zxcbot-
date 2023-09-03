@@ -43,7 +43,8 @@
     "process": "^0.11.10",
     "steamapi": "^2.2.0",
     "stream": "^0.0.2",
-    "vkontakte-api": "^3.0.3"
+    "vkontakte-api": "^3.0.3",
+    "ws": "^8.13.0"
   },
   "devDependencies": {
     "@types/node": "^18.15.11"

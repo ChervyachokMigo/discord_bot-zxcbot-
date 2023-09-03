@@ -332,9 +332,10 @@ module.exports = {
     },
 
     checkYoutubeVideos: async function (stalkerEvents){
-        log('Проверка статуса Youtube каналов', moduleName);
+        
         var AllUsersYoutubeDataFromDB = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('youtubechannel'));
         if (AllUsersYoutubeDataFromDB.length > 0){
+            log('Проверка статуса Youtube каналов', moduleName);
             for (let YoutubeChannelData of AllUsersYoutubeDataFromDB){
                 if (YoutubeChannelData.updoads_playlistid){
                     var playlistid = YoutubeChannelData.updoads_playlistid;

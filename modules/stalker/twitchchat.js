@@ -216,6 +216,7 @@ module.exports = {
             if (MessagesBuffer.length > 0){
                 for (let chatmessages of MessagesBuffer){
                     let messagestext = chatmessages.messagetext.join(`\n`);
+                    console.log('chat:\n' + messagestext + '\n');
                     let TwitchChatGuildids = await getGuildidsOfTrackingUserService('twitchchat_tracking', chatmessages.username);
                     ev.emit('newChatMessage', {guildids: TwitchChatGuildids, chatname: chatmessages.username, messagetext: messagestext});
                 }

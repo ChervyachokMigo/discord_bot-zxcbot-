@@ -22,6 +22,8 @@ const { crypto_check_start } = require('../modules/crypto.js');
 
 const { taiko_farming_maps_initialize } = require('../modules/taiko_recomend_map/index.js');
 
+const webserver = require('../modules/webserver/index.js');
+
 module.exports = async (client) =>{
     try{
         initDisplayDataServer();
@@ -51,7 +53,9 @@ module.exports = async (client) =>{
         }
 
         guilds.forEach( async( guild )=>{
-            console.log('Старт гильдии '+guild.id)
+
+            console.log('Старт гильдии ['+guild.id+']', guild.name);
+
             await initGuildSettings(guild.id);
 
             if (settings.modules.voiceroles){
@@ -116,6 +120,11 @@ module.exports = async (client) =>{
 
         if (settings.modules.autorestart){
             await autoRestartInit();
+        }
+
+        if (settings.modules.webserver) {
+            await webserver.init();
+            await webserver.setDiscordData(client);
         }
 
         

@@ -73,11 +73,11 @@ module.exports = {
 
     checkChangesSteamUser: async function (stalkerEvents){
         try{
-            log('Проверка стим профилей', moduleName)
-            var AllUsersSteamDataFromDB = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('steamuser'));
+            
+            var AllUsersSteamDataFromDB = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('steamuser', {tracking: true}));
     
             if (AllUsersSteamDataFromDB.length > 0){
-                
+                log('Проверка стим профилей', moduleName)
                 var AllSteamUsersIDList = GET_VALUES_FROM_OBJECT_BY_KEY(AllUsersSteamDataFromDB, 'steamid')
                 var AllUsersSteamData = await getSteamUserData(AllSteamUsersIDList);
                 if (AllUsersSteamData.length == 0) {

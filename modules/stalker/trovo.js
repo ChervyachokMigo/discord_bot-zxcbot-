@@ -88,10 +88,11 @@ module.exports = {
 
     checkTrovoFollowers: async function(stalkerEvents){
         try{
-            log('Проверка статуса юзеров Трово', moduleName);
+           
             //получаем всех юзеров у которых tracking = true и преобразовываем данные в обычный массив объектов
-            let mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('streamersTrovo'));
+            let mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('streamersTrovo', {tracking: true}));
             if (mysql_data.length > 0){
+                log('Проверка статуса юзеров Трово', moduleName);
                 //обработка результатов
                 
                 for (let userdata of mysql_data){
@@ -124,10 +125,11 @@ module.exports = {
 
     checkTrovoStatus: async function (stalkerEvents){
         try{
-            log('Проверка статуса юзеров Трово', moduleName);
+           
             //получаем всех юзеров у которых tracking = true и преобразовываем данные в обычный массив объектов
-            let mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('streamersTrovo'));
+            let mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('streamersTrovo', {tracking: true}));
             if (mysql_data.length > 0){
+                log('Проверка статуса юзеров Трово', moduleName);
                 //обработка результатов
                 
                 for (let userdata of mysql_data){
@@ -220,10 +222,11 @@ module.exports = {
 
     checkTrovoLastClips: async function(stalkerEvents){
         try{
-            log('Проверка клипов Трово', moduleName);
+            
             //получаем всех юзеров у которых tracking = true и преобразовываем данные в обычный массив объектов
-            let mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('streamersTrovo'));
+            let mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('streamersTrovo', {tracking: true}));
             if (mysql_data.length > 0){
+                log('Проверка клипов Трово', moduleName);
                 //обработка результатов
                 
                 for (let userdata of mysql_data){

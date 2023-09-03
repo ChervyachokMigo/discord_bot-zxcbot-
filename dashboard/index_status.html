@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Bot Dashboard Status</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="jquery.min.js"></script>
+    <script src="status.js"></script>
+  </head>
+  <body>
+
+    <header>
+      <h1>Discord Bot Dashboard Status</h1>
+    </header>
+    <div class="content">
+        <div class="container">
+          <div class="bot_chhannels">
+            <h2>bot channels</h2>
+            guild<select name="botchannels_guildids" id="botchannels_guildids" onchange="botchannels_select();"></select>
+            chnannel<select name="botchannels_channels" id="botchannels_channels"></select>
+            <button id="botchannel_delete" type="button" name="delete" value="botchannel_delete">Delete</button>
+          </div>
+          <div class="osu_profiles">
+            <h2>osu profiles</h2>
+            <div class="checkboxes">
+              <input type="checkbox" id="osuprofiles_only_tracking" onchange="toggle_only_tracking('osuprofiles_only_tracking', 'osu_profiles');">only tracking
+            </div>
+            user<select name="osuprofiles_userids" id="osuprofiles_userids" onchange="osuprofiles_select();"></select>
+            tracking<select name="osuprofiles_tracking" id="osuprofiles_tracking" onchange="send_selected_option(this, 'osuprofile_tracking_change', osuprofiles_selected);"></select>
+          </div>
+          <div class="steam_users">
+            <h2>steam users</h2>
+            <div class="checkboxes">
+              <input type="checkbox" id="steam_only_tracking" onchange="toggle_only_tracking('steamuser_only_tracking', 'steamusers');">only tracking
+            </div>
+            user<select name="steam_ids" id="steam_ids" onchange="steamuser_select();"></select>
+            tracking<select name="steam_tracking" id="steam_tracking" onchange="send_selected_option(this, 'steamuser_tracking_change', steamusers_selected);"></select>
+          </div>
+          <div class="trovo">
+            <h2>trovo</h2>
+            <div class="checkboxes">
+              <input type="checkbox" id="trovo_only_tracking" onchange="toggle_only_tracking('trovo_user_only_tracking', 'trovo_users');">only tracking
+              <input type="checkbox" id="trovo_only_followers_tracking" onchange="toggle_only_tracking('trovo_user_only_followers_tracking', 'trovo_followers');">only followers tracking
+              <input type="checkbox" id="trovo_only_records" onchange="toggle_only_tracking('trovo_user_only_records', 'trovo_records');">only records
+            </div>
+            user<select name="trovo_user_ids" id="trovo_user_ids" onchange="trovo_user_select();"></select>
+            tracking<select name="trovo_user_tracking" id="trovo_user_tracking" onchange="send_selected_option(this, 'trovo_user_tracking_change', trovo_user_selected);"></select>
+            tracking followers<select name="trovo_followers_tracking" id="trovo_followers_tracking" onchange="send_selected_option(this, 'trovo_followers_tracking_change', trovo_user_selected);"></select>
+            records<select name="trovo_user_records" id="trovo_user_records" onchange="send_selected_option(this, 'trovo_user_records_change', trovo_user_selected);"></select>
+          </div>
+          <div class="twitch">
+            <h2>twitch</h2>
+            <div class="checkboxes">
+              <input type="checkbox" id="twitch_only_tracking" onchange="toggle_only_tracking('twitch_only_tracking', 'twitch_users');">only tracking
+              <input type="checkbox" id="twitch_only_followers_tracking" onchange="toggle_only_tracking('twitch_only_followers_tracking', 'twitch_followers');">only followers tracking
+              <input type="checkbox" id="twitch_only_records" onchange="toggle_only_tracking('twitch_only_records', 'twitch_records');">only records
+              <input type="checkbox" id="twitch_only_clips_tracking" onchange="toggle_only_tracking('twitch_only_clips_tracking', 'twitch_clips');">only clips tracking
+              <input type="checkbox" id="twitch_only_clips_records" onchange="toggle_only_tracking('twitch_only_clips_records', 'twitch_clips_records');">only clips records
+            </div>
+            user<select name="twitch_user_ids" id="twitch_user_ids" onchange="twitch_user_select();"></select>
+            tracking<select name="twitch_user_tracking" id="twitch_user_tracking" onchange="send_selected_option(this, 'twitch_user_tracking_change', twitch_user_selected);"></select>
+            tracking followers<select name="twitch_followers_tracking" id="twitch_followers_tracking" onchange="send_selected_option(this, 'twitch_followers_tracking_change', twitch_user_selected);"></select>
+            records<select name="twitch_user_records" id="twitch_user_records" onchange="send_selected_option(this, 'twitch_user_records_change', twitch_user_selected);"></select>
+            clips tracking<select name="twitch_user_clips_tracking" id="twitch_user_clips_tracking" onchange="send_selected_option(this, 'twitch_user_clips_tracking_change', twitch_user_selected);"></select>
+            clips records<select name="twitch_user_clips_records" id="twitch_user_clips_records" onchange="send_selected_option(this, 'twitch_user_clips_records_change', twitch_user_selected);"></select>
+          </div>
+        </div>
+    </div>
+  </body>
+</html>

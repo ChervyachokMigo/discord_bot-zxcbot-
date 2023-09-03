@@ -111,11 +111,11 @@ module.exports = {
     checkVKstatus: async function (stalkerEvents){
         try{
             //load from db
-            log('Проверка ВК профилей', moduleName);
+          
             var AllTrackingUsersVKData = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('vkuser'));
             
             if (AllTrackingUsersVKData.length > 0){
-        
+                log('Проверка ВК профилей', moduleName);
                 //get all users new data
                 var TrackingUsers_ids = GET_VALUES_FROM_OBJECT_BY_KEY(AllTrackingUsersVKData,'userid');
                 var VKUsersDataNew = await getVKUsersData(TrackingUsers_ids);
@@ -194,10 +194,11 @@ module.exports = {
     
     checkVKfriends: async function (stalkerEvents){
         try{
-            log('Проверка ВК друзей', moduleName);
+          
             var AllTrackingUsersVKData = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('vkuser', {friendsTracking: true}));
             
             if (AllTrackingUsersVKData.length > 0){
+                log('Проверка ВК друзей', moduleName);
                 for (let VKUserData of AllTrackingUsersVKData){
                     let userfullname = `${VKUserData.name1} ${VKUserData.name2}`;
                     let userFriendsNew = await getVKUserFriendsCount(VKUserData.userid);

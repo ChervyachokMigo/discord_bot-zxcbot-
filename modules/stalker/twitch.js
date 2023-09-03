@@ -106,10 +106,11 @@ module.exports = {
 
     checkTwitchStatus: async function (stalkerEvents){
         try{
-            log('Проверка статуса юзеров Твича', moduleName);
+            
             //получаем всех юзеров у которых tracking = true и преобразовываем данные в обычный массив объектов
-            let mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('streamersTwitch'));
+            let mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('streamersTwitch', {tracking: true}));
             if (mysql_data.length > 0){
+                log('Проверка статуса юзеров Твича', moduleName);
                 //получение статуса всех пользователей сразу
                 let usernames = GET_VALUES_FROM_OBJECT_BY_KEY(mysql_data, 'username');
                 let onlineUsersData = await getTwitchUserStatus(usernames);
@@ -235,10 +236,11 @@ module.exports = {
 
     checkUserTwitchFolowers: async function (stalkerEvents){
         try{
-            log('Проверка фоловеров юзеров Твича')
+            
             //получаем всех пользователей у которых tracking = true и преобразовываем в обычный массив объектов
-            let mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('streamersTwitch'));
+            let mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('streamersTwitch', {tracking: true}));
             if (mysql_data.length > 0){
+                log('Проверка фоловеров юзеров Твича')
                 for (let userdata of mysql_data){
                     if (userdata.followersTracking == true){
                         //получаем количество фоловеров от твича
@@ -280,12 +282,12 @@ module.exports = {
 
     checkUserTwitchClips: async function (stalkerEvents, days = stalkerClipsCheckLastDays){
         try{
-            log('Проверка клипов юзеров Твича', moduleName)
+            
             //получаем всех пользователей у которых tracking = true и преобразовываем в обычный массив объектов
-            let users_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('streamersTwitch'));
+            let users_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('streamersTwitch', {tracking: true}));
             
             if ( users_data.length > 0 ){
-                
+                log('Проверка клипов юзеров Твича', moduleName)
                 for ( let userdata of users_data ){
                     if (userdata.clipsTracking == true){
                         

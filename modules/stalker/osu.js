@@ -230,14 +230,15 @@ module.exports = {
     },
 
     checkOsuFollowers: async function(stalkerEvents){
-        log('Проверка осу фолловеров', moduleName)
+        
         
         if (!await checkTokenExpires('osu')){
             log('cant get osu token');
             return false;
         };
-        var AllUsersOsuDataFromDB = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('osuprofile'));
+        var AllUsersOsuDataFromDB = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('osuprofile', {tracking: true}));
         if (AllUsersOsuDataFromDB.length > 0){
+            log('Проверка осу фолловеров', moduleName)
             for (let osuUserDataOld of AllUsersOsuDataFromDB){
 
                 var osuUserDataNew = await getOsuUserData(osuUserDataOld.userid, osuUserDataOld.mainmode);
@@ -260,19 +261,20 @@ module.exports = {
 
     checkOsuData: async function(stalkerEvents, isSilent = false, forUserid = 0){
         try{
-            if (stalkerEvents === undefined){
-                isSilent = true;
-                log('Проверка осу профилей (бесшумная)', moduleName)
-            } else {
-                log('Проверка осу профилей', moduleName)
-            }
+            
             
             if (!await checkTokenExpires('osu')){
                 log('cant get osu token');
                 return false;
             };
-            var AllUsersOsuDataFromDB = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('osuprofile'));
+            var AllUsersOsuDataFromDB = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('osuprofile', {tracking: true}));
             if (AllUsersOsuDataFromDB.length > 0){
+                if (stalkerEvents === undefined){
+                    isSilent = true;
+                    log('Проверка осу профилей (бесшумная)', moduleName)
+                } else {
+                    log('Проверка осу профилей', moduleName)
+                }
                 for (let osuUserDataOld of AllUsersOsuDataFromDB){
                     if (forUserid > 0 && osuUserDataOld.userid !== forUserid){
                         continue;
