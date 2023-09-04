@@ -20,21 +20,7 @@ function isJSON(str) {
 
 var main_loop;
 
-var only_tracking = {
-    osuprofiles: false,
-    steamusers: false,
-    trovo_users: false,
-    trovo_followers: false,
-    trovo_records: false,
-    twitch_users: false,
-    twitch_followers: false,
-    twitch_records: false,
-    twitch_clips: false,
-    twitch_clips_records: false,
-    vk_users: false,
-    vk_friends: false,
-    youtube: false
-}
+var clients = [];
 
 const tracking_change_deps = [
     {action: 'osuprofile_tracking_change', table_name: 'osuprofile', user_key: 'userid', value_key: 'tracking'},
@@ -52,7 +38,7 @@ const tracking_change_deps = [
     {action: 'youtube_tracking_change', table_name: 'youtubechannel', user_key: 'id', value_key: 'tracking'}
 ];
 
-const traching_filter_deps = [
+const tracking_filter_deps = [
     {action: 'osuprofiles_only_tracking', value_key: 'osuprofiles'},
     {action: 'steamuser_only_tracking', value_key: 'steamusers'},
     {action: 'trovo_user_only_tracking', value_key: 'trovo_users'},
@@ -120,8 +106,33 @@ module.exports = {
 
     setDiscordData: async (client) => {
         webs.on('connection', function connection(ws) {
+            ws.id = new Date().getTime();
+            console.log('new connection, id: ', ws.id);
+
+            ws.only_tracking = {
+                osuprofiles: false,
+                steamusers: false,
+                trovo_users: false,
+                trovo_followers: false,
+                trovo_records: false,
+                twitch_users: false,
+                twitch_followers: false,
+                twitch_records: false,
+                twitch_clips: false,
+                twitch_clips_records: false,
+                vk_users: false,
+                vk_friends: false,
+                youtube: false
+            }
+
+            clients.push(ws);
+
             ws.on('error', console.error);
         
+            ws.on('close', ()=> {
+                console.log('connection closed, id: ', ws.id)
+            });
+
             ws.on('message', async function message(data) {
                 console.log('received: %s', data);
                 if (isJSON(data)){
@@ -135,9 +146,9 @@ module.exports = {
                             }
                         }
 
-                        for (let val of traching_filter_deps) {
+                        for (let val of tracking_filter_deps) {
                             if (val.action === data_json.action) {
-                                set_only_tracking(val.value_key, db_data);
+                                set_only_tracking(ws.id, val.value_key, db_data);
                                 break;
                             }
                         }
@@ -170,46 +181,16 @@ module.exports = {
                 botchannels = groupBy(botchannels, 'guildid');
                 ws.send(JSON.stringify({action:'botchannels', data: botchannels}));
 
-                var osuprofiles = db.MYSQL_GET_ALL_RESULTS_TO_ARRAY (await db.MYSQL_GET_ALL('osuprofile', get_tracking_multiply(only_tracking, { 
-                    osuprofiles: 'tracking'
-                }) ));
-                ws.send(JSON.stringify({action:'osuprofiles', data: osuprofiles}));
-
-                var steamusers = db.MYSQL_GET_ALL_RESULTS_TO_ARRAY (await db.MYSQL_GET_ALL('steamuser', get_tracking_multiply(only_tracking, { 
-                    steamusers: 'tracking'
-                }) ));
-                ws.send(JSON.stringify({action:'steamusers', data: steamusers}));
-
-                var trovousers = db.MYSQL_GET_ALL_RESULTS_TO_ARRAY (await db.MYSQL_GET_ALL('streamersTrovo', get_tracking_multiply(only_tracking, { 
-                    trovo_users: 'tracking', 
-                    trovo_followers: 'followersTracking',
-                    trovo_records: 'records'
-                }) ));
-                ws.send(JSON.stringify({action:'trovousers', data: trovousers}));
-
-                var twitchusers = db.MYSQL_GET_ALL_RESULTS_TO_ARRAY (await db.MYSQL_GET_ALL('streamersTwitch', get_tracking_multiply(only_tracking, { 
-                    twitch_users: 'tracking', 
-                    twitch_followers: 'followersTracking',
-                    twitch_records: 'records',
-                    twitch_clips: 'clipsTracking',
-                    twitch_clips_records: 'clipsRecords' 
-                }) ));
-                ws.send(JSON.stringify({action:'twitchusers', data: twitchusers}));
-
-                var vkusers = db.MYSQL_GET_ALL_RESULTS_TO_ARRAY (await db.MYSQL_GET_ALL('vkuser', get_tracking_multiply(only_tracking, { 
-                    vk_users: 'tracking', 
-                    vk_friends: 'friendsTracking'
-                }) ));
-                ws.send(JSON.stringify({action: 'vkusers', data: vkusers}));
-
-                var youtube_users = db.MYSQL_GET_ALL_RESULTS_TO_ARRAY (await db.MYSQL_GET_ALL('youtubechannel', get_tracking_multiply(only_tracking, { 
-                    youtube: 'tracking'
-                }) ));
-                ws.send(JSON.stringify({action: 'youtube_users', data: youtube_users}));
+                await send_db_data(ws, 'osuprofile', 'osuprofiles',  {osuprofiles: 'tracking'});
+                await send_db_data(ws, 'steamuser', 'steamusers',  {steamusers: 'tracking'});
+                await send_db_data(ws, 'streamersTrovo', 'trovousers',  {trovo_users: 'tracking', 
+                    trovo_followers: 'followersTracking', trovo_records: 'records'});
+                await send_db_data(ws, 'streamersTwitch', 'twitchusers',  {twitch_users: 'tracking', twitch_followers: 'followersTracking',
+                    twitch_records: 'records', twitch_clips: 'clipsTracking', twitch_clips_records: 'clipsRecords' });
+                await send_db_data(ws, 'vkuser', 'vkusers', {vk_users: 'tracking', vk_friends: 'friendsTracking'});
+                await send_db_data(ws, 'youtubechannel', 'youtube_users', {youtube: 'tracking'});
             }
-        
         });
-        
     }
 }
 
@@ -246,11 +227,16 @@ async function update_db_user_value(tablename, action, db_data, user_key, value_
     await db.MYSQL_SAVE(tablename, { [user_key]: db_data.userid }, {[value_key]: db_data.value} );
 }
 
-function set_only_tracking (value_key, data) {
+function set_only_tracking (ws_id, value_key, data) {
     if (typeof data.value === 'undefined' || data.value === null || typeof value_key === 'undefined' || value_key === null) {
         console.error('undefined data', data, value_key);
     }
-    only_tracking[value_key] = data.value;
+
+    for (let i in clients){
+        if (clients[i].id === ws_id){
+            clients[i].only_tracking[value_key] = data.value;
+        }
+    }
 }
 
 function get_tracking_multiply(obj, props){
@@ -261,4 +247,9 @@ function get_tracking_multiply(obj, props){
         }
     });
     return res;
+}
+
+async function send_db_data(conn, tablename, action, tracking_props) {
+    let data = db.MYSQL_GET_ALL_RESULTS_TO_ARRAY (await db.MYSQL_GET_ALL(tablename, get_tracking_multiply(conn.only_tracking, tracking_props)));
+    conn.send(JSON.stringify({action, data}));
 }

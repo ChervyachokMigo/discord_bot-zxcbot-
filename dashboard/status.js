@@ -86,8 +86,6 @@ function botchannels_select (){
     }
 }
 
-//баг: передать трекинг фильтры с сервера
-
 function create_user_block(platform, data){
     let options = options_deps.filter( val => val.platform === platform).pop();
     clearSelect(options.select);
