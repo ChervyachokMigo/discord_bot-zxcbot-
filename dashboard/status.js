@@ -1,15 +1,4 @@
-function isJSON(str) {
-        try {
-            JSON.parse(str.toString());
-        } catch (e) {
-            return false;
-        }
-        return true;
-}
-
-let connection = new WebSocket("ws://localhost:8888");
-
-var is_only_tracking = {
+var tracking_filter = {
     osu_profiles: false,
     steamusers: false,
     trovo_users: false,
@@ -22,7 +11,8 @@ var is_only_tracking = {
     twitch_clips_records: false,
     vk_users: false,
     vk_friends: false,
-    youtube: false
+    youtube: false,
+    twitchchat: false
 }
 
 var users = {
@@ -31,7 +21,8 @@ var users = {
     twitch: [],
     trovo: [],
     vk: [],
-    youtube: []
+    youtube: [],
+    twitchchat: []
 }
 
 var selected_user = {
@@ -40,7 +31,8 @@ var selected_user = {
     twitch: 0,
     trovo: 0,
     vk: 0,
-    youtube: 0
+    youtube: 0,
+    twitchchat: 0
 }
 
 const options_deps = [
@@ -69,7 +61,12 @@ const options_deps = [
     {platform: 'youtube', select: '#youtube_ids', is_id_number: true, username_key: 'channelname', user_key: 'id', options: [
         {selector: '#youtube_tracking', value_key: 'tracking', action: 'youtube_tracking_change'}
     ]},
+    {platform: 'twitchchat', select: '#twitchchat_ids', is_id_number: true, username_key: 'username', user_key: 'id', options: [
+        {selector: '#twitchchat_tracking', value_key: 'tracking', action: 'twitchchat_tracking_change'}
+    ]},
 ];
+
+var connection = new WebSocket("ws://localhost:8888");
 
 var botchannels_guilds = [];
 var botchannels_guildid_selected = 0;
@@ -84,6 +81,101 @@ function botchannels_select (){
         }
         };
     }
+}
+
+
+$(document).ready(function(){
+    $('#botchannel_delete').click(function(e){
+        let deleted_channel_id = $('#botchannels_channels').find(":selected").val().toString();
+        deleteOption('botchannel_delete', {id: deleted_channel_id});
+        $("#botchannels_channels option[value='"+deleted_channel_id+"']").remove();
+    });
+    $('#bot_restart').click(function(e){
+        connection.send(JSON.stringify({action: "bot_restart"}));
+        location.reload();
+    });
+});
+
+connection.onopen = () => {
+    connection.onclose = (ev=>{
+        console.error('connection close');
+        console.log(ev);
+        location.reload();
+    });
+    
+    connection.onerror = (err=>{
+        console.error('connection error');
+        console.log(err);
+        location.reload();
+    });
+
+    connection.send(JSON.stringify({action: "connect"}));
+};
+
+connection.onmessage = (data) => {
+
+    if (!isJSON(data.data)) {
+        console.error('is not json');
+        return false;
+    }
+
+    var data_json = JSON.parse(data.data);
+    var db_data = data_json.data;
+
+    if (!data_json.action){
+        console.error('undefined action');
+        return false;
+    }
+
+    switch (data_json.action){
+        case 'guildids':
+            console.log('servers', data_json.data);
+            break;
+        case 'botchannels':
+            clearSelect('#botchannels_guildids');
+            botchannels_guilds = db_data;
+            for (let botchannels of botchannels_guilds){
+                createOption('#botchannels_guildids', botchannels[0].guildid, botchannels[0].guildid );
+            }
+            selectLastSelectedOption( '#botchannels_guildids', botchannels_guildid_selected );
+            if ($('#botchannels_channels').find("option").length == 0) {
+                $('#botchannels_guildids').trigger('change');
+            }
+            break;
+        case 'osuprofiles':
+            create_user_block('osu', db_data);
+            break;
+        case 'steamusers':
+            create_user_block('steam', db_data);
+            break;
+        case 'trovousers':
+            create_user_block('trovo', db_data);
+            break;
+        case 'twitchusers':
+            create_user_block('twitch', db_data);
+            break;
+        case 'vkusers':
+            create_user_block('vk', db_data);
+            break;
+        case 'youtube_users':
+            create_user_block('youtube', db_data);
+            break;
+        case 'twitchchat':
+            create_user_block('twitchchat', db_data);
+            break;
+        default:
+            console.log('no action');
+            break;
+    }
+};
+
+function isJSON(str) {
+    try {
+        JSON.parse(str.toString());
+    } catch (e) {
+        return false;
+    }
+    return true;
 }
 
 function create_user_block(platform, data){
@@ -143,9 +235,9 @@ function user_select(platform){
     }
 }
 
-function toggle_only_tracking(action, value){
-    is_only_tracking[value] = !is_only_tracking[value];
-    connection.send(JSON.stringify({action, data: {value: is_only_tracking[value]}}));
+function toggle_tracking_filter(action, value){
+    tracking_filter[value] = !tracking_filter[value];
+    connection.send(JSON.stringify({action, data: {value: tracking_filter[value]}}));
 }
 
 function createOption(select, text, value){
@@ -179,79 +271,3 @@ function selectLastSelectedOption (selector, option_value) {
         $(selector + ' option:first').prop('selected', true);
     }
 }
-
-$(document).ready(function(){
-    $('#botchannel_delete').click(function(e){
-        let deleted_channel_id = $('#botchannels_channels').find(":selected").val().toString();
-        deleteOption('botchannel_delete', {id: deleted_channel_id});
-        $("#botchannels_channels option[value='"+deleted_channel_id+"']").remove();
-    });
-});
-
-connection.onopen = () => {
-    connection.onclose = (ev=>{
-        console.error('connection close');
-        console.log(ev);
-    });
-    
-    connection.onerror = (err=>{
-        console.error('connection error');
-        console.log(err);
-    });
-
-    connection.send(JSON.stringify({action: "connect"}));
-};
-
-connection.onmessage = (data) => {
-
-    if (!isJSON(data.data)) {
-        console.error('is not json');
-        return false;
-    }
-
-    var data_json = JSON.parse(data.data);
-    var db_data = data_json.data;
-
-    if (!data_json.action){
-        console.error('undefined action');
-        return false;
-    }
-
-    switch (data_json.action){
-        case 'guildids':
-            console.log('servers', data_json.data);
-            break;
-        case 'botchannels':
-            clearSelect('#botchannels_guildids');
-            botchannels_guilds = db_data;
-            for (let botchannels of botchannels_guilds){
-                createOption('#botchannels_guildids', botchannels[0].guildid, botchannels[0].guildid );
-            }
-            selectLastSelectedOption( '#botchannels_guildids', botchannels_guildid_selected );
-            if ($('#botchannels_channels').find("option").length == 0) {
-                $('#botchannels_guildids').trigger('change');
-            }
-            break;
-        case 'osuprofiles':
-            create_user_block('osu', db_data);
-            break;
-        case 'steamusers':
-            create_user_block('steam', db_data);
-            break;
-        case 'trovousers':
-            create_user_block('trovo', db_data);
-            break;
-        case 'twitchusers':
-            create_user_block('twitch', db_data);
-            break;
-        case 'vkusers':
-            create_user_block('vk', db_data);
-            break;
-        case 'youtube_users':
-            create_user_block('youtube', db_data);
-            break;
-        default:
-            console.log('no action');
-            break;
-    }
-};

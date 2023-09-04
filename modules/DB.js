@@ -562,7 +562,6 @@ async function MYSQL_GET_ALL(action, params = {}){
         break 
         case `twitchchat`:
             condition = params?params:{};
-            condition.tracking = true;
             MysqlModel = TwitchChatData;
         break 
         case `osuprofile`:

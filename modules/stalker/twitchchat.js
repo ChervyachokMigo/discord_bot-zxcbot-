@@ -254,7 +254,7 @@ function boldSelectedWords(regexp, str){
 }
 
 async function MYSQL_GET_TRACKING_TWITCH_CHATS (){
-    let mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('twitchchat'));
+    let mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('twitchchat', {tracking: true}));
     var usernames = [];
     if (mysql_data.length > 0){
         usernames = GET_VALUES_FROM_OBJECT_BY_KEY(mysql_data, 'username');

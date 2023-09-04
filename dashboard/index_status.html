@@ -24,7 +24,7 @@
           <div class="osu_profiles">
             <h2>Osu profiles</h2>
             <div class="checkboxes">
-              <input type="checkbox" id="osuprofiles_only_tracking" onchange="toggle_only_tracking('osuprofiles_only_tracking', 'osu_profiles');">only tracking
+              <input type="checkbox" id="osuprofiles_only_tracking" onchange="toggle_tracking_filter('osuprofiles_only_tracking', 'osu_profiles');">only tracking
             </div>
             user<select name="osuprofiles_userids" id="osuprofiles_userids" onchange="user_select('osu');"></select>
             tracking<select name="osuprofiles_tracking" id="osuprofiles_tracking" onchange="send_selected_option(this);"></select>
@@ -32,7 +32,7 @@
           <div class="steam_users">
             <h2>Steam users</h2>
             <div class="checkboxes">
-              <input type="checkbox" id="steam_only_tracking" onchange="toggle_only_tracking('steamuser_only_tracking', 'steamusers');">only tracking
+              <input type="checkbox" id="steam_only_tracking" onchange="toggle_tracking_filter('steamuser_only_tracking', 'steamusers');">only tracking
             </div>
             user<select name="steam_ids" id="steam_ids" onchange="user_select('steam');"></select>
             tracking<select name="steam_tracking" id="steam_tracking" onchange="send_selected_option(this);"></select>
@@ -40,8 +40,8 @@
           <div class="vk_users">
             <h2>VK users</h2>
             <div class="checkboxes">
-              <input type="checkbox" id="vk_users_only_tracking" onchange="toggle_only_tracking('vk_users_only_tracking', 'vk_users');">only tracking
-              <input type="checkbox" id="vk_friends_only_tracking" onchange="toggle_only_tracking('vk_friends_only_tracking', 'vk_friends');">only friends tracking
+              <input type="checkbox" id="vk_users_only_tracking" onchange="toggle_tracking_filter('vk_users_only_tracking', 'vk_users');">only tracking
+              <input type="checkbox" id="vk_friends_only_tracking" onchange="toggle_tracking_filter('vk_friends_only_tracking', 'vk_friends');">only friends tracking
             </div>
             user<select name="vk_ids" id="vk_ids" onchange="user_select('vk');"></select>
             tracking<select name="vk_users_tracking" id="vk_users_tracking" onchange="send_selected_option(this);"></select>
@@ -50,9 +50,9 @@
           <div class="trovo">
             <h2>Trovo</h2>
             <div class="checkboxes">
-              <input type="checkbox" id="trovo_only_tracking" onchange="toggle_only_tracking('trovo_user_only_tracking', 'trovo_users');">only tracking
-              <input type="checkbox" id="trovo_only_followers_tracking" onchange="toggle_only_tracking('trovo_user_only_followers_tracking', 'trovo_followers');">only followers tracking
-              <input type="checkbox" id="trovo_only_records" onchange="toggle_only_tracking('trovo_user_only_records', 'trovo_records');">only records
+              <input type="checkbox" id="trovo_only_tracking" onchange="toggle_tracking_filter('trovo_user_only_tracking', 'trovo_users');">only tracking
+              <input type="checkbox" id="trovo_only_followers_tracking" onchange="toggle_tracking_filter('trovo_user_only_followers_tracking', 'trovo_followers');">only followers tracking
+              <input type="checkbox" id="trovo_only_records" onchange="toggle_tracking_filter('trovo_user_only_records', 'trovo_records');">only records
             </div>
             user<select name="trovo_user_ids" id="trovo_user_ids" onchange="user_select('trovo');"></select>
             tracking<select name="trovo_user_tracking" id="trovo_user_tracking" onchange="send_selected_option(this);"></select>
@@ -62,11 +62,11 @@
           <div class="twitch">
             <h2>Twitch</h2>
             <div class="checkboxes">
-              <input type="checkbox" id="twitch_only_tracking" onchange="toggle_only_tracking('twitch_only_tracking', 'twitch_users');">only tracking
-              <input type="checkbox" id="twitch_only_followers_tracking" onchange="toggle_only_tracking('twitch_only_followers_tracking', 'twitch_followers');">only followers tracking
-              <input type="checkbox" id="twitch_only_records" onchange="toggle_only_tracking('twitch_only_records', 'twitch_records');">only records
-              <input type="checkbox" id="twitch_only_clips_tracking" onchange="toggle_only_tracking('twitch_only_clips_tracking', 'twitch_clips');">only clips tracking
-              <input type="checkbox" id="twitch_only_clips_records" onchange="toggle_only_tracking('twitch_only_clips_records', 'twitch_clips_records');">only clips records
+              <input type="checkbox" id="twitch_only_tracking" onchange="toggle_tracking_filter('twitch_only_tracking', 'twitch_users');">only tracking
+              <input type="checkbox" id="twitch_only_followers_tracking" onchange="toggle_tracking_filter('twitch_only_followers_tracking', 'twitch_followers');">only followers tracking
+              <input type="checkbox" id="twitch_only_records" onchange="toggle_tracking_filter('twitch_only_records', 'twitch_records');">only records
+              <input type="checkbox" id="twitch_only_clips_tracking" onchange="toggle_tracking_filter('twitch_only_clips_tracking', 'twitch_clips');">only clips tracking
+              <input type="checkbox" id="twitch_only_clips_records" onchange="toggle_tracking_filter('twitch_only_clips_records', 'twitch_clips_records');">only clips records
             </div>
             user<select name="twitch_user_ids" id="twitch_user_ids" onchange="user_select('twitch');"></select>
             tracking<select name="twitch_user_tracking" id="twitch_user_tracking" onchange="send_selected_option(this);"></select>
@@ -75,13 +75,25 @@
             clips tracking<select name="twitch_user_clips_tracking" id="twitch_user_clips_tracking" onchange="send_selected_option(this);"></select>
             clips records<select name="twitch_user_clips_records" id="twitch_user_clips_records" onchange="send_selected_option(this);"></select>
           </div>
+          <div class="twitchchat">
+            <h2>Twitch chat</h2>
+            <div class="checkboxes">
+              <input type="checkbox" id="twitchchat_only_tracking" onchange="toggle_tracking_filter('twitchchat_only_tracking', 'twitchchat');">only tracking
+            </div>
+            channel<select name="twitchchat_ids" id="twitchchat_ids" onchange="user_select('twitchchat');"></select>
+            tracking<select name="twitchchat_tracking" id="twitchchat_tracking" onchange="send_selected_option(this);"></select>
+          </div>
           <div class="youtube">
             <h2>Youtube</h2>
             <div class="checkboxes">
-              <input type="checkbox" id="youtube_only_tracking" onchange="toggle_only_tracking('youtube_only_tracking', 'youtube');">only tracking
+              <input type="checkbox" id="youtube_only_tracking" onchange="toggle_tracking_filter('youtube_only_tracking', 'youtube');">only tracking
             </div>
             channel<select name="youtube_ids" id="youtube_ids" onchange="user_select('youtube');"></select>
             tracking<select name="youtube_tracking" id="youtube_tracking" onchange="send_selected_option(this);"></select>
+          </div>
+          <div class="controls">
+            <h2>Controls</h2>
+            <button id="bot_restart" type="button" name="bot_restart" value="bot_restart">Restart Bot</button>
           </div>
         </div>
     </div>

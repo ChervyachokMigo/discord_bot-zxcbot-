@@ -7,7 +7,8 @@ require('../../settings.js');
 const fs = require('fs');
 const WebSocket = require('ws');
 const webs = new WebSocket.WebSocketServer({ port: 8888 });
-const db = require("../../modules/DB.js")
+const db = require("../../modules/DB.js");
+const {log} = require("../../tools/log.js");
 
 function isJSON(str) {
     try {
@@ -35,7 +36,8 @@ const tracking_change_deps = [
     {action: 'twitch_user_clips_records_change', table_name: 'twitchdata', user_key: 'userid', value_key: 'clipsRecords'},
     {action: 'vk_user_tracking_change', table_name: 'vkuser', user_key: 'userid', value_key: 'tracking'},
     {action: 'vk_friends_tracking_change', table_name: 'vkuser', user_key: 'userid', value_key: 'friendsTracking'},
-    {action: 'youtube_tracking_change', table_name: 'youtubechannel', user_key: 'id', value_key: 'tracking'}
+    {action: 'youtube_tracking_change', table_name: 'youtubechannel', user_key: 'id', value_key: 'tracking'},
+    {action: 'twitchchat_tracking_change', table_name: 'twitchchat', user_key: 'id', value_key: 'tracking'}
 ];
 
 const tracking_filter_deps = [
@@ -51,7 +53,20 @@ const tracking_filter_deps = [
     {action: 'twitch_only_clips_records', value_key: 'twitch_clips_records'},
     {action: 'vk_users_only_tracking', value_key: 'vk_users'},
     {action: 'vk_friends_only_tracking', value_key: 'vk_friends'},
-    {action: 'youtube_only_tracking', value_key: 'youtube'}
+    {action: 'youtube_only_tracking', value_key: 'youtube'},
+    {action: 'twitchchat_only_tracking', value_key: 'twitchchat'}
+];
+
+const db_data_deps = [
+    {tablename: 'osuprofile', action: 'osuprofiles', tracking_props: {osuprofiles: 'tracking'} },
+    {tablename: 'steamuser', action: 'steamusers', tracking_props: {steamusers: 'tracking'} },
+    {tablename: 'streamersTrovo', action: 'trovousers', tracking_props: {trovo_users: 'tracking', 
+    trovo_followers: 'followersTracking', trovo_records: 'records'} },
+    {tablename: 'streamersTwitch', action: 'twitchusers', tracking_props: {twitch_users: 'tracking', twitch_followers: 'followersTracking',
+    twitch_records: 'records', twitch_clips: 'clipsTracking', twitch_clips_records: 'clipsRecords' } },
+    {tablename: 'vkuser', action: 'vkusers', tracking_props: {vk_users: 'tracking', vk_friends: 'friendsTracking'} },
+    {tablename: 'youtubechannel', action: 'youtube_users', tracking_props: {youtube: 'tracking'} },
+    {tablename: 'twitchchat', action: 'twitchchat', tracking_props: {twitchchat: 'tracking'} }
 ];
 
 module.exports = {
@@ -60,7 +75,7 @@ module.exports = {
         app.use(bodyParser.urlencoded({ extended: false }));
 
         app.listen(HTTP_PORT, ()=>{
-            console.log(`Webserver listening on http://localhost:${HTTP_PORT}!`);
+            log(`Webserver listening on http://localhost:${HTTP_PORT}!`, 'Dashboard');
         });
 
         app.on('error', (e) => {
@@ -80,9 +95,7 @@ module.exports = {
         app.post('/save_settings', async (req, res) => {
             try{
                 var settings = {};
-                console.log('recev data', req.body)
                 settings = req.body;
-                console.log('post save_settings', settings);
                 fs.writeFileSync('../settings.json', JSON.stringify(settings) );
                 console.log('settings saved');
                 res.send('settings saved');
@@ -94,7 +107,6 @@ module.exports = {
         app.post('/load_all_settings', async (req, res) => {
             try{
                 let settings = fs.readFileSync('../settings.json', 'utf-8');
-                console.log('post init settings', JSON.parse(settings));
                 res.send(JSON.parse(settings));
             } catch (err){
                 console.error(err);
@@ -107,9 +119,9 @@ module.exports = {
     setDiscordData: async (client) => {
         webs.on('connection', function connection(ws) {
             ws.id = new Date().getTime();
-            console.log('new connection, id: ', ws.id);
+            log('new connection, id: '+ws.id, 'Dashboard');
 
-            ws.only_tracking = {
+            ws.tracking_filter = {
                 osuprofiles: false,
                 steamusers: false,
                 trovo_users: false,
@@ -122,7 +134,8 @@ module.exports = {
                 twitch_clips_records: false,
                 vk_users: false,
                 vk_friends: false,
-                youtube: false
+                youtube: false,
+                twitchchat: false
             }
 
             clients.push(ws);
@@ -130,11 +143,16 @@ module.exports = {
             ws.on('error', console.error);
         
             ws.on('close', ()=> {
-                console.log('connection closed, id: ', ws.id)
+                log('connection closed, id: '+ws.id, 'Dashboard');
+                for (let i in clients){
+                    if (clients[i].id === ws.id){
+                        clients.splice(i, 1);
+                    }
+                }
             });
 
             ws.on('message', async function message(data) {
-                console.log('received: %s', data);
+                log('received: '+data, 'Dashboard');
                 if (isJSON(data)){
                     var data_json = JSON.parse(data);
                     var db_data = data_json.data;
@@ -148,7 +166,7 @@ module.exports = {
 
                         for (let val of tracking_filter_deps) {
                             if (val.action === data_json.action) {
-                                set_only_tracking(ws.id, val.value_key, db_data);
+                                set_tracking_filter(ws.id, val.value_key, db_data);
                                 break;
                             }
                         }
@@ -156,13 +174,15 @@ module.exports = {
                         switch (data_json.action){
                             case 'botchannel_delete':
                                 if (typeof db_data.id !== 'undefined' && db_data.id !== null){
-                                    console.log('delete bot channel', db_data.id);
+                                    log('delete bot channel'+db_data.id, 'Dashboard');
                                     await db.MYSQL_DELETE('botchannel', {id: db_data.id});
                                 }
                                 break;
                             case 'connect':
                                 main_loop = setInterval( response, 5000 );
                                 break;
+                            case 'bot_restart':
+                                throw new Error('restart');
                         }
                         response();
                         main_loop.refresh();
@@ -181,14 +201,9 @@ module.exports = {
                 botchannels = groupBy(botchannels, 'guildid');
                 ws.send(JSON.stringify({action:'botchannels', data: botchannels}));
 
-                await send_db_data(ws, 'osuprofile', 'osuprofiles',  {osuprofiles: 'tracking'});
-                await send_db_data(ws, 'steamuser', 'steamusers',  {steamusers: 'tracking'});
-                await send_db_data(ws, 'streamersTrovo', 'trovousers',  {trovo_users: 'tracking', 
-                    trovo_followers: 'followersTracking', trovo_records: 'records'});
-                await send_db_data(ws, 'streamersTwitch', 'twitchusers',  {twitch_users: 'tracking', twitch_followers: 'followersTracking',
-                    twitch_records: 'records', twitch_clips: 'clipsTracking', twitch_clips_records: 'clipsRecords' });
-                await send_db_data(ws, 'vkuser', 'vkusers', {vk_users: 'tracking', vk_friends: 'friendsTracking'});
-                await send_db_data(ws, 'youtubechannel', 'youtube_users', {youtube: 'tracking'});
+                for (let data of db_data_deps){
+                    await send_db_data(ws, data.tablename, data.action, data.tracking_props);
+                }
             }
         });
     }
@@ -227,14 +242,14 @@ async function update_db_user_value(tablename, action, db_data, user_key, value_
     await db.MYSQL_SAVE(tablename, { [user_key]: db_data.userid }, {[value_key]: db_data.value} );
 }
 
-function set_only_tracking (ws_id, value_key, data) {
+function set_tracking_filter (ws_id, value_key, data) {
     if (typeof data.value === 'undefined' || data.value === null || typeof value_key === 'undefined' || value_key === null) {
         console.error('undefined data', data, value_key);
     }
 
     for (let i in clients){
         if (clients[i].id === ws_id){
-            clients[i].only_tracking[value_key] = data.value;
+            clients[i].tracking_filter[value_key] = data.value;
         }
     }
 }
@@ -250,6 +265,6 @@ function get_tracking_multiply(obj, props){
 }
 
 async function send_db_data(conn, tablename, action, tracking_props) {
-    let data = db.MYSQL_GET_ALL_RESULTS_TO_ARRAY (await db.MYSQL_GET_ALL(tablename, get_tracking_multiply(conn.only_tracking, tracking_props)));
+    let data = db.MYSQL_GET_ALL_RESULTS_TO_ARRAY (await db.MYSQL_GET_ALL(tablename, get_tracking_multiply(conn.tracking_filter, tracking_props)));
     conn.send(JSON.stringify({action, data}));
 }
