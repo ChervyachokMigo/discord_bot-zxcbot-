@@ -1,8 +1,7 @@
 const { MYSQL_SAVE, MYSQL_GET_ALL, MYSQL_GET_ONE, MYSQL_GET_ALL_RESULTS_TO_ARRAY, 
-    manageGuildServiceTracking, getTrackingUsersForGuild, getGuildidsOfTrackingUserService } = require("../DB.js");
+    manageGuildServiceTracking, getTrackingInfo, getGuildidsOfTrackingUserService } = require("../DB.js");
 const { LogString, log } = require("../../tools/log.js");
 const { GET_VALUES_FROM_OBJECT_BY_KEY } = require("../../modules/tools.js");
-const { SendAnswer } = require("../../tools/embed.js");
 
 const { getTwitchFolowers, getTwitchUserStatus, getLastTwitchClips, getTwitchUserID } = require (`../../modules/stalker/requests.js`);
 const { DownloadClip, VideoDirectoryCheck, StartRecording } = require (`../../modules/stalker/records.js`);
@@ -65,43 +64,14 @@ module.exports = {
     },
 
     TWITCH_TRACKING_INFO: async function(message){
-        var mysql_data = await getTrackingUsersForGuild(message.guild.id, 'twitch_tracking', 'streamersTwitch');
-        if (mysql_data.length > 0){
-            let MessageFields = [];
-            var usernamesFields = '';
-            var followersFields = '';
-            var clipsFields = ''; 
-            var recordsFields = '';
-            var clipsRecordsFields = '';
-            for (let userdata of mysql_data){
-                userdata.followersTracking = userdata.followersTracking==true?`**${userdata.followersTracking}**`:userdata.followersTracking;
-                userdata.clipsTracking = userdata.clipsTracking==true?`**${userdata.clipsTracking}**`:userdata.clipsTracking;
-                userdata.records = userdata.records==true?`**${userdata.records}**`:userdata.records;
-                userdata.clipsRecordsFields = userdata.clipsRecordsFields==true?`**${userdata.clipsRecordsFields}**`:userdata.clipsRecordsFields;
-                usernamesFields += `${userdata.username.toString()}\n`;
-                followersFields += `${userdata.followersTracking.toString()}\n`;
-                clipsFields += `${userdata.clipsTracking.toString()}\n`;
-                recordsFields += `${userdata.records.toString()}\n`;
-                clipsRecordsFields += `${userdata.records.toString()}\n`;
-            }
-            MessageFields.push ({name: 'Username', value: usernamesFields, inline: true});
-            MessageFields.push ({name: 'followers tracking', value: followersFields, inline: true});
-            MessageFields.push ({name: 'clips tracking', value: clipsFields, inline: true});
-            MessageFields.push ({name: 'records', value: recordsFields, inline: true});
-            MessageFields.push ({name: 'clips records', value: clipsRecordsFields, inline: true});
-            await SendAnswer( {channel:  message.channel,
-                    guildname: message.guild.name,
-                    messagetype: `info`,
-                    title: `${emoji_twitch} ${moduleName}`,
-                    text: `Tracking users info`,
-                    fields: MessageFields} );
-        } else {
-            await SendAnswer( {channel:  message.channel,
-                guildname: message.guild.name,
-                messagetype: `info`,
-                title: `${emoji_twitch} ${moduleName}`,
-                text: `No tracking users`}  );
-        }
+        const fieldsMapping = [
+            { name: 'Username', key: 'username' },
+            { name: 'followers tracking', key: 'followersTracking' },
+            { name: 'records', key: 'records' },
+            { name: 'clips tracking', key: 'clipsTracking' },
+            { name: 'clips records', key: 'clipsRecords' },
+        ];
+        await getTrackingInfo(message, 'streamersTwitch', 'twitch', emoji_twitch, moduleName, fieldsMapping);
     },
 
     checkTwitchStatus: async function (stalkerEvents){

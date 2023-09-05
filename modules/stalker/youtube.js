@@ -5,13 +5,11 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 
 const { MYSQL_SAVE, MYSQL_GET_ALL, MYSQL_GET_ONE, MYSQL_GET_ALL_RESULTS_TO_ARRAY, 
-    manageGuildServiceTracking, getTrackingUsersForGuild, getGuildidsOfTrackingUserService } = require("../DB.js");
+    manageGuildServiceTracking, getTrackingInfo, getGuildidsOfTrackingUserService } = require("../DB.js");
 
-const { SendAnswer } = require("../../tools/embed.js");
 const { CreateFolderSync_IsNotExists } = require('../../modules/tools.js');
 const { getDiscordRelativeTime } = require('../../tools/time.js');
 const { log } = require("../../tools/log.js");
-const { GET_VALUES_FROM_OBJECT_BY_KEY } = require('../../modules/tools.js');
 
 const { youtube_scopes } = require('../../settings.js');
 const { emoji_youtube } = require("../../constantes/emojis.js");
@@ -304,31 +302,11 @@ module.exports = {
     },
     
     YOUTUBE_TRACKING_INFO: async function (message){
-        var mysql_data = await getTrackingUsersForGuild(message.guild.id, 'youtube_tracking', 'youtubechannel');
-        if (mysql_data.length>0){
-            let MessageFields = [];
-            var usernamesFields = '';
-            var useridsFields = '';
-            for (let userdata of mysql_data){
-                useridsFields += `${userdata.channelid.toString()}\n`;
-                usernamesFields += `${userdata.channelname.toString()}\n`;
-            }
-            MessageFields.push ({name: 'Channel ID', value: useridsFields, inline: true});
-            MessageFields.push ({name: 'Channel Name', value: usernamesFields, inline: true});
-            await SendAnswer( {channel:  message.channel,
-                guildname: message.guild.name,
-                messagetype: `info`,
-                title: `${emoji_youtube} ${moduleName}`,
-                text: `Tracking channels info`,
-                fields: MessageFields} );
-
-        } else {
-            await SendAnswer( {channel:  message.channel,
-                guildname: message.guild.name,
-                messagetype: `info`,
-                title: `${emoji_youtube} ${moduleName}`,
-                text: `No tracking channels`} );
-        }
+        const fieldsMapping = [
+            { name: 'Channel ID', key: 'channelid' },
+            { name: 'Channel Name', key: 'channelname' }
+        ];
+        await getTrackingInfo(message, 'youtubechannel', 'youtube', emoji_youtube, moduleName, fieldsMapping);
     },
 
     checkYoutubeVideos: async function (stalkerEvents){

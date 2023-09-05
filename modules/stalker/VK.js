@@ -42,10 +42,10 @@ userWallNew.groups[i].name
 */
 
 const { MYSQL_SAVE, MYSQL_GET_ALL, MYSQL_GET_ONE, MYSQL_DELETE, MYSQL_GET_ALL_RESULTS_TO_ARRAY, 
-    manageGuildServiceTracking, getTrackingUsersForGuild, getGuildidsOfTrackingUserService  } = require("../DB.js");
+    manageGuildServiceTracking, getTrackingInfo, getGuildidsOfTrackingUserService  } = require("../DB.js");
 const { LogString, log } = require("../../tools/log.js");
 const { GET_VALUES_FROM_OBJECT_BY_KEY, getNumberWithSign } = require("../../modules/tools.js");
-const { SendAnswer } = require("../../tools/embed.js");
+
 const { getVKUsersData, getVKUserFriendsCount, getVKUserWall, getVKClubWall } = require (`../../modules/stalker/requests.js`);
 const { getTimeMSKToStringFormat, getDiscordRelativeTime, timeAgo } = require('../../tools/time.js');
 
@@ -79,33 +79,13 @@ module.exports = {
     },
 
     VK_TRACKING_INFO: async function (message){
-        var mysql_data = await getTrackingUsersForGuild(message.guild.id, 'vkprofile_tracking', 'vkuser');
-        if (mysql_data.length > 0){
-            let MessageFields = [];
-            var usernamesFields = '';
-            var useridsFields = '';
-            var friendsFields = '';
-            for (let userdata of mysql_data){
-                useridsFields += `${userdata.userid.toString()}\n`;
-                usernamesFields += `${userdata.name1.toString()} ${userdata.name2.toString()}\n`;
-                friendsFields += `${userdata.friendsTracking.toString()}\n`;
-            }
-            MessageFields.push ({name: 'User ID', value: useridsFields, inline: true});
-            MessageFields.push ({name: 'Username', value: usernamesFields, inline: true});
-            MessageFields.push ({name: 'Friends Tracking', value: friendsFields, inline: true});
-            await SendAnswer( {channel:  message.channel,
-                guildname: message.guild.name,
-                messagetype: `info`,
-                title: `${emoji_vk} ${moduleName}`,
-                text: `Tracking users info`,
-                fields: MessageFields} );
-        } else {
-            await SendAnswer( {channel:  message.channel,
-                guildname: message.guild.name,
-                messagetype: `info`,
-                title: `${emoji_vk} ${moduleName}`,
-                text: `No tracking users`} );
-        }
+        const fieldsMapping = [
+            { name: 'User ID', key: 'userid' },
+            { name: 'First Name', key: 'name1' },
+            { name: 'Last Name', key: 'name2' },
+            { name: 'Friends Tracking', key: 'friendsTracking' },
+        ];
+        await getTrackingInfo(message, 'vkuser', 'vkprofile', emoji_vk, moduleName, fieldsMapping);
     },
 
     checkVKstatus: async function (stalkerEvents){

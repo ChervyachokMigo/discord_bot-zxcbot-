@@ -1,10 +1,9 @@
 const { MYSQL_SAVE, MYSQL_GET_ALL, MYSQL_GET_ALL_RESULTS_TO_ARRAY, MYSQL_GET_ONE,
-    manageGuildServiceTracking, getTrackingUsersForGuild, getGuildidsOfTrackingUserService } = require("../DB.js");
+    manageGuildServiceTracking, getTrackingInfo, getGuildidsOfTrackingUserService } = require("../DB.js");
 const { getSteamUserData } = require (`../../modules/stalker/requests.js`);
 const { LogString, log } = require("../../tools/log.js");
 const { getTimeMSKToStringFormat, getDiscordRelativeTime } = require('../../tools/time.js');
 const { GET_VALUES_FROM_OBJECT_BY_KEY } = require("../../modules/tools.js");
-const { SendAnswer } = require("../../tools/embed.js");
 
 const { emoji_steam } = require("../../constantes/emojis.js");
 
@@ -45,30 +44,11 @@ module.exports = {
     },
 
     STEAM_TRACKING_INFO: async function (message){
-        var mysql_data = await getTrackingUsersForGuild(message.guild.id, 'steamprofile_tracking', 'steamuser');
-        if (mysql_data.length > 0){
-            let MessageFields = [];
-            var usernamesFields = '';
-            var useridsFields = '';
-            for (let userdata of mysql_data){
-                useridsFields += `${userdata.steamid.toString()}\n`;
-                usernamesFields += `${userdata.username.toString()}\n`;
-            }
-            MessageFields.push ({name: 'User ID', value: useridsFields, inline: true});
-            MessageFields.push ({name: 'Username', value: usernamesFields, inline: true});
-            await SendAnswer( {channel:  message.channel,
-                guildname: message.guild.name,
-                messagetype: `info`,
-                title: `${emoji_steam} ${moduleName}`,
-                text: `Tracking users info`,
-                fields: MessageFields} );
-        } else {
-            await SendAnswer( {channel:  message.channel,
-                guildname: message.guild.name,
-                messagetype: `info`,
-                title: `${emoji_steam} ${moduleName}`,
-                text: `No tracking users`} );
-        }
+        const fieldsMapping = [
+            { name: 'User ID', key: 'steamid' },
+            { name: 'Username', key: 'username' },
+        ];
+        await getTrackingInfo(message, 'steamuser', 'steamprofile', emoji_steam, moduleName, fieldsMapping);
     },
 
     checkChangesSteamUser: async function (stalkerEvents){

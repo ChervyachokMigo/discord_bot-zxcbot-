@@ -1,9 +1,9 @@
 const { v2 } = require ('osu-api-extended');
 
 const { MYSQL_SAVE, MYSQL_GET_ALL, MYSQL_GET_ALL_RESULTS_TO_ARRAY, MYSQL_GET_ONE, 
-    manageGuildServiceTracking, getTrackingUsersForGuild, getGuildidsOfTrackingUserService } = require("../DB.js");
+    manageGuildServiceTracking, getTrackingInfo, getGuildidsOfTrackingUserService } = require("../DB.js");
 const { getTimeMSKToStringFormat, timeAgo, getDiscordRelativeTime } = require('../../tools/time.js');
-const { getNumberWithSign, getFixedFloat,  GET_VALUES_FROM_OBJECT_BY_KEY } = require("../../modules/tools.js");
+const { getNumberWithSign, getFixedFloat } = require("../../modules/tools.js");
 const { LogString, log } = require("../../tools/log.js");
 const { SendAnswer, SendError } = require("../../tools/embed.js")
 
@@ -172,31 +172,11 @@ module.exports = {
     },
 
     OSU_TRACKING_INFO: async function (message){
-        var mysql_data = await getTrackingUsersForGuild(message.guild.id, 'osuprofile_tracking', 'osuprofile');
-        console.log('OSU_TRACKING_INFO','guild',message.guild.id,'data', mysql_data)
-        if (mysql_data.length > 0){
-            let MessageFields = [];
-            var usernamesFields = '';
-            var useridsFields = '';
-            for (let userdata of mysql_data){
-                useridsFields += `${userdata.userid.toString()}\n`;
-                usernamesFields += `${userdata.username.toString()}\n`;
-            }
-            MessageFields.push ({name: 'User ID', value: useridsFields, inline: true});
-            MessageFields.push ({name: 'Username', value: usernamesFields, inline: true});
-            await SendAnswer( {channel:  message.channel,
-                guildname: message.guild.name,
-                messagetype: `info`,
-                title: `${emoji_osu} ${moduleName}`,
-                text: `Tracking users info`,
-                fields: MessageFields} );
-        } else {
-            await SendAnswer( {channel:  message.channel,
-                guildname: message.guild.name,
-                messagetype: `info`,
-                title: `${emoji_osu} ${moduleName}`,
-                text: `No tracking users`});
-        }
+        const fieldsMapping = [
+            { name: 'User ID', key: 'userid' },
+            { name: 'Username', key: 'username' }
+        ];
+        await getTrackingInfo(message, 'osuprofile', 'osuprofile', emoji_osu, moduleName, fieldsMapping);
     },
 
     MYSQL_OSU_USER_TRACKING_CHANGE: async function(message, userid, option){

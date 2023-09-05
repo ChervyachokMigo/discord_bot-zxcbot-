@@ -1,11 +1,11 @@
 var player = require('play-sound')(opts = {player:'mplayer'});
 
 const { MYSQL_SAVE, MYSQL_GET_ONE, MYSQL_GET_ALL, MYSQL_GET_ALL_RESULTS_TO_ARRAY, 
-    manageGuildServiceTracking, getTrackingUsersForGuild, getGuildidsOfTrackingUserService } = require("../DB.js");
+    manageGuildServiceTracking, getTrackingInfo, getGuildidsOfTrackingUserService } = require("../DB.js");
 const { getTrovoUserStatus, getTrovoUserID, getTrovoClips } = require (`../../modules/stalker/requests.js`);
 const { LogString, log } = require("../../tools/log.js");
 const { getNumberWithSign } = require("../../modules/tools.js");
-const { SendAnswer } = require("../../tools/embed.js");
+
 const { DownloadClip, VideoDirectoryCheck, StartRecording } = require (`../../modules/stalker/records.js`);
 
 const { modules_stalker } = require('../../settings.js');
@@ -55,35 +55,12 @@ module.exports = {
     },
 
     TROVO_TRACKING_INFO: async function(message){
-        var mysql_data = await getTrackingUsersForGuild(message.guild.id, 'trovo_tracking', 'streamersTrovo');
-        if (mysql_data.length > 0){
-            let MessageFields = [];
-            var usernamesFields = '';
-            var followersFields = '';
-            var recordsFields = '';
-            for (let userdata of mysql_data){
-                userdata.followersTracking = userdata.followersTracking==true?`**${userdata.followersTracking}**`:userdata.followersTracking;
-                userdata.records = userdata.records==true?`**${userdata.records}**`:userdata.records;
-                usernamesFields += `${userdata.username.toString()}\n`;
-                followersFields += `${userdata.followersTracking.toString()}\n`;
-                recordsFields += `${userdata.records.toString()}\n`;
-            }
-            MessageFields.push ({name: 'Username', value: usernamesFields, inline: true});
-            MessageFields.push ({name: 'followers tracking', value: followersFields, inline: true});
-            MessageFields.push ({name: 'records', value: recordsFields, inline: true});
-            await SendAnswer( {channel:  message.channel,
-                guildname: message.guild.name,
-                messagetype: `info`,
-                title: `${emoji_trovo} ${moduleName}`,
-                text: `Tracking users info`,
-                fields: MessageFields} );
-        } else {
-            await SendAnswer( {channel:  message.channel,
-                guildname: message.guild.name,
-                messagetype: `info`,
-                title: `${emoji_trovo} ${moduleName}`,
-                text: `No tracking users`} );
-        }
+        const fieldsMapping = [
+            { name: 'Username', key: 'username' },
+            { name: 'followers tracking', key: 'followersTracking' },
+            { name: 'records', key: 'records' }
+        ];
+        await getTrackingInfo(message, 'streamersTrovo', 'trovo', emoji_trovo, moduleName, fieldsMapping);
     },
 
     checkTrovoFollowers: async function(stalkerEvents){

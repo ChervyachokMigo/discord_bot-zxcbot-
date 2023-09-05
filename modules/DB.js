@@ -2,8 +2,10 @@ const { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME } = require("../config.j
 const { coins_max } = require("../settings.js");
 
 const { LogString, log } = require("../tools/log.js");
+const { SendAnswer } = require("../tools/embed.js");
 
 const { Sequelize, DataTypes, Op } = require('@sequelize/core');
+const { table_id_names } = require("../constantes/table_id_names.js");
 
 const mysql = new Sequelize( DB_NAME, DB_USER, DB_PASSWORD, { 
     dialect: `mysql`,
@@ -242,7 +244,6 @@ const osuHunterTrackingUser = mysql.define ('osuHunterTrackingUser', {
 });
 
 
-
 function updateAll(Model, condition, values ){
     return Model.update(values, {where : condition, logging: ''})
 }
@@ -267,8 +268,77 @@ function upsert(Model, values, condition) {
         })
 }
 
+function select_mysql_model (action){
+    let MysqlModel;
+
+    switch (action) {
+        case `daily`:
+        case `user`:
+            MysqlModel = User; break;
+        case `voiceroles_clear`:
+        case `voiceroles`:
+        case 'role':
+            MysqlModel = Role; break;
+            case `reactionrole`:
+                MysqlModel = ReactionRole; break;
+            case `remind`:
+                MysqlModel = Remind; break;
+            case `channels_clear`:
+            case `botchannel`:
+                MysqlModel = BotChannel; break;
+            case `streamersTwitch`:
+            case `twitchdata`:
+                MysqlModel = TwitchData; break;
+            case `streamersTrovo`:
+            case `trovodata`:
+                MysqlModel = TrovoData; break;
+            case `twitchclips`:
+                MysqlModel = TwitchClips; break;
+            case `trovoclips`:
+                MysqlModel = TrovoClips; break;
+            case `steamuser`:
+                MysqlModel = SteamUserData; break;
+            case `vkuser`:
+                MysqlModel = VKUserData; break;
+            case `vkfriend`:
+                MysqlModel = VKUserFriendData; break;
+            case `twitchchat`:
+                MysqlModel = TwitchChatData; break;
+            case `osuprofile`:
+                MysqlModel = OsuProfileData; break;
+            case `osuscore`:
+                MysqlModel = OsuScoreData; break;
+            case `token`:
+                MysqlModel = Token; break;
+            case 'osuactivity':
+                MysqlModel = OsuActivity; break;
+            case 'youtubechannel':
+                MysqlModel = YoutubeChannelsData; break;
+            case 'youtubevideos':
+                MysqlModel = YoutubeVideosData; break;
+            case 'guildServicesTracking':
+                MysqlModel = guildServicesTracking; break;
+            case 'replaycache':
+                MysqlModel = replayCache; break;
+            case 'replayattachment':
+                MysqlModel = replayAttachment; break;
+            case 'nibbers':
+                MysqlModel = nibbers; break;
+            case 'guildSettings':
+                MysqlModel = guildSettings; break;
+            case 'osuHunterTrackingUser':
+                MysqlModel = osuHunterTrackingUser; break;
+        default:
+            console.error(`DB: (selectMysqlModel) undefined action: ${action}`);
+            throw new Error('unknown mysql model', action);
+    }
+
+    return MysqlModel;
+}
+
 async function MYSQL_SAVE( action, keys, values){
-    var MysqlModel;
+    const MysqlModel = select_mysql_model(action);
+
     switch (action){
         case `user`:
             if (values.coins){
@@ -279,7 +349,6 @@ async function MYSQL_SAVE( action, keys, values){
                     values.coins = 0;
                 }
             }
-            MysqlModel = User;
             break;
         case `role`:
             //или роль продается или установлена на канал
@@ -296,81 +365,7 @@ async function MYSQL_SAVE( action, keys, values){
                     values.price = coins_max
                 }
             }
-            MysqlModel = Role;
             break;
-        case `reactionrole`:
-            MysqlModel = ReactionRole;
-            break;
-        case `remind`:
-            MysqlModel = Remind;
-            break;
-        case `botchannel`:
-            MysqlModel = BotChannel;
-            break;
-        case `twitchdata`:
-            MysqlModel = TwitchData;
-            break;
-        case `trovodata`:
-            MysqlModel = TrovoData;
-            break;
-        case `twitchclips`:
-            MysqlModel = TwitchClips;
-        break
-        case `trovoclips`:
-            MysqlModel = TrovoClips;
-        break
-        case `steamuser`:
-            MysqlModel = SteamUserData;
-        break 
-        case `vkuser`:
-            MysqlModel = VKUserData;
-        break 
-        case `vkfriend`:
-            MysqlModel = VKUserFriendData;
-        break 
-        case `twitchchat`:
-            MysqlModel = TwitchChatData;
-        break 
-        case `osuprofile`:
-            MysqlModel = OsuProfileData;
-        break
-        case `osuscore`:
-            MysqlModel = OsuScoreData;
-        break
-        case `token`:
-            MysqlModel = Token;
-        break
-        case 'osuactivity':
-            MysqlModel = OsuActivity
-        break
-        case 'youtubechannel':
-            MysqlModel = YoutubeChannelsData
-        break
-        case 'youtubevideos':
-            MysqlModel = YoutubeVideosData
-        break
-        case 'guildServicesTracking':
-            MysqlModel = guildServicesTracking
-        break
-        case 'replaycache':
-            MysqlModel = replayCache
-        break
-        case 'replayattachment':
-            MysqlModel = replayAttachment
-        break
-        case 'nibbers':
-            MysqlModel = nibbers
-        break
-        case 'guildSettings':
-            MysqlModel = guildSettings
-        break
-        case 'osuHunterTrackingUser':
-            MysqlModel = osuHunterTrackingUser
-        break
-
-        default:
-            console.error (`DB: (mysql save) undefined action: ${action}`);
-            return false;
     }
     if (keys !== 0){
         values = await module.exports.MYSQL_MERGE_KEYS_VALUES(keys, values)
@@ -391,79 +386,7 @@ async function MYSQL_SAVE( action, keys, values){
 }
 
 async function MYSQL_GET_ONE(action, keys){
-    var MysqlModel;
-    switch (action){
-        case `user`:
-            MysqlModel = User;
-        break
-        case `role`:
-            MysqlModel = Role;
-        break
-        case `reactionrole`:
-            MysqlModel = ReactionRole;
-        break
-        case `botchannel`:
-            MysqlModel = BotChannel;
-        break
-        case `twitchdata`:
-            MysqlModel = TwitchData;
-        break
-        case `trovodata`:
-            MysqlModel = TrovoData;
-        break
-        case `trovoclips`:
-            MysqlModel = TrovoClips;
-        break
-        case `steamuser`:
-            MysqlModel = SteamUserData;
-        break 
-        case `vkuser`:
-            MysqlModel = VKUserData;
-        break 
-        case `twitchchat`:
-            MysqlModel = TwitchChatData;
-        break
-        case `osuprofile`:
-            MysqlModel = OsuProfileData;
-        break
-        case `osuscore`:
-            MysqlModel = OsuScoreData;
-        break
-        case `token`:
-            MysqlModel = Token;
-        break
-        case 'osuactivity':
-            MysqlModel = OsuActivity
-        break
-        case 'youtubechannel':
-            MysqlModel = YoutubeChannelsData
-        break
-        case 'youtubevideos':
-            MysqlModel = YoutubeVideosData
-        break
-        case 'guildServicesTracking':
-            MysqlModel = guildServicesTracking
-        break
-        case 'replaycache':
-            MysqlModel = replayCache
-        break
-        case 'replayattachment':
-            MysqlModel = replayAttachment
-        break
-        case 'nibbers':
-            MysqlModel = nibbers
-        break
-        case 'guildSettings':
-            MysqlModel = guildSettings
-        break
-        case 'osuHunterTrackingUser':
-            MysqlModel = osuHunterTrackingUser
-        break
-
-        default:
-            console.error(`DB: (mysql get one) undefined action: ${action}`);
-            return false;
-    }
+    const MysqlModel = select_mysql_model(action);
     try {
         return  await MysqlModel.findOne({ where: keys , logging: ''})
     } catch (e){
@@ -476,35 +399,31 @@ async function MYSQL_GET_ONE(action, keys){
 }
 
 async function MYSQL_GET_ALL(action, params = {}){
-    var MysqlModel;
+    const MysqlModel = select_mysql_model(action);
     var condition = {};
     switch (action){
         case `daily`:
-            if (typeof params.guildid === 'undefined') throw new Error('unknown guildid')
-            MysqlModel = User
+            if (typeof params.guildid === 'undefined') throw new Error('unknown guildid');
             condition = {
                 guildid: params.guildid,
                 dailynotified: false
             }
-        break
+        break;
         case `voiceroles`:
-            MysqlModel = Role
             condition = {
                 chanid: { [Op.not]: '0' }
             }
-        break
+        break;
         case `reactionrole`:
-            if (typeof params.guildid === 'undefined') throw new Error('unknown guildid')
-            if (typeof params.messageid === 'undefined') throw new Error('unknown messageid')
-            MysqlModel = ReactionRole
+            if (typeof params.guildid === 'undefined') throw new Error('unknown guildid');
+            if (typeof params.messageid === 'undefined') throw new Error('unknown messageid');
             condition = {
                 guildid: params.guildid,
                 messageid: params.messageid
             }
-        break
+        break;
         case `remind`:
-            if (typeof params.guildid === 'undefined') throw new Error('unknown guildid')
-            MysqlModel = Remind
+            if (typeof params.guildid === 'undefined') throw new Error('unknown guildid');
             if (params.userid){
                 condition = {
                     guildid: params.guildid,
@@ -515,82 +434,34 @@ async function MYSQL_GET_ALL(action, params = {}){
                     guildid: params.guildid
                 }
             }
-        break
-        case `botchannel`:
-            //if (typeof params.guildid === 'undefined') throw new Error('unknown guildid')
-            MysqlModel = BotChannel
-            condition = params?params:{};
-            /*condition = {
-                guildid: params.guildid
-            }*/
-        break
-        case `streamersTwitch`:
-            MysqlModel = TwitchData
-            condition = params?params:{};
-        break
-        case `streamersTrovo`:
-            MysqlModel = TrovoData
-            condition = params?params:{};
-        break
+        break;
         case `twitchclips`:
-            if (typeof params.userid === 'undefined') throw new Error('unknown userid')
-            MysqlModel = TwitchClips
-            condition = {
-                userid: params.userid
-            }
-        break
         case `trovoclips`:
-            if (typeof params.userid === 'undefined') throw new Error('unknown userid')
-            MysqlModel = TrovoClips
-            condition = {
-                userid: params.userid
-            }
-        break
-        case `steamuser`:
-            MysqlModel = SteamUserData;
-            condition = params?params:{};
-        break 
-        case `vkuser`:
-            condition = params?params:{};
-            MysqlModel = VKUserData;
-        break 
         case `vkfriend`:
+            if (typeof params.userid === 'undefined') throw new Error('unknown userid');
             condition = {
                 userid: params.userid
             }
-            MysqlModel = VKUserFriendData;
-        break 
+        break;
+        case `botchannel`:
+        case `streamersTwitch`:
+        case `streamersTrovo`:
+        case `steamuser`:
+        case `vkuser`:
         case `twitchchat`:
-            condition = params?params:{};
-            MysqlModel = TwitchChatData;
-        break 
         case `osuprofile`:
-            condition = params?params:{};
-            MysqlModel = OsuProfileData;
-        break
         case 'youtubechannel':
-            condition = params?params:{};
-            MysqlModel = YoutubeChannelsData
-        break
         case 'guildServicesTracking':
-            condition = params?params:{};
-            MysqlModel = guildServicesTracking
-        break
         case 'guildSettings':
             condition = params?params:{};
-            MysqlModel = guildSettings
-        break
-
-        default:
-            console.log(`MYSQL_GET_ALL: nothing requested. undefined action: ${action}`);
-            return false
+        break;
     }
     try{
         let res = await MysqlModel.findAll ({
             where: condition, logging: ''
         });
         //console.log(res)
-        return res
+        return res;
     } catch (e){
         if (e.code === 'ECONNREFUSED' || e.name === `SequelizeConnectionRefusedError`){
             throw new Error(`Нет доступа к базе данных.`);
@@ -601,24 +472,22 @@ async function MYSQL_GET_ALL(action, params = {}){
 }
 
 async function MYSQL_UPDATE(action, values){
-    var MysqlModel;
+    const MysqlModel = select_mysql_model(action);
     var save_values = {};
     switch (action){
         case `voiceroles_clear`:
-            MysqlModel = Role;
             save_values = { chanid: '0' };
             break;
         case `channels_clear`:
-            MysqlModel = BotChannel;
-            save_values = { channelid: values.systemchannelid } ;
+            save_values = { channelid: values.systemchannelid };
             break;
         default:
-            console.error(`DB: (mysql update) undefined action: ${action}`)
+            console.error(`DB: (mysql update) undefined action: ${action}`);
             break;
     }
 
     try{
-        return await updateAll(MysqlModel, {guildid: values.guildid}, save_values )
+        return await updateAll(MysqlModel, {guildid: values.guildid}, save_values );
     } catch (e){
         if (e.code === 'ECONNREFUSED' || e.name === `SequelizeConnectionRefusedError`){
             throw new Error(`Нет доступа к базе данных.`);
@@ -629,31 +498,7 @@ async function MYSQL_UPDATE(action, values){
 }
 
 async function MYSQL_DELETE(action, condition){
-    var MysqlModel;
-
-    switch (action){
-        case `role`:
-            MysqlModel = Role;
-            break;
-        case `reactionrole`:
-            MysqlModel = ReactionRole;
-            break;
-        case `remind`:
-            MysqlModel = Remind;
-            break;
-        case `botchannel`:
-            MysqlModel = BotChannel;
-            break;
-        case `vkfriend`:
-            MysqlModel = VKUserFriendData;
-        break;
-        case 'guildServicesTracking':
-            MysqlModel = guildServicesTracking
-        break
-        default:
-            console.error(`DB: (mysql delete) undefined action: ${action}`);
-            return false;
-    }
+    const MysqlModel = select_mysql_model(action);
     try{
         console.log('delete mysql:', action, condition)
         return await MysqlModel.destroy({
@@ -695,41 +540,75 @@ async function getTrackingUsersForGuild(guildid, platformaction, mysql_tablename
     console.log(guildServicesTracking_data)
     if (guildServicesTracking_data.length>0){
         let guildServicesTracking_userdata = GET_VALUES_FROM_OBJECT_BY_KEY(guildServicesTracking_data, 'trackinguserid');
-        console.log(guildServicesTracking_userdata)
-        var searchUserID = '';
-        console.log(platformaction.split("_")[0])
-        switch (platformaction.split("_")[0]){
-            case 'youtube':
-                searchUserID = 'channelid';
-                break;
-            case 'twitch':
-            case 'vk':
-            case 'vkprofile':
-            case 'trovo':
-            case 'osu':  
-            case 'osuprofile':
-                searchUserID = 'userid';
-                break;
-            case 'steam':
-            case 'steamprofile':
-                searchUserID = 'steamid';
-                break;
-            case 'twitchchat':
-                searchUserID = 'username';
-                break;
-            default:
-                console.log('getTrackingUsersForGuild: undefined platfform '+platformaction);
-                return [];
+        console.log(guildServicesTracking_userdata);
+        console.log(platformaction.split("_")[0]);
+
+        var searchUserID = table_id_names.filter( obj => obj.platforms.includes(platformaction.split("_")[0]));
+        
+        if (searchUserID.length == 0){
+            throw Error('getTrackingUsersForGuild: undefined platfform ' + platformaction);
+        } else {
+            searchUserID = (searchUserID.shift()).name_id;
         }
+        
         return MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL(mysql_tablename, { [searchUserID]: guildServicesTracking_userdata } ));
     } else {
         return [];
     }
 }
 
+async function getTrackingInfo(message, mysql_tablename, trackingType, emoji, moduleName, fieldsMapping) {
+    const mysql_data = await getTrackingUsersForGuild(message.guild.id, `${trackingType}_tracking`, mysql_tablename);
+    console.log(`${trackingType}_TRACKING_INFO`, 'guild', message.guild.id, 'data', mysql_data);
+
+    if (mysql_data.length > 0) {
+        var MessageFields = [];
+        var fieldValuesById = {};
+
+        for (var userdata of mysql_data) {
+            for (var field of fieldsMapping) {
+                var key = field.key;
+                var value = userdata[key].toString();
+
+                if (!fieldValuesById[key]) {
+                    fieldValuesById[key] = [];
+                }
+
+                fieldValuesById[key].push(value);
+            }
+        }
+
+        for (var field of fieldsMapping) {
+            var key = field.key;
+            var values = fieldValuesById[key].join('\n');
+            MessageFields.push({ name: field.name, value: values, inline: true });
+        }
+
+        
+
+        await SendAnswer({
+            channel: message.channel,
+            guildname: message.guild.name,
+            messagetype: 'info',
+            title: `${emoji} ${moduleName}`,
+            text: 'Tracking users info',
+            fields: MessageFields,
+        });
+    } else {
+        await SendAnswer({
+            channel: message.channel,
+            guildname: message.guild.name,
+            messagetype: 'info',
+            title: `${emoji} ${moduleName}`,
+            text: 'No tracking users',
+        });
+    }
+}
+
 
 
 module.exports = {
+    getTrackingInfo: getTrackingInfo,
     getTrackingUsersForGuild: getTrackingUsersForGuild,
     getGuildidsOfTrackingUserService: async function (platformaction, trackinguserid){
         var mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('guildServicesTracking', {
