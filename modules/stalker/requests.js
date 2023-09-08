@@ -13,7 +13,7 @@ const {
     VK_TOKEN,
     OSU_LOGIN,
     OSU_PASSWORD
-  } = require('../../config.js');
+} = require('../../config.js');
 
 const { stalkerTrovoClipsPeriod } = require('../../settings.js');
 
@@ -28,7 +28,8 @@ var steam;
 async function checkTokenExpires(platform){
     var endtime = 0;
     switch(platform){
-        case 'twitch': 
+        case 'twitch':
+            log('twitch token checking', 'twitch token')
             if (typeof tokens.twitch.value === 'undefined'){
                 var tokendata = await MYSQL_GET_ONE('token', {platform: platform});
                 if (tokendata === null){
@@ -47,6 +48,7 @@ async function checkTokenExpires(platform){
             }
         break;
         case 'steam': 
+            log('steam token checking', 'steam token')
             if (typeof steam === 'undefined'){
                 await initSteam();
             }
@@ -56,22 +58,19 @@ async function checkTokenExpires(platform){
             }
         break;
         case 'osu': 
+            log('osu token checking', 'osu token')
             if (typeof tokens.osu.value === 'undefined'){
                 if (await initOsu() == false){
-                    console.log('osu token', false)
                     return false
                 }
             }
             endtime = tokens.osu.getdate + tokens.osu.expires;
             if (endtime < (new Date().valueOf()-60)/1000){
                 if (await initOsu() == false){
-                    console.log('osu token', false)
                     return false
                 }
-                console.log('osu token', true)
                 return true
             } else {
-                console.log('osu token', true)
                 return true
             }
         break;
@@ -87,11 +86,11 @@ async function initOsu(){
         mysql_token = mysql_token.dataValues;
 
         var nowdate = Math.trunc(new Date().valueOf()/1000);
-       
+
         if (nowdate - mysql_token.getdate > mysql_token.expires){
             return await relogin_osu();
         } else {
-            console.log('Установлен старый осу токен')
+            log('Установлен старый осу токен', 'Osu token')
             auth.set_v2(mysql_token.value);
             tokens.osu = {
                 value: mysql_token.value,
@@ -106,8 +105,7 @@ async function initOsu(){
     }
 
     async function relogin_osu(){
-        log('Получение Осу токена');
-        
+        log('Получение Осу токена');        
         var token = await auth.login_lazer(OSU_LOGIN, OSU_PASSWORD);
         console.log('osu token',token)
         tokens.osu = {
@@ -133,7 +131,7 @@ async function initTwitch(){
         };
         await MYSQL_SAVE('token', {platform: 'twitch'}, tokens.twitch);
     } catch (e){
-        console.log('initTwitch', e)
+        console.error('initTwitch', e)
         return false
     }
 }
@@ -156,7 +154,6 @@ async function getTwitchToken(){
             LogString(`System`, `info`, `Stalker Twitch Token`,`Логин на твич совершен`);
             res(response.data);
         }).catch(function (error) {
-            console.log(error.code, error);
             rej(error.code);
         });
     });
@@ -192,6 +189,7 @@ async function getTwitchUserStatus(usernames){
     var usernames_string = `user_login=`+usernames.join(`&user_login=`);
 
     await checkTokenExpires('twitch');
+
     var url1 = 'https://api.twitch.tv';
     var url2 = `/helix/streams?${usernames_string}`;
 
@@ -227,26 +225,26 @@ async function getTwitchUserStatus(usernames){
 async function getTwitchFolowers(TwitchUserID){
     await checkTokenExpires('twitch');
 
-        var url1 = 'https://api.twitch.tv';
-        var url2 = `/helix/users/follows?to_id=${TwitchUserID}&first=1`;
-        
-        var twitch = await axios.create({
-            baseURL: url1,
-            url: url2,
-            headers: {
-                'Accept': 'application/json',
-                'Client-ID': TWITCH_CLIENT_ID,
-                'Authorization': `Bearer ${tokens.twitch.value}`
-            }
+    var url1 = 'https://api.twitch.tv';
+    var url2 = `/helix/users/follows?to_id=${TwitchUserID}&first=1`;
+    
+    var twitch = await axios.create({
+        baseURL: url1,
+        url: url2,
+        headers: {
+            'Accept': 'application/json',
+            'Client-ID': TWITCH_CLIENT_ID,
+            'Authorization': `Bearer ${tokens.twitch.value}`
+        }
+    });
+    return await new Promise(async (res,rej)=>{
+        await twitch.get(`${url1}${url2}`).then(function (response) {
+            res(response.data.total);
+        }).catch(function (error) {
+            LogString(`System`, `Error`, `Stalker getTwitchFolowers`,`${error.code} ${error.message}`);
+            rej(-1);
         });
-        return await new Promise(async (res,rej)=>{
-            await twitch.get(`${url1}${url2}`).then(function (response) {
-                res(response.data.total);
-            }).catch(function (error) {
-                LogString(`System`, `Error`, `Stalker getTwitchFolowers`,`${error.code} ${error.message}`);
-                rej(-1);
-            });
-        });
+    });
 
 };
 
@@ -318,8 +316,6 @@ function getIndexInArrayOfStringStartsWith(arr,str){
 }
 
 
-/////////////////////////////////////////
-///////////////////////Trovo
 async function getTrovoUserID(username){
     return new Promise(async (res, rej)=>{
         await axios.post(
@@ -377,7 +373,7 @@ async function getTrovoUserStatus(username){
                     errMessage += `Request of ${username} failed. Will retry after some seconds`;
                 break;
                 default:
-                    console.log(error)
+                    console.error(error)
             } 
             
             rej (errMessage);
@@ -402,9 +398,6 @@ async function getTrovoClips(requestdata){
     });
 }
 
-
-///////////////////////////////////////////
-//////////////////////////////STEAM
 
 async function initSteam(){
     log('Получение Стим токена')
@@ -442,8 +435,6 @@ async function getSteamUserData(usersid){
     });
 }
 
-//////////////////////////////////////////////////
-//////////////////////////////////ВК
 
 async function getVKUsersData(users_ids){
     var user_ids = users_ids.join(',');
@@ -452,13 +443,15 @@ async function getVKUsersData(users_ids){
     var vk_url = `https://api.vk.com/method/users.get?user_ids=${user_ids}&fields=${fields}&v=5.131&access_token=${VK_TOKEN}`;
     
     return new Promise (async (res,rej)=> {
-    await axios.create().get(vk_url).then(async function (response) {
+        await axios.create().get(vk_url).then(async function (response) {
+            if (response.data.error){
+                res (response.data.error)
+            }
             res (response.data.response);
         }).catch(function (error) {
             rej (error);
         });
     });
-    //
 }
 
 async function getVKUserFriendsCount(user_id){
@@ -493,6 +486,7 @@ async function getVKClubWall(club_id, count=3){
         });
     });
 }
+
 
 module.exports = {
     getTwitchFolowers: getTwitchFolowers,

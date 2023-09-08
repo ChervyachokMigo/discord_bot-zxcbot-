@@ -30,7 +30,6 @@ async function getOsuUserData(userid, mode = 'osu'){
         return data;
     }
     if (data.error || typeof data.statistics === 'undefined' || typeof data.statistics.pp === 'undefined'){
-        console.log(data);
         return {error: null}
     }
     var res = {
@@ -357,7 +356,7 @@ module.exports = {
                                 }
                                 break
                             default:
-                                console.log(`необработаный тип активности: ${activity.type}\n`, activity);
+                                log(`необработаный тип активности: ${activity.type}\n`, 'Osu');
                         }
                     }
                 }

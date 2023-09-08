@@ -12,6 +12,8 @@ module.exports = {
     TWITCH_CLIENT_SECRET: '',
 
     //to get TOKEN use https://dev.vk.com/api/access-token/implicit-flow-user
+    //ENTER CLIENT ID FROM https://vk.com/apps?act=manage
+    //https://oauth.vk.com/authorize?client_id=&display=page&redirect_uri=https://oauth.vk.com/blank.html&scope=offline&response_type=token&v=5.131
     VK_TOKEN: '',
 
     //https://steamcommunity.com/dev/apikey

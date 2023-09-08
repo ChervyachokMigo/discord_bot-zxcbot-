@@ -617,7 +617,7 @@ async function MYSQL_GET_TRACKING_DATA_BY_ACTION(action, custom_query_params = {
             query_params = {tracking: true};
             break;
         case 'vkuser_friends':
-            query_action = 'vk_user';
+            query_action = 'vkuser';
             query_params = {tracking: true, friendsTracking: true};
             break;
         case 'guildSettings':

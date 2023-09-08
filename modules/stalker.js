@@ -31,17 +31,17 @@ const { checkOsuData, checkOsuFollowers } = require (`../modules/stalker/osu.js`
 const { checkYoutubeVideos, youtube_init } = require (`../modules/stalker/youtube.js`);
 
 const {
-  stalkerRefreshRate,
-  stalkerClipsTwitchRefreshRate,
-  stalkerFollowersTwitchRefreshRate,
-  stalkerSteamProfilesRefreshRate,
-  stalkerOsuScoresRefreshRate,
-  stalkerVKProfilesRefreshRate,
-  stalkerVKFollowersRefreshRate,
-  stalkerClipsTrovoRefreshRate,
-  stalkerOsuFollowersRefreshRate,
-  stalkerTrovoFollowersRefreshRate,
-  stalkerYoutubeRefreshRate,
+    stalkerRefreshRate,
+    stalkerClipsTwitchRefreshRate,
+    stalkerFollowersTwitchRefreshRate,
+    stalkerSteamProfilesRefreshRate,
+    stalkerOsuScoresRefreshRate,
+    stalkerVKProfilesRefreshRate,
+    stalkerVKFollowersRefreshRate,
+    stalkerClipsTrovoRefreshRate,
+    stalkerOsuFollowersRefreshRate,
+    stalkerTrovoFollowersRefreshRate,
+    stalkerYoutubeRefreshRate,
 } = require('../settings.js');
 
 const {

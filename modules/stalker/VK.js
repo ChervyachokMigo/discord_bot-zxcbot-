@@ -90,16 +90,20 @@ module.exports = {
 
     checkVKstatus: async function (stalkerEvents){
         try{
-            //load from db
-          
+
             var AllTrackingUsersVKData = await MYSQL_GET_TRACKING_DATA_BY_ACTION('vkuser');
-            
+
             if (AllTrackingUsersVKData.length > 0){
                 log('Проверка ВК профилей', moduleName);
-                //get all users new data
-                var TrackingUsers_ids = GET_VALUES_FROM_OBJECT_BY_KEY(AllTrackingUsersVKData,'userid');
+
+                var TrackingUsers_ids = GET_VALUES_FROM_OBJECT_BY_KEY(AllTrackingUsersVKData, 'userid');
                 var VKUsersDataNew = await getVKUsersData(TrackingUsers_ids);
-        
+
+                if (VKUsersDataNew.error_code){
+                    console.error('VK Users check error\n','Error code:', VKUsersDataNew.error_code, '\n','Message', VKUsersDataNew.error_msg);
+                    return false;
+                }
+
                 for (let VKUserData of AllTrackingUsersVKData){
         
                     let VKUserDataNew = getVKUserDataFromVKUsersRequestData(VKUsersDataNew, VKUserData.userid)
@@ -186,6 +190,7 @@ module.exports = {
 
                     let mysql_data = await MYSQL_GET_TRACKING_DATA_BY_ACTION('vkfriend', {userid: VKUserData.userid});
                     let mysql_data_array = GET_VALUES_FROM_OBJECT_BY_KEY(mysql_data, 'friendid');
+                    
                     let diff_rem = mysql_data_array.filter( (val) => !userFriendsNew.items.includes(val));
                     let diff_new = userFriendsNew.items.filter( (val) => !mysql_data_array.includes(val));
                     
@@ -277,8 +282,12 @@ function CONVERT_TO_VKUSER_OBJECT(VK_values){
 }
 
 function getVKUserDataFromVKUsersRequestData(requestdata, userid){
-    let userdata = requestdata.filter( (val)=> {return userid === val.id})[0];
-    return CONVERT_TO_VKUSER_OBJECT(userdata)
+    try{
+        var userdata = (requestdata.filter( (val)=> {return userid === val.id}))[0];
+        return CONVERT_TO_VKUSER_OBJECT(userdata)
+    } catch(e) {
+        console.error(e)
+    }
 }
 
 async function REWRITE_VK_FRIENDS(userdata, friendsData){
