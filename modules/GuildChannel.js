@@ -29,12 +29,13 @@ module.exports = {
     },
 
     getGuildChannelDB: async function ( guild , channeltype ){
-        if (!channeltype) throw new Error ('wrong channel type')
+        if (!channeltype) throw new Error ('wrong channel type: ' + channeltype)
 
         var BotChannelsDB = await module.exports.getAllChannelsDB(guild.id)
         var botchannel = false
         var channelSet = false
         var channelSystem = false
+        
         if (BotChannelsDB.length>0){
             for (var BotChannelDB of BotChannelsDB){
                 if (BotChannelDB.dataValues.channeltype === channeltype){

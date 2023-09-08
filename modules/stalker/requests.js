@@ -177,7 +177,7 @@ async function getTwitchUserID(username){
     
     return new Promise(async (res,rej)=>{
         await twitch.get(`${url1}${url2}`).then(function (response) {
-            res(Number(response.data.data[0].id));
+            res( Number(response.data.data[0].id) );
         }).catch(function (error) {
             rej(`twitch check error getTwitchUserID ${error.code}`);
         });

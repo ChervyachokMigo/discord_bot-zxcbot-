@@ -65,7 +65,6 @@ module.exports = {
 
     checkTrovoFollowers: async function(stalkerEvents){
         try{
-           
             //получаем всех юзеров у которых tracking = true и преобразовываем данные в обычный массив объектов
             let mysql_data = await MYSQL_GET_TRACKING_DATA_BY_ACTION('streamersTrovo');
             if (mysql_data.length > 0){
@@ -88,7 +87,7 @@ module.exports = {
                         if (userdataNew.followers !== userdata.followers){
                             if (userdata.followers !== 0){
                                 trovoChanges.guildids = await getGuildidsOfTrackingUserService('trovo_followersTracking', userdata.userid);
-                                stalkerEvents.emit('StreamFolowers', trovoChanges);
+                                stalkerEvents.emit('TrovoFolowers', trovoChanges);
                             }
                             await MYSQL_SAVE('trovodata', { username: userdata.username }, {followers: userdataNew.followers} );
                         }
@@ -140,7 +139,7 @@ module.exports = {
                         }
                             
                         if(trovoChanges.isChanges == true){
-                            stalkerEvents.emit('StreamChanges', trovoChanges);
+                            stalkerEvents.emit('TrovoChanges', trovoChanges);
                         }
                     };
     
@@ -163,7 +162,7 @@ module.exports = {
                             statusChanges.text = `**${userdataNew.username}** прекратил стримить.\n`;
                         }
     
-                        stalkerEvents.emit('ChangeStreamStatus', statusChanges);
+                        stalkerEvents.emit('ChangeTrovoStatus', statusChanges);
                     };
     
                     //сохраняем в базу только когда он онлайн

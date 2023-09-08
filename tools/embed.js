@@ -28,6 +28,8 @@ const createEmbed = (color, title, desc, url, fields, image) => ({
       if (!guildname) return LogString("System", "error", "SendAnswer Error", "guild name not specified");
       if (!title) return LogString("System", "error", "SendAnswer Error", "message title not specified");
   
+      console.log('сообщение', text)
+
       text = text.slice(0, 4096) || " ";
       title = title.slice(0, 256) || " ";
   

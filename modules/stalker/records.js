@@ -64,7 +64,13 @@ async function VideoDirectoryCheck(user, platform, stalkerEvents){
     if(!CreateFolderSync_IsNotExists(processed_path)){ return }
 
     var trackingsGuilds = await getGuildidsOfTrackingUserService(`${platform}_records`, user.userid);
-                    
+
+    if (platform === 'twitch') {
+        var event_name = 'TwitchRecord';
+    } else if (platform === 'trovo') {
+        var event_name = 'TrovoRecord';
+    }
+
     return new Promise(async (res,rej)=>{
         //fix videos from previous recording session
         try {
@@ -84,7 +90,7 @@ async function VideoDirectoryCheck(user, platform, stalkerEvents){
                                 } else {
                                     fs.close(fd, async function(){
                                         var result = await FixVideo(`${recorded_path}\\${video}`, `${processed_path}\\${video}`);
-                                        stalkerEvents.emit('StreamRecord', {guildids: trackingsGuilds, action: 'fix', text: result, platform: platform})
+                                        stalkerEvents.emit(event_name, {guildids: trackingsGuilds, action: 'fix', text: result, platform: platform})
                                     });
                                 }
                             });
@@ -162,12 +168,14 @@ async function StartRecording(user, platform, stalkerEvents){
                 `best`,
                 `-o`,`${recordto}\\${videoname}`,
                 `--twitch-disable-ads`];
+            var event_name = 'TwitchRecord';
             break
         case 'trovo':
             processArgs = [
                 'https://trovo.live/s/'+user.username,
                 `best`,
                 `--output`,`${recordto}\\${videoname}`];
+            var event_name = 'TrovoRecord';
             break
         default:
             LogString('System','Error',moduleName,`unknown platform to start recording`);
@@ -182,13 +190,13 @@ async function StartRecording(user, platform, stalkerEvents){
 
     LogString('System','info',moduleName,`начало записи: ${videoname}`);
     var trackingsGuilds = await getGuildidsOfTrackingUserService(`${platform}_records`, user.userid);
-    stalkerEvents.emit('StreamRecord', {guildids: trackingsGuilds, action: 'start', name: videoname, platform: platform });
+    stalkerEvents.emit(event_name, {guildids: trackingsGuilds, action: 'start', name: videoname, platform: platform });
 
     proc.on('close', (code) => {
 
         if (code==0 || code==1){
             LogString('System','info',moduleName, `завершена запись ${user?.username}: ${videoname}`);
-            stalkerEvents.emit('StreamRecord', {guildids: trackingsGuilds, action: 'stop', name: videoname, platform: platform});
+            stalkerEvents.emit(event_name, {guildids: trackingsGuilds, action: 'stop', name: videoname, platform: platform});
         } else {
             console.log(`child process exited with code ${code}`);
         }
@@ -224,7 +232,6 @@ async function DownloadClip (clipdata, platform){
                         res(code);
                     });
                     
-                   
                 } catch(e){
                     LogString(`System`, `Error`, moduleName, e);
                     rej(e)

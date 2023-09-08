@@ -78,23 +78,25 @@ module.exports = {
             
             //получаем всех юзеров у которых tracking = true и преобразовываем данные в обычный массив объектов
             let mysql_data = await MYSQL_GET_TRACKING_DATA_BY_ACTION('streamersTwitch');
+
             if (mysql_data.length > 0){
                 log('Проверка статуса юзеров Твича', moduleName);
                 //получение статуса всех пользователей сразу
                 let usernames = GET_VALUES_FROM_OBJECT_BY_KEY(mysql_data, 'username');
                 let onlineUsersData = await getTwitchUserStatus(usernames);
+
                 //обработка результатов
                 for (let userdata of mysql_data){
                     //если отсутствует id - получение id и сохранение
                     if (userdata.userid == 0) {
-                        userdata.userid = await getTwitchUzserID(userdata.username);
+                        userdata.userid = await getTwitchUserID(userdata.username);
                         await MYSQL_SAVE('twitchdata', { username: userdata.username }, {userid: userdata.userid});
                     }
 
+                    
                     //поиск пользователя из базы в новом запросе
-                    let userdataNew = onlineUsersData.filter((val) => {
-                        return val.user_login === userdata.username
-                    });
+                    let userdataNew = onlineUsersData.filter((val) => Number(val.user_id) === userdata.userid );
+
                     //если нет данных, значит юзер - оффлайн
                     if (userdataNew.length == 0){
                         userdataNew = {
@@ -112,10 +114,12 @@ module.exports = {
                             title: userdataNew.title,
                         };
                     }
+
                     if( (userdataNew.status === 'online' && userdata.status === 'online') ||
                         (userdataNew.status !== userdata.status)){
-                    var trackingsGuildsOfChangesTwitchProfile = await getGuildidsOfTrackingUserService('twitch_tracking', userdata.userid);
+                        var trackingsGuildsOfChangesTwitchProfile = await getGuildidsOfTrackingUserService('twitch_tracking', userdata.userid);
                     }
+
                     //если статус изменился - отправляем сообщение
                     if (userdataNew.status !== userdata.status){
                         let changesdata = {
@@ -140,7 +144,7 @@ module.exports = {
                                 ClearChatters(userdataNew.username);
                             }
                         }
-                        stalkerEvents.emit('ChangeStreamStatus', changesdata);
+                        stalkerEvents.emit('ChangeTwitchStatus', changesdata);
                     }
 
                     //если пользователь онлайн - проверяем изменившиеся данные, исключая первое обновление
@@ -164,7 +168,7 @@ module.exports = {
                         }
                         
                         if(twitchChanges.isChanges == true){
-                            stalkerEvents.emit('StreamChanges', twitchChanges);
+                            stalkerEvents.emit('TwitchChanges', twitchChanges);
                         }
                     }
                     
@@ -198,7 +202,7 @@ module.exports = {
             }
         } catch (e){
             
-                LogString(`System`, `Error`, moduleName, e.code);
+                LogString(`System`, `Error`, moduleName, e);
             
         }
     },
@@ -233,7 +237,7 @@ module.exports = {
                             //сообщаем если количество изменилось и не было первым обновлением в базе
                             if (userdata.followers !== twitch_followers && userdata.followers !== 0){
                                 params.guildids = await getGuildidsOfTrackingUserService('twitch_followersTracking', userdata.userid);
-                                stalkerEvents.emit('StreamFolowers', params);
+                                stalkerEvents.emit('TwitchFolowers', params);
                             }
         
                             //если значение изменилось - записать в базу

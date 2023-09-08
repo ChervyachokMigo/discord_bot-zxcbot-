@@ -72,18 +72,14 @@ module.exports = {
     },
 
     giveCommandAction: async function ( comargs, message, com_text){
-        try{
-            var userid_to = await checkArgsOfUser(comargs[0], com_text, message)
-            if (!userid_to) return
+        var userid_to = await checkArgsOfUser(comargs[0], com_text, message)
+        if (!userid_to) return
 
-            var moneygive = await checkArgsOfValue(comargs[1], com_text, message)
-            if (!moneygive) return
+        var moneygive = await checkArgsOfValue(comargs[1], com_text, message)
+        if (!moneygive) return
 
-            var userdb_from = await CheckUser( message.channel, message.author.id)
-            var userdb_to = await CheckUser( message.channel, userid_to)
-        } catch (e){
-            console.log(e)
-        }
+        var userdb_from = await CheckUser( message.channel, message.author.id)
+        var userdb_to = await CheckUser( message.channel, userid_to)
             
         if (message.author.id == userid_to){
             await SendError(message, com_text, `Ты че шиз?`);

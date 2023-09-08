@@ -6,11 +6,8 @@ module.exports = {
     command_aliases: [`clear`, `purge`],
     command_help: `clear <count>`,
     action: async (comargs, message)=>{
-        try{
-            await clearCommand(comargs, message, {name: module.exports.command_name,
-                help: module.exports.command_help })
-        } catch (e){
-            console.log(e)
-        }
+        await clearCommand(comargs, message, {name: module.exports.command_name,
+            help: module.exports.command_help })
+
     }
 }

@@ -457,11 +457,7 @@ async function MYSQL_GET_ALL(action, params = {}){
         break;
     }
     try{
-        let res = await MysqlModel.findAll ({
-            where: condition, logging: ''
-        });
-        //console.log(res)
-        return res;
+        return await MysqlModel.findAll ({ where: condition, logging: '' });
     } catch (e){
         if (e.code === 'ECONNREFUSED' || e.name === `SequelizeConnectionRefusedError`){
             throw new Error(`Нет доступа к базе данных.`);
@@ -557,7 +553,6 @@ async function getTrackingUsersForGuild(guildid, platformaction, mysql_tablename
 
 async function getTrackingInfo(message, mysql_tablename, trackingType, emoji, moduleName, fieldsMapping) {
     const mysql_data = await getTrackingUsersForGuild(message.guild.id, `${trackingType}_tracking`, mysql_tablename);
-    console.log(`${trackingType}_TRACKING_INFO`, 'guild', message.guild.id, 'data', mysql_data);
 
     if (mysql_data.length > 0) {
         var MessageFields = [];
@@ -606,6 +601,7 @@ async function getTrackingInfo(message, mysql_tablename, trackingType, emoji, mo
 async function MYSQL_GET_TRACKING_DATA_BY_ACTION(action, custom_query_params = {}){
     var query_params = {};
     var query_action = action;
+
     switch (action){
         case 'steamuser':
         case 'streamersTrovo':
@@ -626,8 +622,10 @@ async function MYSQL_GET_TRACKING_DATA_BY_ACTION(action, custom_query_params = {
         case 'guildServicesTracking':
         case 'vkfriend':
         case 'botchannel':
-        default:
             query_params = custom_query_params;
+            break;
+        default:
+            throw new Error('undefined action');
     }
     return MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL(query_action, query_params));
 }
@@ -642,11 +640,8 @@ module.exports = {
             platformaction: platformaction,
             trackinguserid: trackinguserid.toString()
         }));
-
         var guildids = GET_VALUES_FROM_OBJECT_BY_KEY(mysql_data, 'guildid');
-        return guildids.filter((value, index, self)=>{
-            return self.indexOf(value) === index;
-        });
+        return guildids.filter( (value, index, self) => self.indexOf(value) === index );
     },
 
     MYSQL_GET_ALL_RESULTS_TO_ARRAY: MYSQL_GET_ALL_RESULTS_TO_ARRAY,

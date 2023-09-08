@@ -14,12 +14,14 @@
 
 //статистика
 
+//инициализация каналов дял новой гильдии
+
 var {EventEmitter} = require('events');
 
 var { getDiscordRelativeTime } = require('../tools/time.js');
 const { getGuildChannelDB } = require (`../modules/GuildChannel.js`);
 const { SendAnswer } = require("../tools/embed.js");
-const { LogString, log , debug } = require("../tools/log.js");
+const { log } = require("../tools/log.js");
 const { setInfinityTimerLoop, ObjToString, getBooleanFromString } = require("../modules/tools.js");
 const { getGuildSetting } = require('../modules/guildSettings.js');
 
@@ -55,349 +57,143 @@ var stalkerEvents = new EventEmitter({captureRejections: true});
 
 const moduleName = `Stalker info`;
 
+const guild_setting_deps = [
+    {event_name: 'newScore', setting_name: 'osu_scores', channel: 'newscores', 
+        emoji: emoji_osu, message_title: 'Osu Scores'},
+    {event_name: 'newOsuActivity', setting_name: 'osu_activity', channel: 'newactivityies', 
+        emoji: emoji_osu, message_title: 'Osu Activites'},
+    {event_name: 'osuProfileChanges', setting_name: 'osu_profiles', channel: 'osuchanges',
+        emoji: emoji_osu, message_title: 'Osu Profile Changes'},
+    {event_name: 'osuFollowersChanges', setting_name: 'osu_followers', channel: 'osufollowers',
+        emoji: emoji_osu, message_title: 'Osu Followers'},
+    {event_name: 'steamUserProfileChanges', setting_name: 'steam_profile', channel: 'steamchanges',
+        emoji: emoji_steam, message_title: 'Steam Profile Changes'},
+    {event_name: 'TwitchFolowers', setting_name: 'twitch_followers', channel: 'streamfollowers',
+        emoji: emoji_twitch, message_title: 'Twitch Followers'},
+    {event_name: 'TrovoFolowers', setting_name: 'trovo_followers', channel: 'streamfollowers',
+        emoji: emoji_trovo, message_title: 'Trovo Followers'},
+    {event_name: 'newClipTwitch', setting_name: 'twitch_clips', channel: 'twitchclips',
+        emoji: emoji_twitch, message_title: 'Twitch Clips'},
+    {event_name: 'newClipTrovo', setting_name: 'trovo_clips', channel: 'trovoclips',
+        emoji: emoji_trovo, message_title: 'Trovo Clips'},
+    {event_name: 'ChangeTwitchStatus', setting_name: 'twitch_status', channel: 'streamstatus',
+        emoji: emoji_twitch, message_title: 'Twitch Status'},
+    {event_name: 'ChangeTrovoStatus', setting_name: 'trovo_status', channel: 'streamstatus',
+        emoji: emoji_trovo, message_title: 'Trovo Status'},
+    {event_name: 'TwitchChattersOfEndStream', setting_name: 'twitch_chatters', channel: 'streamstatus',
+        emoji: emoji_twitch, message_title: 'Twitch Chatters'},
+    {event_name: 'TwitchChanges', setting_name: 'twitch_changes', channel: 'streamchanges',
+        emoji: emoji_twitch, message_title: 'Twitch Changes'},
+    {event_name: 'TrovoChanges', setting_name: 'trovo_changes', channel: 'streamchanges',
+        emoji: emoji_trovo, message_title: 'Trovo Changes'},
+    {event_name: 'VKProfileChanges', setting_name: 'vk_profile', channel: 'vkchanges',
+        emoji: emoji_vk, message_title: 'VK Profile Changes'},
+    {event_name: 'VKFriendsChanges', setting_name: 'vk_friends', channel: 'vkfriends',
+        emoji: emoji_vk, message_title: 'VK Friends Changes'},
+    {event_name: 'YoutubeChanges', setting_name: 'youtube_newvideo', channel: 'youtubevideos',
+        emoji: emoji_youtube, message_title: 'Youtube Changes'},
+    {event_name: 'TwitchRecord', setting_name: 'stream_record', channel: 'records',
+        emoji: emoji_twitch, message_title: 'Twitch Record'},
+    {event_name: 'TrovoRecord', setting_name: 'stream_record', channel: 'records',
+        emoji: emoji_twitch, message_title: 'Twitch Record'}
+];
+
 module.exports = {
     StalkerStartListeners: async function (guild){
 
-        stalkerEvents.on(`newScore`, async function (args){
-            if (args.guildids && args.guildids.includes(guild.id)){
-                if (!(getBooleanFromString(getGuildSetting(guild.id, 'osu_scores')))) return false;
-                var channel;
-                switch (args.userid){
-                    case 1389663: 
-                        channel = await getGuildChannelDB( guild, 'talala_newscores' );
-                    break;
-                    case 9547517:
-                        channel = await getGuildChannelDB( guild, 'sadgod_newscores' );
-                    break;
-                    default:
-                        channel = await getGuildChannelDB( guild, 'newscores' );
-                        break;
-                }
-                await SendAnswer( {channel: channel,
-                    guildname: guild.name,
-                    messagetype: `info`,
-                    title: `${emoji_osu} Stalker Osu Scores`,
-                    text:  args.text } );
-                LogString(guild.name,`info`, moduleName,`Новый осу скор!`);
-            }
-        });
+        function ListenEvent(event_name) {
 
-        stalkerEvents.on(`newOsuActivity`, async function (args){
-            if (args.guildids && args.guildids.includes(guild.id)){
-                if (!(getBooleanFromString(getGuildSetting(guild.id, 'osu_activity')))) return false;
-                var channel;
-                switch (args.userid){
-                    case 1389663: 
-                        channel = await getGuildChannelDB( guild, 'talala_newactivityies' );
-                    break;
-                    case 9547517:
-                        channel = await getGuildChannelDB( guild, 'sadgod_newactivityies' );
-                    break;
-                    default:
-                        channel = await getGuildChannelDB( guild, 'newactivityies' );
-                        break;
-                }
-                await SendAnswer( {channel: channel,
-                    guildname: guild.name,
-                    messagetype: `info`,
-                    title: `${emoji_osu} Stalker Osu Activites`,
-                    text:  args.text } );
-                LogString(guild.name,`info`, moduleName,`Новая осу активность!`);
-            }
-        });
+            stalkerEvents.on(event_name, async function (args){
 
-        stalkerEvents.on(`osuProfileChanges`, async function (args){
-            if (args.guildids && args.guildids.includes(guild.id)){
-                if (!(getBooleanFromString(getGuildSetting(guild.id, 'osu_profiles')))) return false;
-                var channel;
-                switch (args.userid){
-                    case 1389663: 
-                        channel = await getGuildChannelDB( guild, 'talala_osuchanges' );
-                        break;
-                    case 9547517:
-                        channel = await getGuildChannelDB( guild, 'sadgod_osuchanges' );
-                        break;
-                    default:
-                        channel = await getGuildChannelDB( guild, 'osuchanges' );
-                        break;
-                }
-                await SendAnswer( {channel: channel,
-                    guildname: guild.name,
-                    messagetype: `info`,
-                    title: `${emoji_osu} Stalker Osu Profile`,
-                    text:  args.text,
-                    image: args.image } );
-                LogString(guild.name,`info`, moduleName,`Изменения в осу профиле!`);
-            }
-        });
-
-        stalkerEvents.on(`osuFollowersChanges`, async function (args){
-            if (args.guildids && args.guildids.includes(guild.id)){
-                if (!(getBooleanFromString(getGuildSetting(guild.id, 'osu_followers')))) return false;
-                var channel;
-                switch (args.userid){
-                    case 1389663: 
-                        channel = await getGuildChannelDB( guild, 'talala_osufollowers' );
-                        break;
-                    case 9547517:
-                        channel = await getGuildChannelDB( guild, 'sadgod_osufollowers' );
-                        break;
-                    default:
-                        channel = await getGuildChannelDB( guild, 'osufollowers' );
-                        break;
-                }
-                await SendAnswer( {channel: channel,
-                    guildname: guild.name,
-                    messagetype: `info`,
-                    title: `${emoji_osu} Stalker Osu Followers`,
-                    text:  args.text } );
-                LogString(guild.name,`info`, moduleName,`Изменения осу подписчиков!`);
-            }
-        });
-
-        stalkerEvents.on(`steamUserProfileChanges`, async function (args){   
-            if (args.guildids && args.guildids.includes(guild.id)){
-                if (!(getBooleanFromString(getGuildSetting(guild.id, 'steam_profile')))) return false;
-                if (args.userid === '76561198021506077'){
-                    var channel = await getGuildChannelDB( guild, 'talala_steamchanges' );
-                } else {
-                    var channel = await getGuildChannelDB( guild, 'steamchanges' );
-                }
-                await SendAnswer( {channel: channel,
-                    guildname: guild.name,
-                    messagetype: `info`,
-                    title: `${emoji_steam} Stalker Steam Profile`,
-                    text:  args.text } );
-                LogString(guild.name,`info`, moduleName,`Изменения в стим профиле!`);
-            }
-        });
-        
-        stalkerEvents.on(`StreamFolowers`, async function (args){
-            if (args.guildids && args.guildids.includes(guild.id)){
-                if (args.platform === 'Twitch'){
-                    if (!(getBooleanFromString(getGuildSetting(guild.id, 'twitch_followers')))) return false;
-                    var title_emoji = emoji_twitch;
-                    var text = `На канале **[${args.username}](https://www.twitch.tv/${args.username})** изменилось количество подписчиков на **${args.diff}**\nТеперь подписано **${args.count}** человек`;
-                }
-                if (args.platform === 'Trovo'){
-                    if (!(getBooleanFromString(getGuildSetting(guild.id, 'trovo_followers')))) return false;
-                    var title_emoji = emoji_trovo;
-                    var text = `На канале **[${args.username}](https://trovo.live/s/${args.username})** изменилось количество подписчиков на **${args.diff}**\nТеперь подписано **${args.count}** человек`;
-                }
-                if (args.username === 'talalusha'){
-                    var channel = await getGuildChannelDB( guild, 'talala_streamfollowers' );
-                } else {
-                    var channel = await getGuildChannelDB( guild, 'streamfollowers' );
-                }
-                await SendAnswer( {channel: channel,
-                    guildname: guild.name,
-                    messagetype: `info`,
-                    title: `${title_emoji} Stalker ${args.platform} Followers`,
-                    text:  text } );
-                LogString(guild.name,`info`, moduleName,`Изменения количества ${args.platform} подписчиков!`);
-            }
-        });
-
-        stalkerEvents.on(`newClipTwitch`, async function (args){
-            if (args.guildids && args.guildids.includes(guild.id)){
-                if (!(getBooleanFromString(getGuildSetting(guild.id, 'twitch_clips')))) return false;
-                if (args.broadcaster_name === 'talalusha'){
-                    var channel = await getGuildChannelDB( guild, 'talala_twitchclips' );
-                } else {
-                    var channel = await getGuildChannelDB( guild, 'twitchclips' );
-                }
-                var text = `На канале **${args.broadcaster_name}** появился [новый клип](${args.url})\n`;
-                text += `Название: **${args.title}**\n`;
-                text += `Создатель: **${args.creator_name}**\n`;
-                text += `Дата: ${getDiscordRelativeTime( args.created_at )}\n`;
-                
-                await SendAnswer( {channel: channel,
-                    guildname: guild.name,
-                    messagetype: `info`,
-                    title: `${emoji_twitch} Stalker Twitch Clips`,
-                    text:  text } );
-                LogString(guild.name,`info`, moduleName,`Новый клип на Twitch!`);
-            }
-        });
-
-        stalkerEvents.on(`newClipTrovo`, async function (args){
-            if (args.guildids && args.guildids.includes(guild.id)){
-                if (!(getBooleanFromString(getGuildSetting(guild.id, 'trovo_clips')))) return false;
-                if (args.streamer_username === 'talalusha'){
-                    var channel = await getGuildChannelDB( guild, 'talala_trovoclips' );
-                } else {
-                    var channel = await getGuildChannelDB( guild, 'trovoclips' );
-                }
-                var text = `На канале **${args.streamer_username}** появился [новый клип](${args.url})\n`;
-                text += `Название: **${args.title}**\n`;
-                text += `Создатель: **${args.maker_username}**\n`;
-                text += `Дата: ${getDiscordRelativeTime( args.made_at*1000 )}\n`;
-                
-                await SendAnswer( {channel: channel,
-                    guildname: guild.name,
-                    messagetype: `info`,
-                    title: `${emoji_trovo} Stalker Trovo Clips`,
-                    text:  text } );
-                LogString(guild.name,`info`, moduleName,`Новый клип на Trovo!`);
-            }
-        });
-        
-        stalkerEvents.on(`ChangeStreamStatus`, async function (args){
-            if (args.guildids && args.guildids.includes(guild.id)){
-                if (args.platform === 'Twitch'){
-                    if (!(getBooleanFromString(getGuildSetting(guild.id, 'twitch_status')))) return false;
-                    var title_emoji = emoji_twitch;
-                }
-                if (args.platform === 'Trovo'){
-                    if (!(getBooleanFromString(getGuildSetting(guild.id, 'trovo_status')))) return false;
-                    var title_emoji = emoji_trovo;
-                }
-                if (args.username === 'talalusha'){
-                    var channel = await getGuildChannelDB( guild, 'talala_streamstatus' );
-                } else {
-                    var channel = await getGuildChannelDB( guild, 'streamstatus' );
-                }
-                await SendAnswer( {channel: channel,
-                    guildname: guild.name,
-                    messagetype: `info`,
-                    title: `${title_emoji} Stalker ${args.platform} Status`,
-                    text:  args.text } );
-                LogString(guild.name,`info`, moduleName,`${args.username} меняет статус на ${args.platform}`);
-            }
-        });
-
-        stalkerEvents.on(`TwitchChattersOfEndStream`, async function (args){
-            if (args.guildids && args.guildids.includes(guild.id)){
-                if (!(getBooleanFromString(getGuildSetting(guild.id, 'twitch_chatters')))) return false;
-                if (args.chatters.TotalMessages>0){
-                    var text = `Total Messages: **${args.chatters.TotalMessages}**\nTotal Users: **${Object.entries(args.chatters.Users).length}**\n${ObjToString(args.chatters.Users)}`;
-
-                    var channel = await getGuildChannelDB( guild, 'streamstatus' );
+                if (args.guildids && args.guildids.includes(guild.id)){
                     
-                    await SendAnswer( {channel: channel,
+                    const setting_deps = guild_setting_deps.find(val=> val.event_name === event_name);
+
+                    if (!(getBooleanFromString(getGuildSetting(guild.id, setting_deps.setting_name)))) {
+                        return false;
+                    }
+
+                    const channel = await getGuildChannelDB(guild, setting_deps.channel);
+                    
+                    var message_text = '';
+                    var message_image = '';
+
+                    switch (event_name){
+                        case 'newScore':
+                        case 'newOsuActivity':
+                        case 'osuFollowersChanges':
+                        case 'steamUserProfileChanges':
+                        case 'ChangeTwitchStatus':
+                        case 'ChangeTrovoStatus':
+                        case 'VKProfileChanges':
+                        case 'VKFriendsChanges':
+                            message_text = args.text;
+                            break;
+                        case 'osuProfileChanges':
+                        case 'YoutubeChanges':
+                            message_text = args.text;
+                            message_image = args.image
+                            break;
+                        case 'TwitchFolowers':
+                            message_text = `На канале **[${args.username}](https://www.twitch.tv/${args.username})** изменилось количество подписчиков на **${args.diff}**\nТеперь подписано **${args.count}** человек`;
+                        case 'TrovoFolowers':
+                            message_text = `На канале **[${args.username}](https://trovo.live/s/${args.username})** изменилось количество подписчиков на **${args.diff}**\nТеперь подписано **${args.count}** человек`;
+                            break;
+                        case 'newClipTwitch':
+                        case 'newClipTrovo':
+                            message_text = `На канале **${args.broadcaster_name || args.streamer_username}** появился [новый клип](${args.url})\n`;
+                            message_text += `Название: **${args.title}**\n`;
+                            message_text += `Создатель: **${args.creator_name || args.maker_username}**\n`;
+                            message_text += `Дата: ${args.created_at?getDiscordRelativeTime( args.created_at ):'' ||
+                                args.made_at?getDiscordRelativeTime( args.made_at*1000 ):''}\n`;
+                            break;
+                        case 'TwitchChattersOfEndStream':
+                            message_text = `Total Messages: **${args.chatters.TotalMessages}**\nTotal Users: **${Object.entries(args.chatters.Users).length}**\n${ObjToString(args.chatters.Users)}`;
+                            break;
+                        case 'TwitchChanges':
+                        case 'TrovoChanges':
+                            message_text = `**${args.username}** имеет изменения:\n${args.text}`;
+                            break;
+                        case 'TwitchRecord':
+                        case 'TrovoRecord':
+                            switch (args.action){
+                                case 'fix':
+                                    message_text = args.text
+                                    break;
+                                case 'start':
+                                    message_text = `Была запущена запись **${args.name}** с платформы **${args.platform}**`;
+                                    break;
+                                case 'stop':
+                                    message_text = `Остановлена запись **${args.name}** с платформы **${args.platform}**`;
+                                    break;
+                                default:
+                                    log('Ошибка действия', moduleName + ' ' + setting_deps.message_title);
+                            }
+                            break;
+                        default:
+                            message_text = 'null text';
+                    }
+
+                    log('new event: ' + setting_deps.message_title, moduleName);
+
+                    await SendAnswer({ channel,
                         guildname: guild.name,
                         messagetype: `info`,
-                        title: `${emoji_twitch} Stalker Twitch Chatters`,
-                        text:  text } );
+                        title: `${setting_deps.emoji} ${setting_deps.message_title}`,
+                        text: message_text,
+                        image: message_image 
+                    });
+
                 }
-            }
-        });
-        
-        stalkerEvents.on(`StreamChanges`, async function (args){
-            if (args.guildids && args.guildids.includes(guild.id)){
-                if (args.platform === 'Twitch'){
-                    if (!(getBooleanFromString(getGuildSetting(guild.id, 'twitch_changes')))) return false;
-                    var title_emoji = emoji_twitch;
-                }
-                if (args.platform === 'Trovo'){
-                    if (!(getBooleanFromString(getGuildSetting(guild.id, 'trovo_changes')))) return false;
-                    var title_emoji = emoji_trovo;
-                }
-                if (args.username === 'talalusha'){
-                    var channel = await getGuildChannelDB( guild, 'talala_streamchanges' );
-                } else {
-                    var channel = await getGuildChannelDB( guild, 'streamchanges' );
-                }
-                await SendAnswer( {channel: channel,
-                    guildname: guild.name,
-                    messagetype: `info`,
-                    title: `${title_emoji} Stalker ${args.platform} Changes`,
-                    text:  `**${args.username}** имеет изменения:\n${args.text}` } );
-                LogString(guild.name,`info`, moduleName,`${args.username} имеет изменения на ${args.platform}`);
-            }
-        });
-        
-        stalkerEvents.on(`VKProfileChanges`, async function (args){
-            if (args.guildids && args.guildids.includes(guild.id)){
-                if (!(getBooleanFromString(getGuildSetting(guild.id, 'vk_profile')))) return false;
-                if (args.userid === 53405222){
-                    var channel = await getGuildChannelDB( guild, 'talala_vkchanges' );
-                } else {
-                    var channel = await getGuildChannelDB( guild, 'vkchanges' );
-                }
-                await SendAnswer( {channel: channel,
-                    guildname: guild.name,
-                    messagetype: `info`,
-                    title: `${emoji_vk} Stalker VK Profile`,
-                    text:  args.text } );
-                LogString(guild.name,`info`, moduleName,`${args.username} имеет изменения VK`);
-            }
+            });
+        }
+
+        guild_setting_deps.forEach( stalker_event => {
+            console.log('Запуск слушателя события:', stalker_event.event_name)
+            ListenEvent(stalker_event.event_name);
         });
 
-        stalkerEvents.on(`YoutubeChanges`, async function (args){
-            if (args.guildids && args.guildids.includes(guild.id)){
-                if (!(getBooleanFromString(getGuildSetting(guild.id, 'youtube_newvideo')))) return false;
-                if (args.channelid === 'UC0v-I8Iemr67p_MNUshCPmw'){
-                    var channel = await getGuildChannelDB( guild, 'sadgod_youtube' );
-                } else {
-                    var channel = await getGuildChannelDB( guild, 'youtubevideos' );
-                }
-                await SendAnswer( {channel: channel,
-                    guildname: guild.name,
-                    messagetype: `info`,
-                    title: `${emoji_youtube} Stalker Youtube`,
-                    text:  args.text,
-                    image: args.image  } );
-                LogString(guild.name,`info`, moduleName,`${args.username} имеет изменения на Youtube`);
-            }
-        });
-
-        stalkerEvents.on(`VKFriendsChanges`, async function (args){
-            if (args.guildids && args.guildids.includes(guild.id)){
-                if (!(getBooleanFromString(getGuildSetting(guild.id, 'vk_friends')))) return false;
-                if (args.userid === 53405222){
-                    var channel = await getGuildChannelDB( guild, 'talala_vkfriends' );
-                } else {
-                    var channel = await getGuildChannelDB( guild, 'vkfriends' );
-                }
-                await SendAnswer( {channel: channel,
-                    guildname: guild.name,
-                    messagetype: `info`,
-                    title: `${emoji_vk} Stalker VK Friends`,
-                    text:  args.text } );
-                LogString(guild.name,`info`, moduleName,`${args.username} имеет изменения друзей в VK`);
-            }
-        });
-
-        stalkerEvents.on(`StreamRecord`, async function (args){
-            if (args.guildids && args.guildids.includes(guild.id)){
-                if (!(getBooleanFromString(getGuildSetting(guild.id, 'stream_record')))) return false;
-                var channel = await getGuildChannelDB( guild, 'records' );
-                if (args.platform === 'twitch'){
-                    var title_emoji = emoji_twitch;
-                }
-                if (args.platform === 'trovo'){
-                    var title_emoji = emoji_trovo;
-                }
-                switch (args.action){
-                    case 'fix':
-                        await SendAnswer( {channel: channel,
-                            guildname: guild.name,
-                            messagetype: `info`,
-                            title: `${title_emoji} Stalker Records`,
-                            text:  args.text } );
-                        break
-                    case 'start':
-                        await SendAnswer( {channel: channel,
-                            guildname: guild.name,
-                            messagetype: `info`,
-                            title: `${title_emoji} Stalker Records`,
-                            text:  `Была запущена запись **${args.name}** с платформы **${args.platform}**` } );
-                        break
-                    case 'stop':
-                        await SendAnswer( {channel: channel,
-                            guildname: guild.name,
-                            messagetype: `info`,
-                            title: `${title_emoji} Stalker Records`,
-                            text:  `Остановлена запись **${args.name}** с платформы **${args.platform}**` } );
-                        break
-                    default:
-                        LogString(guild.name,`info`, moduleName,`Ошибка действия`)
-                }
-            }
-        });
-    
-        LogString(guild.name,`info`, moduleName,`Дей волкер, найт сталкер!`);
+        log (`Дей волкер, найт сталкер!`, moduleName);
     },
 
     StalkerStartLoop: async function (){        
@@ -474,8 +270,7 @@ module.exports = {
                 is_active: modules_stalker.vkfriends,
                 function_name: checkVKfriends,
                 refresh_time: stalkerVKFollowersRefreshRate
-            }
-        ];
+            }];
 
             for (const stalker_module of stalker_deps){
                 await initStalkerModule(stalker_module.is_active, stalker_module.function_name, stalker_module.refresh_time, stalker_module.console_start_message);

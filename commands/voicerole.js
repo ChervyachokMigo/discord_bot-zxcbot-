@@ -8,11 +8,8 @@ module.exports = {
     command_help: `voicerole [channel name] [@role]\nvoicerole ["channel name"] [@role]\nvoicerole clear`,
     action: async (comargs, message)=>{
         if (modules.voiceroles){
-            try{
-                await VoiceRoleSet( comargs, message, {name: module.exports.command_name, help: module.exports.command_help });
-            } catch (e){
-                console.log(e)
-            }
+            await VoiceRoleSet( comargs, message, 
+                {name: module.exports.command_name, help: module.exports.command_help });
         }
     }
 }
