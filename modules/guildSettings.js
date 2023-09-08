@@ -1,4 +1,4 @@
-const { MYSQL_SAVE, MYSQL_GET_ONE, MYSQL_GET_ALL, MYSQL_GET_ALL_RESULTS_TO_ARRAY } = require (`./DB.js`)
+const { MYSQL_SAVE,   MYSQL_GET_TRACKING_DATA_BY_ACTION} = require (`./DB.js`)
 const { log } = require("../tools/log.js")
 
 var guildSettingsCache = [];
@@ -6,7 +6,7 @@ var guildSettingsCache = [];
 async function initGuildSettings(guildid){
     log('Загрузка настроек гильдии '+guildid);
     try{
-        let mysql_guildSettings = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL(`guildSettings`, { guildid: guildid } ))
+        let mysql_guildSettings =  await MYSQL_GET_TRACKING_DATA_BY_ACTION('guildSettings', { guildid: guildid });
         guildSettingsCache = guildSettingsCache.concat(mysql_guildSettings);
     } catch (e){
         console.log(e)

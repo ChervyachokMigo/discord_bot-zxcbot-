@@ -533,15 +533,13 @@ function GET_VALUES_FROM_OBJECT_BY_KEY (arrayobject, valuekey){
 }
 
 async function getTrackingUsersForGuild(guildid, platformaction, mysql_tablename){
-    let guildServicesTracking_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('guildServicesTracking', {
+    let guildServicesTracking_data = await MYSQL_GET_TRACKING_DATA_BY_ACTION('guildServicesTracking', {
         guildid: guildid,
         platformaction: platformaction
-    }));
-    console.log(guildServicesTracking_data)
+    });
+
     if (guildServicesTracking_data.length>0){
         let guildServicesTracking_userdata = GET_VALUES_FROM_OBJECT_BY_KEY(guildServicesTracking_data, 'trackinguserid');
-        console.log(guildServicesTracking_userdata);
-        console.log(platformaction.split("_")[0]);
 
         var searchUserID = table_id_names.filter( obj => obj.platforms.includes(platformaction.split("_")[0]));
         
@@ -551,7 +549,7 @@ async function getTrackingUsersForGuild(guildid, platformaction, mysql_tablename
             searchUserID = (searchUserID.shift()).name_id;
         }
         
-        return MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL(mysql_tablename, { [searchUserID]: guildServicesTracking_userdata } ));
+        return await MYSQL_GET_TRACKING_DATA_BY_ACTION(mysql_tablename, { [searchUserID]: guildServicesTracking_userdata } );
     } else {
         return [];
     }
@@ -605,11 +603,40 @@ async function getTrackingInfo(message, mysql_tablename, trackingType, emoji, mo
     }
 }
 
+async function MYSQL_GET_TRACKING_DATA_BY_ACTION(action, custom_query_params = {}){
+    var query_params = {};
+    var query_action = action;
+    switch (action){
+        case 'steamuser':
+        case 'streamersTrovo':
+        case 'streamersTwitch':
+        case 'twitchchat':
+        case 'osuprofile':
+        case 'vkuser':
+        case 'youtubechannel':
+            query_params = {tracking: true};
+            break;
+        case 'vkuser_friends':
+            query_action = 'vk_user';
+            query_params = {tracking: true, friendsTracking: true};
+            break;
+        case 'guildSettings':
+        case 'trovoclips':
+        case 'twitchclips':
+        case 'guildServicesTracking':
+        case 'vkfriend':
+        case 'botchannel':
+        default:
+            query_params = custom_query_params;
+    }
+    return MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL(query_action, query_params));
+}
 
 
 module.exports = {
     getTrackingInfo: getTrackingInfo,
     getTrackingUsersForGuild: getTrackingUsersForGuild,
+    MYSQL_GET_TRACKING_DATA_BY_ACTION: MYSQL_GET_TRACKING_DATA_BY_ACTION,
     getGuildidsOfTrackingUserService: async function (platformaction, trackinguserid){
         var mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('guildServicesTracking', {
             platformaction: platformaction,
@@ -625,6 +652,7 @@ module.exports = {
     MYSQL_GET_ALL_RESULTS_TO_ARRAY: MYSQL_GET_ALL_RESULTS_TO_ARRAY,
 
     prepareDB: async function (){
+        log('Подготовка баз данных', 'DB');
         try {
             const mysql_checkdb = require('mysql2/promise');
             const connection = await mysql_checkdb.createConnection(`mysql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}`);

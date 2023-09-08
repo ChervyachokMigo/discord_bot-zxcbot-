@@ -28,7 +28,7 @@ const { checkTrovoStatus, checkTrovoLastClips, checkTrovoFollowers } = require (
 const { checkChangesSteamUser } = require (`../modules/stalker/steam.js`);
 const { checkVKstatus, checkVKfriends } = require (`../modules/stalker/VK.js`);
 const { checkOsuData, checkOsuFollowers } = require (`../modules/stalker/osu.js`);
-const youtube = require (`../modules/stalker/youtube.js`);
+const { checkYoutubeVideos, youtube_init } = require (`../modules/stalker/youtube.js`);
 
 const {
   stalkerRefreshRate,
@@ -400,74 +400,98 @@ module.exports = {
         LogString(guild.name,`info`, moduleName,`Дей волкер, найт сталкер!`);
     },
 
-    StalkerStartLoop: async function (){
-        try{
+    StalkerStartLoop: async function (){        
         if (modules.stalker == true){
-            if (modules_stalker.osuprofile){
-                console.log('запуск осу профилей')
-                await checkOsuData(stalkerEvents);
-                setInfinityTimerLoop(async ()=>{await checkOsuData(stalkerEvents);}, stalkerOsuScoresRefreshRate);
-            }
-            
-            if (modules_stalker.osufollowers){
-                console.log('запуск осу фоловеров')
-                await checkOsuFollowers(stalkerEvents);
-                setInfinityTimerLoop(async ()=>{await checkOsuFollowers(stalkerEvents);}, stalkerOsuFollowersRefreshRate);
-            }
-            
-            if (modules_stalker.youtube){
-                console.log('запуск ютуба')
-                await youtube.init();
-                await youtube.checkYoutubeVideos(stalkerEvents);
-                setInfinityTimerLoop(async ()=>{await youtube.checkYoutubeVideos(stalkerEvents);}, stalkerYoutubeRefreshRate);
-            }
 
-            if (modules_stalker.twitchstatus){
-                console.log('запуск твича')
-                await checkTwitchStatus(stalkerEvents);
-                setInfinityTimerLoop(async ()=>{await checkTwitchStatus(stalkerEvents);}, stalkerRefreshRate);
+            const stalker_deps = [{
+                console_start_message: 'запуск осу профилей',
+                is_active: modules_stalker.osuprofile,
+                function_name: checkOsuData,
+                refresh_time: stalkerOsuScoresRefreshRate
+            },
+            {
+                console_start_message: 'запуск осу фоловеров',
+                is_active: modules_stalker.osufollowers,
+                function_name: checkOsuFollowers,
+                refresh_time: stalkerOsuFollowersRefreshRate
+            },
+            {
+                console_start_message: 'запуск ютуба',
+                is_active: modules_stalker.youtube,
+                function_name: checkYoutubeVideos,
+                refresh_time: stalkerYoutubeRefreshRate
+            },
+            {
+                console_start_message: 'запуск твича',
+                is_active: modules_stalker.twitchstatus,
+                function_name: checkTwitchStatus,
+                refresh_time: stalkerRefreshRate
+            },
+            {
+                console_start_message: 'запуск твич фоловеров',
+                is_active: modules_stalker.twitchfollowers,
+                function_name: checkUserTwitchFolowers,
+                refresh_time: stalkerFollowersTwitchRefreshRate
+            },
+            {
+                console_start_message: 'запуск твич клипов',
+                is_active: modules_stalker.twitchclips,
+                function_name: checkUserTwitchClips,
+                refresh_time: stalkerClipsTwitchRefreshRate
+            },
+            {
+                console_start_message: 'запуск трово',
+                is_active: modules_stalker.trovostatus,
+                function_name: checkTrovoStatus,
+                refresh_time: stalkerRefreshRate
+            },
+            {
+                console_start_message: 'запуск трово фоловеров',
+                is_active: modules_stalker.trovofollowers,
+                function_name: checkTrovoFollowers,
+                refresh_time: stalkerTrovoFollowersRefreshRate
+            },
+            {
+                console_start_message: 'запуск трово клипов',
+                is_active: modules_stalker.trovoclips,
+                function_name: checkTrovoLastClips,
+                refresh_time: stalkerClipsTrovoRefreshRate
+            },
+            {
+                console_start_message: 'запуск стим',
+                is_active: modules_stalker.steamstatus,
+                function_name: checkChangesSteamUser,
+                refresh_time: stalkerSteamProfilesRefreshRate
+            },
+            {
+                console_start_message: 'запуск vk',
+                is_active: modules_stalker.vkstatus,
+                function_name: checkVKstatus,
+                refresh_time: stalkerVKProfilesRefreshRate
+            },
+            {
+                console_start_message: 'запуск вк друзей',
+                is_active: modules_stalker.vkfriends,
+                function_name: checkVKfriends,
+                refresh_time: stalkerVKFollowersRefreshRate
             }
-            if (modules_stalker.twitchfollowers){
-                await checkUserTwitchFolowers(stalkerEvents);
-                setInfinityTimerLoop(async ()=>{await checkUserTwitchFolowers(stalkerEvents);}, stalkerFollowersTwitchRefreshRate);
-            }
-            if (modules_stalker.twitchclips){
-                await checkUserTwitchClips(stalkerEvents);
-                setInfinityTimerLoop(async ()=>{await checkUserTwitchClips(stalkerEvents);}, stalkerClipsTwitchRefreshRate);
-            }
+        ];
 
-            if (modules_stalker.trovostatus){
-                await checkTrovoStatus(stalkerEvents);
-                setInfinityTimerLoop(async ()=>{await checkTrovoStatus(stalkerEvents);}, stalkerRefreshRate);
+            for (const stalker_module of stalker_deps){
+                await initStalkerModule(stalker_module.is_active, stalker_module.function_name, stalker_module.refresh_time, stalker_module.console_start_message);
             }
-            if (modules_stalker.trovofollowers){
-                await checkTrovoFollowers(stalkerEvents);
-                setInfinityTimerLoop(async ()=>{await checkTrovoFollowers(stalkerEvents);}, stalkerTrovoFollowersRefreshRate);
-            }
-            if (modules_stalker.trovoclips){
-                await checkTrovoLastClips(stalkerEvents);
-                setInfinityTimerLoop(async ()=>{await checkTrovoLastClips(stalkerEvents);}, stalkerClipsTrovoRefreshRate);
-            }
-            
-            if (modules_stalker.steamstatus){
-                await checkChangesSteamUser(stalkerEvents);
-                setInfinityTimerLoop(async ()=>{await checkChangesSteamUser(stalkerEvents);}, stalkerSteamProfilesRefreshRate);
-            }
-
-            if (modules_stalker.vkstatus){
-                await checkVKstatus(stalkerEvents);
-                setInfinityTimerLoop(async ()=>{await checkVKstatus(stalkerEvents);}, stalkerVKProfilesRefreshRate);
-            }
-            if (modules_stalker.vkfriends){
-                await checkVKfriends(stalkerEvents);
-                setInfinityTimerLoop(async ()=>{await checkVKfriends(stalkerEvents);}, stalkerVKFollowersRefreshRate);
-            }
-
-            
 
         }
-    }catch (e){
-        console.log(e);
     }
-    },
+}
+
+async function initStalkerModule(is_active, check_function , refresh_time, console_message){
+    if (is_active){
+        log(console_message, moduleName);
+        if (check_function == checkYoutubeVideos){
+            await youtube_init();
+        }
+        await check_function(stalkerEvents);
+        setInfinityTimerLoop(async ()=>{await check_function(stalkerEvents);}, refresh_time);
+    }
 }

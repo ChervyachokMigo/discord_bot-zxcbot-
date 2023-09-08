@@ -1,4 +1,5 @@
 const  fs = require('fs');
+const {  log } = require("../../tools/log.js");
 
 var farming_maps;
 
@@ -20,6 +21,7 @@ function load_farming_maps(){
 }
 
 async function initialize(){
+    log('Загрузка карт для тайко', 'taiko_farming_maps');
     load_farming_maps();
     //read_farming_maps(4.3, 5.2, 0.2); //test
 }

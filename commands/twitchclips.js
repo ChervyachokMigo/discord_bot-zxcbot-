@@ -7,7 +7,7 @@ const { getGuildChannelDB } = require (`../modules/GuildChannel.js`);
 const { emoji_twitch } = require("../constantes/emojis.js");
 const { stalkerClipsCheckLastDays, twitchclipsTitleMinChars } = require('../settings.js');
 
-const { MYSQL_SAVE, MYSQL_GET_ALL, MYSQL_GET_ALL_RESULTS_TO_ARRAY } = require("../modules/DB.js");
+const { MYSQL_SAVE, MYSQL_GET_TRACKING_DATA_BY_ACTION } = require("../modules/DB.js");
 const { LogString, log } = require("../tools/log.js");
 const { GET_VALUES_FROM_OBJECT_BY_KEY } = require("../modules/tools.js");
 
@@ -68,7 +68,7 @@ module.exports = {
                 
                 if (comtype === 'new'){
                     //получаем все клипы пользователя и преобразовываем в обычный массив объектов
-                    let clips_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('twitchclips', { userid: userid } ));
+                    let clips_data = await MYSQL_GET_TRACKING_DATA_BY_ACTION('twitchclips', { userid: userid } );
                                 
                     if ( clips_data.length > 0 ){
                         //преобразовываем список в массив с айди клипов

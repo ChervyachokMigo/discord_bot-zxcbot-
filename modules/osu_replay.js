@@ -25,24 +25,6 @@ function ReplayDataToText(osu_replay){
     mapfullname += `+${osu_replay.mods.join(', ')}`
 
     let mapurl = `https://osu.ppy.sh/beatmapsets/${osu_replay.beatmap.beatmapID}#taiko/${osu_replay.beatmap.difficultyID}`;
-    
-    /*var text = ``;
-    text += `Карта: [${mapfullname}](${mapurl})\n`;
-    text += `Игрок: **${osu_replay.playername}**\n`;
-    text += `Режим: **${ getObjectKeyByValue(Number(osu_replay.gamemode), GAMEMODE).replace('MODE_','') }**\n`;
-    text += `300/100/50/miss: **${osu_replay.count300}/`+
-                            `${osu_replay.count100}/`+
-                            `${osu_replay.count50}/`+
-                            `${osu_replay.countMiss}**\n`;
-    text += `Комбо: **${osu_replay.combo}**\n`;
-    text += `Моды: **${osu_replay.mods.join(', ')}**\n`;
-    text += `Дата: ${getDiscordRelativeTime(WindowsTicksToUTC(osu_replay.date))}\n`;   
-    text += `Фреймы: **${osu_replay.replay.dataFramesLength}**\n`;
-    text += `Нажатия: **${osu_replay.replay.hits.counts.Key1}/`+
-                    `${osu_replay.replay.hits.counts.Key2}/`+
-                    `${osu_replay.replay.hits.counts.Key3}/`+
-                    `${osu_replay.replay.hits.counts.Key4}**\n`;
-    */
 
     var description = '';
 
@@ -156,12 +138,7 @@ function NewButtons(){
                 .setCustomId('ReplayZoomDec')
                 .setLabel('🔍➖')
                 .setStyle('PRIMARY')
-                .setDisabled(false),
-           /* new MessageButton()
-                .setCustomId('SetTimeModalShow')
-                .setLabel('SetTimeModalShow')
-                .setStyle('PRIMARY')
-                .setDisabled(false),*/
+                .setDisabled(false)
         ]),
         new MessageActionRow().addComponents([
         new MessageSelectMenu()
@@ -180,16 +157,7 @@ function NewButtons(){
             }
         
         ])
-        ]),/*        new Modal().setComponents([
-            new TextInputComponent()
-            .setCustomId('SetTime')
-            .setLabel('SetTime')
-            .setPlaceholder('перейти к')
-            .setStyle('SHORT')
-            .setRequired(true)
-            .setMinLength(1).setMaxLength(15)
-        ]),*/
-
+        ])
     ]
 }
 
@@ -360,15 +328,6 @@ module.exports = {
                             attachment.time = 0;
                         }
                         break;
-                    /*case 'SetTimeModalShow':
-                        new Modal().setCustomId('SetTimeModal').setTitle('settime').setComponents([
-                            new TextInputComponent()
-                            .setCustomId('SetTime')
-                            .setLabel('SetTime')
-                            .setPlaceholder('перейти к')
-                            .setStyle('SHORT')
-                            .setRequired(true)
-                            .setMinLength(1).setMaxLength(15)]);*/
                     break;
                 }
                 

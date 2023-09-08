@@ -1,7 +1,7 @@
 const { EventEmitter } = require('events');
 const { ChatClient } = require("dank-twitch-irc");
 
-const { MYSQL_GET_ALL, MYSQL_GET_ONE, MYSQL_GET_ALL_RESULTS_TO_ARRAY, 
+const { MYSQL_GET_ONE, MYSQL_GET_TRACKING_DATA_BY_ACTION,
     manageGuildServiceTracking, getTrackingUsersForGuild, getGuildidsOfTrackingUserService } = require("../DB.js");
 const { GET_VALUES_FROM_OBJECT_BY_KEY } = require("../../modules/tools.js");
 const { LogString, log } = require("../../tools/log.js");
@@ -163,15 +163,17 @@ module.exports = {
     },
 
     twitchchat: function (){    
+        log('Загрузка твич чатов', moduleName);
 
-        client.on("ready", () => LogString(`System`, `info`, moduleName,`Соединение с twitch irc установлено!`));
+        client.on("ready", () => log('Соединение с twitch irc установлено!', moduleName) );
 
         client.on("close", (error) => {
             if (error != null) {
                 console.error("Client closed due to error", error);
             }
         });
-        client.on('error', (e)=>console.log(e));
+
+        client.on('error', (e)=> console.error(e));
 
         client.on("PRIVMSG", async (msg) => {
             var messageText = '';
@@ -209,14 +211,14 @@ module.exports = {
         });
 
         client.on("JOIN", async (msg) => {
-            LogString(`System`, `info`, moduleName,`Подключен к чату - ${msg.channelName}`);
+            log(`Подключен к чату: ${msg.channelName}`, moduleName);
         });
     
         async function sendMessages(){
             if (MessagesBuffer.length > 0){
                 for (let chatmessages of MessagesBuffer){
                     let messagestext = chatmessages.messagetext.join(`\n`);
-                    console.log('chat:\n' + messagestext + '\n');
+                    log(`Новое сообщение из чата "${chatmessages.username}":\n`+ messagestext + '\n', moduleName);
                     let TwitchChatGuildids = await getGuildidsOfTrackingUserService('twitchchat_tracking', chatmessages.username);
                     ev.emit('newChatMessage', {guildids: TwitchChatGuildids, chatname: chatmessages.username, messagetext: messagestext});
                 }
@@ -236,10 +238,10 @@ module.exports = {
 async function ChatsJoin(){
     await client.connect();
     var TwitchChatNames = await MYSQL_GET_TRACKING_TWITCH_CHATS();
-    if (TwitchChatNames.length>0){
+    if (TwitchChatNames.length > 0){
         await client.joinAll(TwitchChatNames);
     }
-    //await client.say('tester_pivka17', '!skin');
+
 }
 
 function boldSelectedWords(regexp, str){
@@ -254,7 +256,7 @@ function boldSelectedWords(regexp, str){
 }
 
 async function MYSQL_GET_TRACKING_TWITCH_CHATS (){
-    let mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('twitchchat', {tracking: true}));
+    let mysql_data = await MYSQL_GET_TRACKING_DATA_BY_ACTION('twitchchat', {tracking: true});
     var usernames = [];
     if (mysql_data.length > 0){
         usernames = GET_VALUES_FROM_OBJECT_BY_KEY(mysql_data, 'username');

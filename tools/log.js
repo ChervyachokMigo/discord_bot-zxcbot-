@@ -1,17 +1,11 @@
 const { getTimeMSKCurrentToStringFormat } = require('./time.js');
-const { saveLog } = require('../displaydata/displaydata.js');
+const { saveLog } = require('../logserver/displaydata.js');
 
 module.exports = {
     LogString: function(guildname, type, name, text ){
 
-        /*guildname = typeof guildname === 'undefined'?'':guildname;
-        type = typeof type === 'undefined'?'':type;
-        name = typeof name === 'undefined'?'':name;
-        text = typeof text === 'undefined'?'':text;*/
-
         var logtext = `[${getTimeMSKCurrentToStringFormat()}] (${type}) ${guildname} | ${name}: ${text}`;
         console.log(logtext);
-        //console.log(text);
         
         saveLog(logtext);
     },

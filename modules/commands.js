@@ -1,10 +1,15 @@
 const fs = require('fs');
+
+const { log } = require("../tools/log.js");
+
 var AvailableCommands = [];
 
 module.exports = {
     initAvailableCommands: function(){
+        log('Загрузка доступных комманд', 'Commands');
         let command_files = fs.readdirSync(`./commands`, {encoding:'utf-8'});
         for (let command_file of command_files){
+            log('Загрузка команды: ' + command_file ,'Commands');
             let { command_aliases, command_description, command_name, command_help } = require(`../commands/${command_file}`);
             AvailableCommands.push({
                 filename: command_file,

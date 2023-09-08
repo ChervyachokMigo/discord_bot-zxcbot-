@@ -7,8 +7,8 @@ const port = 3000
 var logData = [];
 
 module.exports = {
-    initDisplayDataServer : function (){
-
+    initLogServer : function (){
+        
         app.use(express.static(__dirname));
         app.use(bodyParser.urlencoded({ extended: true }));
 

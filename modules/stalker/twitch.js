@@ -1,4 +1,4 @@
-const { MYSQL_SAVE, MYSQL_GET_ALL, MYSQL_GET_ONE, MYSQL_GET_ALL_RESULTS_TO_ARRAY, 
+const { MYSQL_SAVE, MYSQL_GET_TRACKING_DATA_BY_ACTION, MYSQL_GET_ONE, 
     manageGuildServiceTracking, getTrackingInfo, getGuildidsOfTrackingUserService } = require("../DB.js");
 const { LogString, log } = require("../../tools/log.js");
 const { GET_VALUES_FROM_OBJECT_BY_KEY } = require("../../modules/tools.js");
@@ -60,7 +60,6 @@ module.exports = {
                 throw new Error('unexpected error: undefined action');
         }
         return {success: true, text: `Twitch user **${username}** set **${option.action}** is **${option.value}**`}
-
     },
 
     TWITCH_TRACKING_INFO: async function(message){
@@ -78,7 +77,7 @@ module.exports = {
         try{
             
             //получаем всех юзеров у которых tracking = true и преобразовываем данные в обычный массив объектов
-            let mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('streamersTwitch', {tracking: true}));
+            let mysql_data = await MYSQL_GET_TRACKING_DATA_BY_ACTION('streamersTwitch');
             if (mysql_data.length > 0){
                 log('Проверка статуса юзеров Твича', moduleName);
                 //получение статуса всех пользователей сразу
@@ -114,7 +113,7 @@ module.exports = {
                         };
                     }
                     if( (userdataNew.status === 'online' && userdata.status === 'online') ||
-                         (userdataNew.status !== userdata.status)){
+                        (userdataNew.status !== userdata.status)){
                     var trackingsGuildsOfChangesTwitchProfile = await getGuildidsOfTrackingUserService('twitch_tracking', userdata.userid);
                     }
                     //если статус изменился - отправляем сообщение
@@ -208,7 +207,7 @@ module.exports = {
         try{
             
             //получаем всех пользователей у которых tracking = true и преобразовываем в обычный массив объектов
-            let mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('streamersTwitch', {tracking: true}));
+            let mysql_data = await MYSQL_GET_TRACKING_DATA_BY_ACTION('streamersTwitch');
             if (mysql_data.length > 0){
                 log('Проверка фоловеров юзеров Твича')
                 for (let userdata of mysql_data){
@@ -254,7 +253,7 @@ module.exports = {
         try{
             
             //получаем всех пользователей у которых tracking = true и преобразовываем в обычный массив объектов
-            let users_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('streamersTwitch', {tracking: true}));
+            let users_data = await MYSQL_GET_TRACKING_DATA_BY_ACTION('streamersTwitch');
             
             if ( users_data.length > 0 ){
                 log('Проверка клипов юзеров Твича', moduleName)
@@ -279,7 +278,7 @@ module.exports = {
                             continue
                         }
                         //получаем все клипы пользователя и преобразовываем в обычный массив объектов
-                        let clips_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('twitchclips', { userid: Number(userdata.userid) } ));
+                        let clips_data = await MYSQL_GET_TRACKING_DATA_BY_ACTION('twitchclips', { userid: Number(userdata.userid) } );
                         
                         if ( clips_data && clips_data.length > 0 ){
                             //преобразовываем список в массив с айди клипов

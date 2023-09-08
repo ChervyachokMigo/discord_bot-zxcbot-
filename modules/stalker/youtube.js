@@ -4,7 +4,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 
-const { MYSQL_SAVE, MYSQL_GET_ALL, MYSQL_GET_ONE, MYSQL_GET_ALL_RESULTS_TO_ARRAY, 
+const { MYSQL_SAVE, MYSQL_GET_ONE, MYSQL_GET_TRACKING_DATA_BY_ACTION, 
     manageGuildServiceTracking, getTrackingInfo, getGuildidsOfTrackingUserService } = require("../DB.js");
 
 const { CreateFolderSync_IsNotExists } = require('../../modules/tools.js');
@@ -188,9 +188,8 @@ async function getVideosByPlaylistId(playlistid){
         }, function(err, response) {
 
             if (err) {
-            //console.log('The API returned an error: ' + err);
-            rej(err)
-            return;
+                rej(err)
+                return;
             }
 
             var response_data = response.data.items;
@@ -213,21 +212,20 @@ async function getChannelInfoByName(channel_name){
         order: 'relevance',
         type: 'channel',
         maxResults: 1
-      }, function(err, response) {
+        }, function(err, response) {
 
-        if (err) {
-            //console.log('The API returned an error: ' + err);
-            rej(err)
-            return;
-        }
+            if (err) {
+                rej(err)
+                return;
+            }
 
-        var response_data = response.data.items;
-        if (!response_data || response_data.length == 0) {
-            res({error: 'no channels with '+channel_name});
-        } else {
-            res(getChannelInfoResult(response_data[0]));
-        }
-    });
+            var response_data = response.data.items;
+            if (!response_data || response_data.length == 0) {
+                res({error: 'no channels with '+channel_name});
+            } else {
+                res(getChannelInfoResult(response_data[0]));
+            }
+        });
     });
 }
 
@@ -266,7 +264,7 @@ async function MYSQL_TRACK_NEW_YOUTUBE_USER (channeldata){
 }
 
 module.exports = {
-    init: init,
+    youtube_init: init,
 
     MYSQL_YOUTUBE_USER_TRACKING_CHANGE: async function(message, searchname, option){
         //проверка юзера и создаание нового юзера
@@ -310,8 +308,8 @@ module.exports = {
     },
 
     checkYoutubeVideos: async function (stalkerEvents){
-        
-        var AllUsersYoutubeDataFromDB = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('youtubechannel', {tracking: true}));
+        var AllUsersYoutubeDataFromDB = await MYSQL_GET_TRACKING_DATA_BY_ACTION('youtubechannel');
+
         if (AllUsersYoutubeDataFromDB.length > 0){
             log('Проверка статуса Youtube каналов', moduleName);
             for (let YoutubeChannelData of AllUsersYoutubeDataFromDB){

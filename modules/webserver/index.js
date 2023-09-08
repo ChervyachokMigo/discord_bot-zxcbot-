@@ -7,7 +7,7 @@ require('../../settings.js');
 const fs = require('fs');
 const WebSocket = require('ws');
 const webs = new WebSocket.WebSocketServer({ port: 8888 });
-const db = require("../../modules/DB.js");
+const {MYSQL_GET_TRACKING_DATA_BY_ACTION, MYSQL_GET_ALL_RESULTS_TO_ARRAY, MYSQL_GET_ALL } = require("../../modules/DB.js");
 const {log} = require("../../tools/log.js");
 
 function isJSON(str) {
@@ -197,7 +197,7 @@ module.exports = {
                 client.guilds.cache.forEach( async ( guild )=> guildids.push(guild.id) );
                 ws.send(JSON.stringify({action:'guildids', data: guildids}) );
 
-                var botchannels = db.MYSQL_GET_ALL_RESULTS_TO_ARRAY (await db.MYSQL_GET_ALL('botchannel') );
+                var botchannels = await MYSQL_GET_TRACKING_DATA_BY_ACTION('botchannel');
                 botchannels = groupBy(botchannels, 'guildid');
                 ws.send(JSON.stringify({action:'botchannels', data: botchannels}));
 
@@ -265,6 +265,6 @@ function get_tracking_multiply(obj, props){
 }
 
 async function send_db_data(conn, tablename, action, tracking_props) {
-    let data = db.MYSQL_GET_ALL_RESULTS_TO_ARRAY (await db.MYSQL_GET_ALL(tablename, get_tracking_multiply(conn.tracking_filter, tracking_props)));
+    let data = MYSQL_GET_ALL_RESULTS_TO_ARRAY (await MYSQL_GET_ALL(tablename, get_tracking_multiply(conn.tracking_filter, tracking_props)));
     conn.send(JSON.stringify({action, data}));
 }

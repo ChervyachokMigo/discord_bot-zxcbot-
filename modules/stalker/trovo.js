@@ -1,6 +1,6 @@
 var player = require('play-sound')(opts = {player:'mplayer'});
 
-const { MYSQL_SAVE, MYSQL_GET_ONE, MYSQL_GET_ALL, MYSQL_GET_ALL_RESULTS_TO_ARRAY, 
+const { MYSQL_SAVE, MYSQL_GET_ONE, MYSQL_GET_TRACKING_DATA_BY_ACTION, 
     manageGuildServiceTracking, getTrackingInfo, getGuildidsOfTrackingUserService } = require("../DB.js");
 const { getTrovoUserStatus, getTrovoUserID, getTrovoClips } = require (`../../modules/stalker/requests.js`);
 const { LogString, log } = require("../../tools/log.js");
@@ -67,7 +67,7 @@ module.exports = {
         try{
            
             //получаем всех юзеров у которых tracking = true и преобразовываем данные в обычный массив объектов
-            let mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('streamersTrovo', {tracking: true}));
+            let mysql_data = await MYSQL_GET_TRACKING_DATA_BY_ACTION('streamersTrovo');
             if (mysql_data.length > 0){
                 log('Проверка статуса юзеров Трово', moduleName);
                 //обработка результатов
@@ -104,7 +104,7 @@ module.exports = {
         try{
            
             //получаем всех юзеров у которых tracking = true и преобразовываем данные в обычный массив объектов
-            let mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('streamersTrovo', {tracking: true}));
+            let mysql_data = await MYSQL_GET_TRACKING_DATA_BY_ACTION('streamersTrovo');
             if (mysql_data.length > 0){
                 log('Проверка статуса юзеров Трово', moduleName);
                 //обработка результатов
@@ -201,7 +201,7 @@ module.exports = {
         try{
             
             //получаем всех юзеров у которых tracking = true и преобразовываем данные в обычный массив объектов
-            let mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('streamersTrovo', {tracking: true}));
+            let mysql_data = await MYSQL_GET_TRACKING_DATA_BY_ACTION('streamersTrovo');
             if (mysql_data.length > 0){
                 log('Проверка клипов Трово', moduleName);
                 //обработка результатов
@@ -211,7 +211,7 @@ module.exports = {
 
                     var clips = await getTrovoClips({channelid: userdata.userid});
                     if (clips.length>0){
-                        var mysql_clipsdata = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('trovoclips',{userid: userdata.userid}));
+                        var mysql_clipsdata = await MYSQL_GET_TRACKING_DATA_BY_ACTION('trovoclips', {userid: userdata.userid} );
                         
                         for (let clip of clips){
                             

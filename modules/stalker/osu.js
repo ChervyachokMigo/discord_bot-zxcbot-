@@ -1,6 +1,6 @@
 const { v2 } = require ('osu-api-extended');
 
-const { MYSQL_SAVE, MYSQL_GET_ALL, MYSQL_GET_ALL_RESULTS_TO_ARRAY, MYSQL_GET_ONE, 
+const { MYSQL_SAVE, MYSQL_GET_TRACKING_DATA_BY_ACTION, MYSQL_GET_ONE, 
     manageGuildServiceTracking, getTrackingInfo, getGuildidsOfTrackingUserService } = require("../DB.js");
 const { getTimeMSKToStringFormat, timeAgo, getDiscordRelativeTime } = require('../../tools/time.js');
 const { getNumberWithSign, getFixedFloat } = require("../../modules/tools.js");
@@ -33,19 +33,19 @@ async function getOsuUserData(userid, mode = 'osu'){
         console.log(data);
         return {error: null}
     }
-    var res = {};
-
-    res.userid = Number(data.id);
-    res.username = data.username;
-    res.pp = parseInt(getFixedFloat(data.statistics.pp, 2)*100);
-    res.rank = parseInt(data.statistics.global_rank);
-    res.acc = parseInt(getFixedFloat(data.statistics.hit_accuracy,2)*100);
-    res.countryrank = parseInt(data.statistics.country_rank);
-    res.lastactive = parseInt(new Date(data.last_visit).valueOf()/1000);
-    res.online = data.is_online;
-    res.followers = parseInt(data.follower_count);
-    res.mainmode = data.playmode;
-    res.avatar = data.avatar_url;
+    var res = {
+        userid: Number(data.id),
+        username: data.username,
+        pp: parseInt(getFixedFloat(data.statistics.pp, 2)*100),
+        rank: parseInt(data.statistics.global_rank),
+        acc: parseInt(getFixedFloat(data.statistics.hit_accuracy,2)*100),
+        countryrank: parseInt(data.statistics.country_rank),
+        lastactive: parseInt(new Date(data.last_visit).valueOf()/1000),
+        online: data.is_online,
+        followers: parseInt(data.follower_count),
+        mainmode: data.playmode,
+        avatar: data.avatar_url
+    }
     return res;
 }
 
@@ -211,14 +211,17 @@ module.exports = {
 
     checkOsuFollowers: async function(stalkerEvents){
         
-        
         if (!await checkTokenExpires('osu')){
             log('cant get osu token');
             return false;
         };
-        var AllUsersOsuDataFromDB = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('osuprofile', {tracking: true}));
+
+        var AllUsersOsuDataFromDB = await MYSQL_GET_TRACKING_DATA_BY_ACTION('osuprofile');
+
         if (AllUsersOsuDataFromDB.length > 0){
-            log('Проверка осу фолловеров', moduleName)
+
+            log('Проверка осу фолловеров', moduleName);
+
             for (let osuUserDataOld of AllUsersOsuDataFromDB){
 
                 var osuUserDataNew = await getOsuUserData(osuUserDataOld.userid, osuUserDataOld.mainmode);
@@ -241,13 +244,14 @@ module.exports = {
 
     checkOsuData: async function(stalkerEvents, isSilent = false, forUserid = 0){
         try{
-            
-            
+
             if (!await checkTokenExpires('osu')){
                 log('cant get osu token');
                 return false;
             };
-            var AllUsersOsuDataFromDB = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('osuprofile', {tracking: true}));
+
+            var AllUsersOsuDataFromDB = await MYSQL_GET_TRACKING_DATA_BY_ACTION('osuprofile');
+            
             if (AllUsersOsuDataFromDB.length > 0){
                 if (stalkerEvents === undefined){
                     isSilent = true;
@@ -377,23 +381,24 @@ function getUserSummary(osu_userInfo){
         }
         return last_year;
     }
-    var res = {};
-    res.id = Number(osu_userInfo.id);
-    res.username = osu_userInfo.username;
-    res.pp = getFixedFloat(osu_userInfo.statistics.pp,2);
-    res.rank = osu_userInfo.statistics.global_rank;
-    res.acc = getFixedFloat(osu_userInfo.statistics.hit_accuracy,2);
-    res.countryrank = osu_userInfo.statistics.country_rank;
-    res.lastvisit = osu_userInfo.last_visit;
-    res.online = osu_userInfo.is_online===true?'online':'offline';
-    res.followers = osu_userInfo.follower_count;
-    res.gamemode = osu_userInfo.playmode;
-    res.country = osu_userInfo.country.name;
-    res.playcount = {
-        total: osu_userInfo.beatmap_playcounts_count,
-        last_month: osu_userInfo.monthly_playcounts[osu_userInfo.monthly_playcounts.length-1].count,
-        last_year: getLastYearCount(osu_userInfo.monthly_playcounts)
-    };
+    var res = {
+        id: Number(osu_userInfo.id),
+        username: osu_userInfo.username,
+        pp: getFixedFloat(osu_userInfo.statistics.pp,2),
+        rank: osu_userInfo.statistics.global_rank,
+        acc: getFixedFloat(osu_userInfo.statistics.hit_accuracy,2),
+        countryrank: osu_userInfo.statistics.country_rank,
+        lastvisit: osu_userInfo.last_visit,
+        online: osu_userInfo.is_online===true?'online':'offline',
+        followers: osu_userInfo.follower_count,
+        gamemode: osu_userInfo.playmode,
+        country: osu_userInfo.country.name,
+        playcount: {
+            total: osu_userInfo.beatmap_playcounts_count,
+            last_month: osu_userInfo.monthly_playcounts[osu_userInfo.monthly_playcounts.length-1].count,
+            last_year: getLastYearCount(osu_userInfo.monthly_playcounts)
+        }
+    }
     
     return res;
 }
@@ -409,75 +414,78 @@ async function addNewScore(scoreobj){
 }
 
 function getActivityText(user, activity){
-    var text = '';
+
+    function username_link(username, userid){
+        return `**[${username}](https://osu.ppy.sh/users/${userid})**`;
+    }
+
+    function beatmap_link(title, relative_url){
+        return `[${title}](https://osu.ppy.sh${relative_url})`;
+    }
+
+    var text = ``;
+
     switch (activity.type){
+
         case `rank`:
-            text += `**[${user.username}](https://osu.ppy.sh/users/${user.userid})** `;
-            text += `занял **#${activity.rank}** место с ранком **${activity.scoreRank}**\n`;
-            text += `На карте [${activity.beatmap.title}](https://osu.ppy.sh${activity.beatmap.url}) (${activity.mode})\n`;
-            text += `Дата: ${getDiscordRelativeTime(activity.created_at)}`;
+            text += `${username_link(user.username,user.userid)} занял **#${activity.rank}** место с ранком **${activity.scoreRank}**\n`;
+            text += `На карте ${beatmap_link(activity.beatmap.title, activity.beatmap.url)} (${activity.mode})\n`;
             break
+
         case `rankLost`:
-            text += `**[${user.username}](https://osu.ppy.sh/users/${user.userid})** `;
-            text += `потерял лидерство\n`;
-            text += `На карте [${activity.beatmap.title}](https://osu.ppy.sh${activity.beatmap.url}) (${activity.mode})\n`;
-            text += `Дата: ${getDiscordRelativeTime(activity.created_at)}`;
+            text += `${username_link(user.username,user.userid)} потерял лидерство\n`;
+            text += `На карте ${beatmap_link(activity.beatmap.title, activity.beatmap.url)} (${activity.mode})\n`;
             break
+
         case `userSupportGift`:
-            text += `**[${user.username}](https://osu.ppy.sh/users/${user.userid})** `;
-            text += `получил тег **osu!supporter** в подарок!\n`
-            text += `Дата: ${getDiscordRelativeTime(activity.created_at)}`;
+            text += `${username_link(user.username,user.userid)} получил тег **osu!supporter** в подарок!\n`
             break
+
         case `userSupportAgain`:
-            text += `**[${user.username}](https://osu.ppy.sh/users/${user.userid})** `;
-            text += `решил снова **поддержать osu!** - спасибо за вашу щедрость!\n`
-            text += `Дата: ${getDiscordRelativeTime(activity.created_at)}`;
+            text += `${username_link(user.username,user.userid)} решил снова **поддержать osu!** - спасибо за вашу щедрость!\n`
             break
+
         case `achievement`:
-            text += `**[${user.username}](https://osu.ppy.sh/users/${user.userid})** `;
-            text += `получил медаль «**${activity.achievement.name}**»! (${activity.achievement.mode})\n`;
+            text += `${username_link(user.username,user.userid)} получил медаль «**${activity.achievement.name}**»! (${activity.achievement.mode})\n`;
             text += `Категория: **${activity.achievement.grouping}**\n`;
             text += `Описание: ${activity.achievement.description}\n`;
-            text += `Дата: ${getDiscordRelativeTime(activity.created_at)}`;
             break
+
         case `beatmapsetUpdate`:
-            text += `**[${user.username}](https://osu.ppy.sh/users/${user.userid})** `;
-            text += `обновил карту [${activity.beatmapset.title}](https://osu.ppy.sh${activity.beatmapset.url})\n`;
-            text += `Дата: ${getDiscordRelativeTime(activity.created_at)}`;
+            text += `${username_link(user.username,user.userid)} обновил карту ${beatmap_link(activity.beatmap.title, activity.beatmap.url)}\n`;
             break
+
         case `beatmapsetUpload`:
-            text += `**[${user.username}](https://osu.ppy.sh/users/${user.userid})** `;
-            text += `опубликовал карту [${activity.beatmapset.title}](https://osu.ppy.sh${activity.beatmapset.url})\n`;
-            text += `Дата: ${getDiscordRelativeTime(activity.created_at)}`;
+            text += `${username_link(user.username,user.userid)} опубликовал карту ${beatmap_link(activity.beatmap.title, activity.beatmap.url)}\n`;
             break
+
         case `beatmapsetRevive`:
-            text += `**[${user.username}](https://osu.ppy.sh/users/${user.userid})** `;
-            text += `пробудил карту [${activity.beatmapset.title}](https://osu.ppy.sh${activity.beatmapset.url}) из вечного сна\n`;
-            text += `Дата: ${getDiscordRelativeTime(activity.created_at)}`;
+            text += `${username_link(user.username,user.userid)} пробудил карту ${beatmap_link(activity.beatmap.title, activity.beatmap.url)} из вечного сна\n`;
             break
+
         case `beatmapsetDelete`:
-            text += `**[${user.username}](https://osu.ppy.sh/users/${user.userid})** `;
-            text += `удалил карту ${activity.beatmapset.title}\n`;
-            text += `Дата: ${getDiscordRelativeTime(activity.created_at)}`;
+            text += `${username_link(user.username,user.userid)} удалил карту ${activity.beatmapset.title}\n`;
             break
+
         case `beatmapsetApprove`:
             let approvalType = activity.approval;
             if (approvalType === 'qualified') approvalType = `квалифицированой`;
             if (approvalType === 'ranked') approvalType = `рейтинговой`;
             if (approvalType === 'loved') approvalType = `любимой`;
             if (approvalType === 'approved') approvalType = `одобреной`;
-            text += `**[${user.username}](https://osu.ppy.sh/users/${user.userid})**\n`;
-            text += `Карта [${activity.beatmapset.title}](https://osu.ppy.sh${activity.beatmapset.url}) стала ${approvalType}!\n`;
-            text += `Дата: ${getDiscordRelativeTime(activity.created_at)}`;
+            text += `Сделаная ${username_link(user.username,user.userid)} карта ${beatmap_link(activity.beatmap.title, activity.beatmap.url)} стала ${approvalType}!\n`;
             break
+
         case `usernameChange`:
-            text += `**[${activity.user.previousUsername}](https://osu.ppy.sh/users/${user.userid})** `;
-            text += `изменил ник на **[${activity.user.username}](https://osu.ppy.sh/users/${user.userid})**\n`;
-            text += `Дата: ${getDiscordRelativeTime(activity.created_at)}`;
+            text += `${username_link(activity.user.previousUsername,user.userid)} изменил ник на ${username_link(activity.user.username,user.userid)}\n`;
             break
+
         default:
             text += `необработаный тип активности: ${activity.type}`;
     }
+
+    text += `Дата: ${getDiscordRelativeTime(activity.created_at)}`;
+
     return text
 }
 
@@ -513,32 +521,30 @@ function getScoreText(scoreObject){
 }
 
 function getScoreObject (score){
-    var res = {};
-    res.userid = score.user.id;
-    res.username = score.user.username;
-    res.scoreid = score.id;
-    res.gamemode = score.mode;
-    res.acc = parseInt(getFixedFloat(score.accuracy,4)*10000);
-    res.pp = parseInt(getFixedFloat(score.pp,2)*100);
-    res.score300 = score.statistics.count_300;
-    res.score100 = score.statistics.count_100;
-    res.score50 = score.statistics.count_50;
-    res.score0 = score.statistics.count_miss;
-    res.mapsetid = score.beatmap.beatmapset_id;
-    res.mapid = score.beatmap.id;
-    res.date = new Date(score.created_at).valueOf()/1000;
-    //res.purepp = score.weight.pp;
-    res.rank = score.rank;
-    res.mods = score.mods.join("+");
-    res.artist = score.beatmapset.artist;
-    res.title = score.beatmapset.title;
-    res.diff = score.beatmap.version;
-    return res;
+    return {
+        userid: score.user.id,
+        username: score.user.username,
+        scoreid: score.id,
+        gamemode: score.mode,
+        acc: parseInt(getFixedFloat(score.accuracy,4)*10000),
+        pp: parseInt(getFixedFloat(score.pp,2)*100),
+        score300: score.statistics.count_300,
+        score100: score.statistics.count_100,
+        score50: score.statistics.count_50,
+        score0: score.statistics.count_miss,
+        mapsetid: score.beatmap.beatmapset_id,
+        mapid: score.beatmap.id,
+        date: new Date(score.created_at).valueOf()/1000,
+        rank: score.rank,
+        mods: score.mods.join("+"),
+        artist: score.beatmapset.artist,
+        title: score.beatmapset.title,
+        diff: score.beatmap.version
+    };
 }
 
 function getTextByOsuUserSummary(sum){
     var text = '';
-    
     text += `Профиль игрока: **[${sum.username}](https://osu.ppy.sh/users/${sum.id})** **(${sum.gamemode})**\n`;
     if (sum.rank !== 'null' && sum.rank !== null && isNaN(sum.rank) !== true){
         text += `Ранк: **#${sum.rank}** (**#${sum.countryrank}** ${sum.country}) \n`;

@@ -1,4 +1,4 @@
-const { MYSQL_SAVE, MYSQL_GET_ALL, MYSQL_GET_ALL_RESULTS_TO_ARRAY, MYSQL_GET_ONE,
+const { MYSQL_SAVE, MYSQL_GET_TRACKING_DATA_BY_ACTION, MYSQL_GET_ONE,
     manageGuildServiceTracking, getTrackingInfo, getGuildidsOfTrackingUserService } = require("../DB.js");
 const { getSteamUserData } = require (`../../modules/stalker/requests.js`);
 const { LogString, log } = require("../../tools/log.js");
@@ -54,7 +54,7 @@ module.exports = {
     checkChangesSteamUser: async function (stalkerEvents){
         try{
             
-            var AllUsersSteamDataFromDB = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('steamuser', {tracking: true}));
+            var AllUsersSteamDataFromDB = await MYSQL_GET_TRACKING_DATA_BY_ACTION('steamuser');
     
             if (AllUsersSteamDataFromDB.length > 0){
                 log('Проверка стим профилей', moduleName)

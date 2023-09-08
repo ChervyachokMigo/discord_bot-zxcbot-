@@ -110,7 +110,7 @@ const joiner = require('./modules/joiner.js');
 
 const { osu_replay_interaction } = require('./modules/osu_replay.js');
 
-clientDiscord.once('ready', async client => await onReady(client) );
+clientDiscord.on('ready', async client => await onReady.initAll(client) );
 
 clientDiscord.on("voiceStateUpdate", async (newState, oldState) => await voiceStateUpdate(oldState,newState) );
 

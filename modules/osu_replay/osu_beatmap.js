@@ -71,10 +71,6 @@ function readLocalBeatmap(beatmapCurrentdir, beatmapRelativePathWithOsuFile, bea
                 beatmap_info.artist = getPropery(beatmap_text[i]);
             if (beatmap_text[i].toLowerCase().trim().startsWith("title:") == true)
                 beatmap_info.title = getPropery(beatmap_text[i]);
-           /* if (beatmap_text[i].toLowerCase().trim().startsWith("artistunicode") == true)
-                beatmap_info.artist = getPropery(beatmap_text[i]);
-            if (beatmap_text[i].toLowerCase().trim().startsWith("titleunicode") == true)
-                beatmap_info.title = getPropery(beatmap_text[i]);*/
             if (beatmap_text[i].toLowerCase().trim().startsWith("creator") == true)
                 beatmap_info.creator = getPropery(beatmap_text[i]);
             if (beatmap_text[i].toLowerCase().trim().startsWith("version") == true)

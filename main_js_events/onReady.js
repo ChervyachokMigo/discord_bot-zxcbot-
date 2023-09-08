@@ -1,7 +1,7 @@
 const settings = require(`../settings.js`)
-const { LogString } = require("../tools/log.js")
+const { log } = require("../tools/log.js")
 
-const { GET_ALL_VOICEROLES, VoiceRolesClearFromUsers, AllVoiceRolesSet } = require("../modules/VoicesRoles.js")
+const { LOAD_ALL_VOICEROLES, VoiceRolesClearFromUsers, AllVoiceRolesSet } = require("../modules/VoicesRoles.js")
 const { StartAllRemindes } = require("../modules/remind.js")
 const { getGuildChannelDB } = require("../modules/GuildChannel.js")
 const { SendAnswer } = require("../tools/embed.js")
@@ -11,7 +11,7 @@ const { prepareDB } = require("../modules/DB.js")
 const { StalkerStartListeners, StalkerStartLoop } = require(`../modules/stalker.js`);
 const { twitchchat } = require(`../modules/stalker/twitchchat.js`);
 
-const { initDisplayDataServer } = require('../displaydata/displaydata.js');
+const { initLogServer } = require('../logserver/displaydata.js');
 
 const autoRestartInit  = require('../modules/autoRestart.js');
 const { init_osu_db } = require('../modules/osu_replay/osu_db.js');
@@ -24,112 +24,114 @@ const { taiko_farming_maps_initialize } = require('../modules/taiko_recomend_map
 
 const webserver = require('../modules/webserver/index.js');
 
-module.exports = async (client) =>{
-    try{
-        initDisplayDataServer();
+module.exports = {
+    initAll: async (client) =>{
+        try{
+            initLogServer();
 
-        await prepareDB();
+            await prepareDB();
 
-        var botname = client.user.username;
-        var guilds = client.guilds.cache;
+            var botname = client.user.username;
+            var guilds = client.guilds.cache;
 
-        initAvailableCommands();
+            initAvailableCommands();
 
-        if (settings.modules.stalker){  
-            if (settings.modules_stalker.twitchchat){     
-                 var chatevents = twitchchat();
-            }
-        }
-
-        if (settings.modules.osu_replay){
-            if (!await init_osu_db()){
-                console.log('Невозможно загрузить osu_db');
-                return false;
-            };
-        }
-
-        if (settings.modules.taiko_map_recomend){
-            taiko_farming_maps_initialize();
-        }
-
-        guilds.forEach( async( guild )=>{
-
-            console.log('Старт гильдии ['+guild.id+']', guild.name);
-
-            await initGuildSettings(guild.id);
-
-            if (settings.modules.voiceroles){
-                console.log('загрузка войсролей')
-                await GET_ALL_VOICEROLES();
-                await VoiceRolesClearFromUsers( guild );
-                await AllVoiceRolesSet( client.channels, guild );
-            };
-
-            if (settings.modules.remind){
-                console.log('загрузка напоминаний')
-                await StartAllRemindes (guild);
-            };
-
-            if (settings.modules.balance){
-                if (settings.modules_balance.daily){
-                    await dailyesTimers_onStart(guild);
+            if (settings.modules.stalker){  
+                if (settings.modules_stalker.twitchchat){     
+                    var chatevents = twitchchat();
                 }
-            };
-        
+            }
+
+            if (settings.modules.osu_replay){
+                if (!await init_osu_db()){
+                    log('Невозможно загрузить osu_db', 'initialisation');
+                    return false;
+                };
+            }
+
+            if (settings.modules.taiko_map_recomend){
+                taiko_farming_maps_initialize();
+            }
+
+            guilds.forEach( async( guild )=>{
+
+                log('Старт гильдии ['+guild.id+'] ' + guild.name, 'initialisation');
+
+                await initGuildSettings(guild.id);
+
+                if (settings.modules.voiceroles){
+                    log('загрузка войсролей', 'initialisation');
+                    await LOAD_ALL_VOICEROLES();
+                    await VoiceRolesClearFromUsers( guild );
+                    await AllVoiceRolesSet( client.channels, guild );
+                };
+
+                if (settings.modules.remind){
+                    log('загрузка напоминаний', 'initialisation');
+                    await StartAllRemindes (guild);
+                };
+
+                if (settings.modules.balance){
+                    if (settings.modules_balance.daily){
+                        await dailyesTimers_onStart(guild);
+                    }
+                };
+            
+                if (settings.modules.stalker){
+                    log('запуск слушателей событий', 'initialisation');
+                    await StalkerStartListeners(guild);
+                    log('запуск слушателей событий выполнено', 'initialisation');
+                    if (settings.modules_stalker.twitchchat){
+                        log('запуск чата', 'initialisation');
+                        chatevents.on('newChatMessage', async (args) => {
+                            if (args.guildids && args.guildids.includes(guild.id)){
+                                let channel = await getGuildChannelDB( guild, `twitchchat_${args.chatname}` );
+                                await SendAnswer({
+                                    channel: channel, 
+                                    guildname: guild.name, 
+                                    messagetype:`chat`, 
+                                    title: `${args.chatname} chat`, 
+                                    text: args.messagetext });
+                            }
+                        });
+                    }
+                }
+
+                if (settings.sendBotAppears){
+                    var botChannel = await getGuildChannelDB( guild ,`system`);
+                    if (!botChannel) return;
+                    let msgready = `Бот ${botname} появился на сервере`;
+                    log (msgready, 'initialisation');                
+                    await SendAnswer( {channel: botChannel,guildname: guild.name, messagetype: `info`, title: `Welcome`,text: msgready} );
+                };
+            
+                if (settings.modules.crypto){
+                    log('запуск крипты..', 'initialisation');
+                    await crypto_check_start(guild);
+                    log('крипта выполнено', 'initialisation');
+                }
+            });
+            
             if (settings.modules.stalker){
-                console.log('запуск слушателей событий')
-                await StalkerStartListeners(guild);
-                console.log('запуск слушателей событий выполнено')
-                if (settings.modules_stalker.twitchchat){
-                    console.log('запуск чата')
-                    chatevents.on('newChatMessage', async (args) => {
-                        if (args.guildids && args.guildids.includes(guild.id)){
-                            let channel = await getGuildChannelDB( guild, `twitchchat_${args.chatname}` );
-                            await SendAnswer( {
-                                channel: channel, 
-                                guildname: guild.name, 
-                                messagetype:`chat`, 
-                                title: `${args.chatname} chat`, 
-                                text: args.messagetext});
-                        }
-                    });
-                }
+                log('запуск сталкера ожидание..', 'initialisation');
+                await StalkerStartLoop();
+                log('сталкер выполнено', 'initialisation');
             }
 
-            if (settings.sendBotAppears){
-                var botChannel = await getGuildChannelDB( guild ,`system`);
-                if (!botChannel) return;
-                let msgready = `Бот ${botname} появился на сервере`;
-                LogString(guild.name,`info`,`Welcome`, msgready);
-                
-                await SendAnswer( {channel: botChannel,guildname: guild.name, messagetype: `info`, title: `Welcome`,text: msgready} );
-            };
-        
-            if (settings.modules.crypto){
-                console.log('запуск крипты..')
-                await crypto_check_start(guild);
-                console.log('крипта выполнено')
+            if (settings.modules.autorestart){
+                await autoRestartInit();
             }
-        });
-        
-        if (settings.modules.stalker){
-            console.log('запуск сталкера ожидание..')
-            await StalkerStartLoop();
-            console.log('сталкер выполнено')
+
+            if (settings.modules.webserver) {
+                log('запуск веб сервера настроек', 'initialisation');
+                await webserver.init();
+                await webserver.setDiscordData(client);
+            }
+
+            log('инициализация выполнена', 'initialisation complete');
+
+        } catch (e){
+            log(e.toString(), 'initialisation error');
         }
-
-        if (settings.modules.autorestart){
-            await autoRestartInit();
-        }
-
-        if (settings.modules.webserver) {
-            await webserver.init();
-            await webserver.setDiscordData(client);
-        }
-
-        
-
-    } catch (e){
-        LogString(`System`,`Error`, 'Error', e);
     }
 }

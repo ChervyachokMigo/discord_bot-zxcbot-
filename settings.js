@@ -1,5 +1,7 @@
 const fs = require('fs');
 
+const {log} = require('./tools/log.js');
+
 var settings = {};
 
 function check_values(){
@@ -230,6 +232,7 @@ function check_values(){
 }
 
 const load = ()=>{
+    log('loading settings.js');
     try{
         settings = fs.readFileSync('../settings.json', 'utf8');
         settings = JSON.parse(settings);
@@ -249,7 +252,6 @@ const load = ()=>{
                 throw new Error(err);
         }
     }
-    console.log('loading settings.js', settings)
 }
 
 load();

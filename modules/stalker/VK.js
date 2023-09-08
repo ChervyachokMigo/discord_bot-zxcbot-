@@ -41,8 +41,8 @@ userWallNew.groups[i].id
 userWallNew.groups[i].name
 */
 
-const { MYSQL_SAVE, MYSQL_GET_ALL, MYSQL_GET_ONE, MYSQL_DELETE, MYSQL_GET_ALL_RESULTS_TO_ARRAY, 
-    manageGuildServiceTracking, getTrackingInfo, getGuildidsOfTrackingUserService  } = require("../DB.js");
+const { MYSQL_SAVE, MYSQL_GET_ONE, MYSQL_DELETE, MYSQL_GET_TRACKING_DATA_BY_ACTION, 
+    manageGuildServiceTracking, getTrackingInfo, getGuildidsOfTrackingUserService } = require("../DB.js");
 const { LogString, log } = require("../../tools/log.js");
 const { GET_VALUES_FROM_OBJECT_BY_KEY, getNumberWithSign } = require("../../modules/tools.js");
 
@@ -92,7 +92,7 @@ module.exports = {
         try{
             //load from db
           
-            var AllTrackingUsersVKData = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('vkuser', {tracking: true}));
+            var AllTrackingUsersVKData = await MYSQL_GET_TRACKING_DATA_BY_ACTION('vkuser');
             
             if (AllTrackingUsersVKData.length > 0){
                 log('Проверка ВК профилей', moduleName);
@@ -174,16 +174,17 @@ module.exports = {
     
     checkVKfriends: async function (stalkerEvents){
         try{
-          
-            var AllTrackingUsersVKData = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('vkuser', {tracking: true, friendsTracking: true}));
+
+            var AllTrackingUsersVKData = await MYSQL_GET_TRACKING_DATA_BY_ACTION('vkuser_friends');
             
             if (AllTrackingUsersVKData.length > 0){
+
                 log('Проверка ВК друзей', moduleName);
                 for (let VKUserData of AllTrackingUsersVKData){
                     let userfullname = `${VKUserData.name1} ${VKUserData.name2}`;
                     let userFriendsNew = await getVKUserFriendsCount(VKUserData.userid);
 
-                    let mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('vkfriend', {userid: VKUserData.userid}))
+                    let mysql_data = await MYSQL_GET_TRACKING_DATA_BY_ACTION('vkfriend', {userid: VKUserData.userid});
                     let mysql_data_array = GET_VALUES_FROM_OBJECT_BY_KEY(mysql_data, 'friendid');
                     let diff_rem = mysql_data_array.filter( (val) => !userFriendsNew.items.includes(val));
                     let diff_new = userFriendsNew.items.filter( (val) => !mysql_data_array.includes(val));

@@ -146,8 +146,8 @@ module.exports = {
     },
 
 
-    GET_ALL_VOICEROLES:async function(){
-        VoicesRoles = await MYSQL_GET_ALL(`voiceroles`)
+    LOAD_ALL_VOICEROLES: async function(){
+        VoicesRoles = await MYSQL_GET_ALL(`voiceroles`);
     },
     
     VoiceRolesClearFromUsers: async function ( guild ){
