@@ -1,6 +1,8 @@
 const fs = require('fs');
 
 const {log} = require('./tools/log.js');
+const {GET_VALUES_FROM_OBJECT_BY_KEY, onlyUnique} = require('./modules/tools.js');
+const { guild_setting_events_deps } = require('./constantes/guild_setting_events_deps.js');
 
 var settings = {};
 
@@ -269,35 +271,19 @@ module.exports = {
     restrict_words: [{type:`links` ,    values: settings.restricted_links},
                      {type:`words`,     values: settings.restricted_words} ],
 
-    available_guildSettings: [`prefix`, 
-    `osu_scores`, `osu_activity`, `osu_profiles`, `osu_followers`,
-    `steam_profile`,
-    `twitch_followers`, `trovo_followers`,
-    `twitch_clips`, `trovo_clips`,
-    `twitch_status`, `trovo_status`,
-    `twitch_chatters`, 
-    `twitch_changes`, `trovo_changes`,
-    `vk_profile`,
-    `youtube_newvideo`,
-    `vk_friends`,
-    `stream_record`,
-    `crypto`,
-    `osu_replay`
-    ],
+    available_guildSettings: ()=>{
+        var res = [`prefix`,
+            `crypto`,
+            `osu_replay`
+        ];
+        return onlyUnique(res.concat(GET_VALUES_FROM_OBJECT_BY_KEY(guild_setting_events_deps, 'setting_name')));
+    },
 
-    AllowedNamesOfGuildChannels: [`system`,`general`,`daily`,`reminds`,`joiner`,
-    `streamchanges`,`streamstatus`,`steamchanges`,`streamfollowers`,`twitchclips`,`trovoclips`,`osufollowers`,
-    `vkchanges`,`vkfriends`,
-    `osuchanges`,`newscores`,`newactivityies`,
-    `youtubevideos`,
-    `talala_streamchanges`,`talala_streamstatus`,
-    `talala_steamchanges`,`talala_streamfollowers`,
-    `talala_twitchclips`,`talala_trovoclips`,`talala_osufollowers`,
-    `talala_vkchanges`,`talala_vkfriends`,
-    `talala_osuchanges`,`talala_newscores`,`talala_newactivityies`,
-    `sadgod_osuchanges`,`sadgod_newscores`,`sadgod_newactivityies`,`sadgod_osufollowers`,`sadgod_youtube`,
-    `clear`,`records`,
-    `crypto`],
+    AllowedNamesOfGuildChannels: ()=>{
+        var res = [`system`,`general`,`daily`,`reminds`,`joiner`,
+        `clear`, `crypto`];
+        return onlyUnique(res.concat(GET_VALUES_FROM_OBJECT_BY_KEY(guild_setting_events_deps, 'channel')));
+},
 
     AllowedChannelsStartedWith: ['twitchchat'],
 

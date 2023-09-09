@@ -1,11 +1,21 @@
 const { MYSQL_SAVE,   MYSQL_GET_TRACKING_DATA_BY_ACTION} = require (`./DB.js`)
 const { log } = require("../tools/log.js")
-
+const { available_guildSettings } = require('../settings.js')
 var guildSettingsCache = [];
 
 async function initGuildSettings(guildid){
     log('Загрузка настроек гильдии ' + guildid);
-    let mysql_guildSettings =  await MYSQL_GET_TRACKING_DATA_BY_ACTION('guildSettings', { guildid });    
+    let mysql_guildSettings =  await MYSQL_GET_TRACKING_DATA_BY_ACTION('guildSettings', { guildid });
+    if (mysql_guildSettings.length == 0){
+        mysql_guildSettings = available_guildSettings();
+        for (let setting of mysql_guildSettings){
+            var default_value = '1';
+            if (setting === 'prefix'){ 
+                default_value = '!';
+            }
+            changeGuildSetting(guildid, setting, default_value);
+        }
+    }
     guildSettingsCache = guildSettingsCache.concat(mysql_guildSettings);
     return true;
 }

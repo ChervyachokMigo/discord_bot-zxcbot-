@@ -26,7 +26,7 @@ module.exports = {
             return false;
         }
 
-        if (!available_guildSettings.includes(settingname)){
+        if (!available_guildSettings().includes(settingname)){
             await SendError(message, {name: module.exports.command_name,
                 help: module.exports.command_help }, 'Недоступная настройка')
             return false;

@@ -161,7 +161,7 @@ module.exports = {
 
         function checkAllowedChannel(channeltype){
             var allowedTypesStartedWith = AllowedChannelsStartedWith.filter((val)=>channeltype.startsWith(val));
-            return AllowedNamesOfGuildChannels.includes(channeltype) || allowedTypesStartedWith.length>0;
+            return AllowedNamesOfGuildChannels().includes(channeltype) || allowedTypesStartedWith.length>0;
         }
         
         if (checkAllowedChannel(channeltype) == false){
