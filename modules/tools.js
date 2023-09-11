@@ -1,5 +1,6 @@
-const { existsSync, mkdirSync } = require(`fs`);
+const { existsSync, mkdirSync, readdirSync } = require(`fs`);
 const { SendAnswer, SendError } = require(`../tools/embed.js`);
+const path = require('path');
 
 const keyboard_map = {'q' : 'й', 'w' : 'ц', 'e' : 'у', 'r' : 'к', 't' : 'е', 'y' : 'н', 'u' : 'г', 'i' : 'ш', 'o' : 'щ', 'p' : 'з', '[' : 'х', ']' : 'ъ', 
 'a' : 'ф', 's' : 'ы', 'd' : 'в', 'f' : 'а', 'g' : 'п', 'h' : 'р', 'j' : 'о', 'k' : 'л', 'l' : 'д', ';' : 'ж', '\'' : 'э', 
@@ -327,7 +328,50 @@ module.exports = {
         return result;
     },
 
+    isJSON: (str) => {
+        try {
+            JSON.parse(str.toString());
+        } catch (e) {
+            return false;
+        }
+        return true;
+    },
 
+    groupBy: (collection, property) => {
+        var i = 0, val, index, values = [], result = [];
+        for (; i < collection.length; i++) {
+            val = collection[i][property];
+            index = values.indexOf(val);
+            if (index > -1)
+                result[index].push(collection[i]);
+            else {
+                values.push(val);
+                result.push([collection[i]]);
+            }
+        }
+        return result;
+    },
+    
+    listenWebFolder: ( express, weblink, folderpath) => {
+        const absolute_folderpath = path.resolve(folderpath);
+        for (const filename of readdirSync(absolute_folderpath)){
+            const url = urlFromPath(path.join( path.sep, weblink, filename));
+            const _filepath = path.join(absolute_folderpath, filename);
+            module.exports.listenWebFile(express, url, _filepath);
+        }
+    },
+
+    listenWebFile: (express, link, filepath) => {
+        const absolute_filepath = path.resolve(filepath);
+        console.log('Listen file: ', link, '->',  absolute_filepath);
+        express.get(link, (req, res) => {
+            res.sendFile(absolute_filepath);
+        });
+    }
+}
+
+function urlFromPath(path_str){
+    return path_str.replace(/\\/g, '/');
 }
 
 function onlyUnique(value, index, self) {

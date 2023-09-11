@@ -10,8 +10,6 @@ const {  MYSQL_SAVE, MYSQL_GET_ALL } = require("./DB.js")
 const { LogString } = require("../tools/log.js")
 const { SendAnswer } = require("../tools/embed.js")
 
-const log = console.log.bind(console);
-
 var DailyTimers = [];
 
 const daily_waittime_ms = daily_WaitTime*1000

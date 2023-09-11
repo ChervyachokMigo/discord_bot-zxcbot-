@@ -24,6 +24,8 @@ const { taiko_farming_maps_initialize } = require('../modules/taiko_recomend_map
 
 const webserver = require('../modules/webserver/index.js');
 
+const yandex = require('../modules/yandex/index.js');
+
 module.exports = {
     initAll: async (client) =>{
         try{
@@ -35,6 +37,14 @@ module.exports = {
             var guilds = client.guilds.cache;
 
             initAvailableCommands();
+
+            if (settings.modules.webserver) {
+                log('запуск веб сервера настроек', 'initialisation');
+                await webserver.init();
+                await webserver.setDiscordData(client);
+            }
+
+            await yandex.init();
 
             if (settings.modules.stalker){  
                 if (settings.modules_stalker.twitchchat){     
@@ -122,11 +132,6 @@ module.exports = {
                 await autoRestartInit();
             }
 
-            if (settings.modules.webserver) {
-                log('запуск веб сервера настроек', 'initialisation');
-                await webserver.init();
-                await webserver.setDiscordData(client);
-            }
 
             log('инициализация выполнена', 'initialisation complete');
 

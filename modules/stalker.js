@@ -146,7 +146,7 @@ module.exports = {
         }
 
         guild_setting_events_deps.forEach( stalker_event => {
-            log('Запуск слушателя события:', stalker_event.event_name, 'Events init')
+            log('Запуск слушателя события: ' + stalker_event.event_name, 'Events init')
             ListenEvent(stalker_event.event_name);
         });
 

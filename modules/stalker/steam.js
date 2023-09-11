@@ -14,11 +14,12 @@ const STEAM_PERSONA_STATE = ['Offline', 'Online', 'Busy', 'Away', 'Snooze', 'loo
 module.exports = {
 
     MYSQL_STEAM_USER_TRACKING_CHANGE: async function(message, userid, option){
+        const user = isNaN( Number(userid))?{username: userid.toString()}:{steamid: userid};
         //проверка юзера и создаание нового юзера
-        var userdata = await MYSQL_GET_ONE('steamuser', {steamid: userid});
+        var userdata = await MYSQL_GET_ONE('steamuser', user);
         if (userdata === null ) {
-            var steamuserdata = await getSteamUserData([userid]);
-            if (steamuserdata.length>0){
+            var steamuserdata = await getSteamUserData(user);
+            if (steamuserdata.length > 0){
                 steamuserdata = steamuserdata[0];
             } else {
                 return {success: false, text: `Steam user **${userid}** not exists`}
@@ -58,18 +59,15 @@ module.exports = {
     
             if (AllUsersSteamDataFromDB.length > 0){
                 log('Проверка стим профилей', moduleName)
-                var AllSteamUsersIDList = GET_VALUES_FROM_OBJECT_BY_KEY(AllUsersSteamDataFromDB, 'steamid')
-                var AllUsersSteamData = await getSteamUserData(AllSteamUsersIDList);
+                var AllSteamUsersIDList = GET_VALUES_FROM_OBJECT_BY_KEY(AllUsersSteamDataFromDB, 'steamid');
+                var AllUsersSteamData = await getSteamUserData({ids: AllSteamUsersIDList});
                 if (AllUsersSteamData.length == 0) {
                     return false
                 }
 
                 for (let steamDataOld of AllUsersSteamDataFromDB){
                     
-                    let steamData = AllUsersSteamData.filter((val) => {
-                        return val.steamid === steamDataOld.steamid
-                    });
-                    steamData = steamData[0];
+                    let steamData = AllUsersSteamData.find(val => val.steamid === steamDataOld.steamid);
 
                     if ( typeof steamData.tracking === 'undefined' || steamData.tracking === null){
                         steamData.tracking = true;
@@ -94,13 +92,13 @@ module.exports = {
                         }
                         steamChanges.isChanges = true;
                     }
-                
-                    if (steamData.gameid !== 0){
+
+                    if (Number(steamDataOld.gameid) !== Number(steamData.gameid) && Number(steamData.gameid) !== 0){
                         steamChanges.text += `Играет в **${steamData.gameinfo!==''?steamData.gameinfo:'Неопределено' } (ID: ${steamData.gameid})**\n`;
                         steamChanges.isChanges = true;
                     }
     
-                    if (steamData.gameid === 0 && steamDataOld.gameid !== 0){
+                    if (Number(steamData.gameid) === 0 && Number(steamDataOld.gameid) !== 0){
                         steamChanges.text += `Больше не играет в **${steamDataOld.gameinfo!==''?steamDataOld.gameinfo:'Неопределено' } (ID: ${steamDataOld.gameid})**\n`;
                         steamChanges.isChanges = true;
                     }

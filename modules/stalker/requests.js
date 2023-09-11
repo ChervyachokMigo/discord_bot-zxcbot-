@@ -411,23 +411,50 @@ async function initSteam(){
     await MYSQL_SAVE('token', {platform: 'steam'}, tokens.steam);
 }
 
-async function getSteamUserData(usersid){
+async function getSteamUserData(users){
+
     await checkTokenExpires('steam');
-    return new Promise((res, rej)=>{
-        steam.getUserSummary(usersid).then(summaries => {
+
+    return new Promise(async (res, rej)=>{
+
+        var steamids;
+
+        if (users.username){
+            steamids = await new Promise(async (response_steamid, rej) => {
+                await steam.get('/ISteamUser/ResolveVanityURL/v0001/?key='+STREAM_API_KEY+'&vanityurl=' + users.username,
+                'http://api.steampowered.com', STREAM_API_KEY).then ( result => {
+                    if (result.response.steamid) {
+                        response_steamid ([result.response.steamid])
+                    } else {
+                        response_steamid (undefined);
+                    }
+                })
+            });
+
+            if (typeof steamids === 'undefined') {
+                console.error('can\'t find user by name ' + users);
+                res ([]);
+            }
+        } else if (users.steamid){
+            steamids = [users.steamid];
+        } else if (users.ids){
+            steamids = users.ids;
+        }
+
+        steam.getUserSummary(steamids).then(summaries => {
             var results = [];
-            for (let summary of summaries){
-                let result = {};
-                result.steamid = summary.steamID;
-                result.username = summary.nickname;
-                result.onlinestate = summary.personaState;
-                result.lastactive = typeof summary.lastLogOff==='undefined'?0:summary.lastLogOff;
-                result.gameid = typeof summary.gameID==='undefined'?0:summary.gameID;
-                result.gameinfo = typeof summary.gameExtraInfo==='undefined'?'':summary.gameExtraInfo;
-                result.url = summary.url;
-                results.push(result);
-            };
-            res (results)
+            for (summary of summaries) {
+                results.push({
+                    steamid: summary.steamID,
+                    username: summary.nickname,
+                    onlinestate: summary.personaState,
+                    lastactive: typeof summary.lastLogOff==='undefined'?0:summary.lastLogOff,
+                    gameid: typeof summary.gameID==='undefined'?0:summary.gameID,
+                    gameinfo: typeof summary.gameExtraInfo==='undefined'?'':summary.gameExtraInfo,
+                    url: summary.url
+                });
+            }
+            res (results);
         }).catch (err=>{
             console.log (err.code);
             res ([]);

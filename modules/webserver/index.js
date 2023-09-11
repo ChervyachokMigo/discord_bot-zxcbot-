@@ -7,17 +7,10 @@ require('../../settings.js');
 const fs = require('fs');
 const WebSocket = require('ws');
 const webs = new WebSocket.WebSocketServer({ port: 8888 });
-const {MYSQL_GET_TRACKING_DATA_BY_ACTION, MYSQL_GET_ALL_RESULTS_TO_ARRAY, MYSQL_GET_ALL } = require("../../modules/DB.js");
-const {log} = require("../../tools/log.js");
+const { MYSQL_GET_TRACKING_DATA_BY_ACTION, MYSQL_GET_ALL_RESULTS_TO_ARRAY, MYSQL_GET_ALL, MYSQL_DELETE, MYSQL_SAVE } = require("../../modules/DB.js");
+const { log } = require("../../tools/log.js");
+const { isJSON, groupBy, listenWebFolder, listenWebFile} = require('../tools.js');
 
-function isJSON(str) {
-    try {
-        JSON.parse(str.toString());
-    } catch (e) {
-        return false;
-    }
-    return true;
-}
 
 var main_loop;
 
@@ -84,13 +77,12 @@ module.exports = {
             }
         });
 
-        WebfileListen('/','../../dashboard/index.html');
-        WebfileListen('/settings','../../dashboard/index_settings.html');
-        WebfileListen('/status','../../dashboard/index_status.html');
-        WebfileListen('/status.js','../../dashboard/status.js');
-        WebfileListen('/jquery.min.js','../../dashboard/jquery.min.js');
-        WebfileListen('/styles.css','../../dashboard/styles.css');
-        WebfileListen('/favicon.ico','../../dashboard/favicon.png');
+        listenWebFolder(app, '/', 'dashboard/');
+
+        listenWebFile(app, '/', 'dashboard/index.html');
+        listenWebFile(app, '/settings', 'dashboard/index_settings.html');
+        listenWebFile(app, '/status', 'dashboard/index_status.html');
+        listenWebFile(app, '/favicon.ico', 'dashboard/favicon.png');
 
         app.post('/save_settings', async (req, res) => {
             try{
@@ -175,7 +167,7 @@ module.exports = {
                             case 'botchannel_delete':
                                 if (typeof db_data.id !== 'undefined' && db_data.id !== null){
                                     log('delete bot channel'+db_data.id, 'Dashboard');
-                                    await db.MYSQL_DELETE('botchannel', {id: db_data.id});
+                                    await MYSQL_DELETE('botchannel', {id: db_data.id});
                                 }
                                 break;
                             case 'connect':
@@ -209,28 +201,6 @@ module.exports = {
     }
 }
 
-function WebfileListen(link, filepath){
-    app.get(link, (req, res) => {
-        res.sendFile(path.join(__dirname, filepath));
-    });
-}
-
-function groupBy(collection, property) {
-    var i = 0, val, index,
-        values = [], result = [];
-    for (; i < collection.length; i++) {
-        val = collection[i][property];
-        index = values.indexOf(val);
-        if (index > -1)
-            result[index].push(collection[i]);
-        else {
-            values.push(val);
-            result.push([collection[i]]);
-        }
-    }
-    return result;
-}
-
 async function update_db_user_value(tablename, action, db_data, user_key, value_key) {
     if (typeof db_data.userid === 'undefined' || typeof db_data.value === 'undefined' || 
     db_data.userid === null || db_data.value === null ||
@@ -239,7 +209,7 @@ async function update_db_user_value(tablename, action, db_data, user_key, value_
         console.error('undefined data', db_data, user_key, value_key);
         return false;
     }
-    await db.MYSQL_SAVE(tablename, { [user_key]: db_data.userid }, {[value_key]: db_data.value} );
+    await MYSQL_SAVE(tablename, { [user_key]: db_data.userid }, {[value_key]: db_data.value} );
 }
 
 function set_tracking_filter (ws_id, value_key, data) {

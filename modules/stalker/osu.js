@@ -21,18 +21,22 @@ const moduleName = `Stalker Osu`;
 function changesIsNan(param){ if(isNaN(param)) {return 0;} else {return param;} }
 
 async function getOsuUserData(userid, mode = 'osu'){
+
     if (!await checkTokenExpires('osu')){
         log('cant get osu token');
         return false;
     };
+
     var data = await v2.user.details(userid, mode);
     if (data.error === null){
         return data;
     }
+
     if (data.error || typeof data.statistics === 'undefined' || typeof data.statistics.pp === 'undefined'){
         return {error: null}
     }
-    var res = {
+
+    return {
         userid: Number(data.id),
         username: data.username,
         pp: parseInt(getFixedFloat(data.statistics.pp, 2)*100),
@@ -44,8 +48,7 @@ async function getOsuUserData(userid, mode = 'osu'){
         followers: parseInt(data.follower_count),
         mainmode: data.playmode,
         avatar: data.avatar_url
-    }
-    return res;
+    };
 }
 
 
@@ -179,11 +182,11 @@ module.exports = {
     },
 
     MYSQL_OSU_USER_TRACKING_CHANGE: async function(message, userid, option){
-        var userid = isNaN( Number(userid))?{username:userid.toString()}:{userid:Number(userid)};
+        var user = isNaN( Number(userid))?{username:userid.toString()}:{userid:Number(userid)};
         //проверка юзера и создаание нового юзера
-        var userdata = await MYSQL_GET_ONE('osuprofile', userid);
+        var userdata = await MYSQL_GET_ONE('osuprofile', user);
         if (userdata === null ) {
-            var osuserdata = await getOsuUserData(userid,'osu');
+            var osuserdata = await getOsuUserData(user.username || user.userid,'osu');
             if (typeof osuserdata.userid === 'undefined' || osuserdata.error){
                 return {success: false, text: `Osu user **${userid}** not exists`}
             }

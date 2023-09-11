@@ -1,8 +1,8 @@
 module.exports = {
-    emoji_twitch: '<:twitch:1017414478570197042>',
-    emoji_trovo: '<:trovo:1017414622288040017>',
-    emoji_vk: '<:vk:1017414873375842334>',
-    emoji_osu: '<:osu:1017414742194802719>',
-    emoji_steam: '<:steam:1017414998861037578>',
-    emoji_youtube: '<:youtube:1017415602941481031>',
+    emoji_twitch: '<:twitch:1150027534034030673>',
+    emoji_trovo: '<:trovo:1150027620877086781>',
+    emoji_vk: '<:vk:1150027289363484693>',
+    emoji_osu: '<:osu:1150027840008507503>',
+    emoji_steam: '<:steam:1150027932438380704>',
+    emoji_youtube: '<:youtube:1150026919572680744>',
 }
