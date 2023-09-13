@@ -33,18 +33,18 @@ async function getPrices(guild){
 
     const guild_pairs = coins_in_mysql.map( p => {
         let pair = p.split(',');
-        return {first: pair.shift(), second: pair.shift()};
+        return {first: pair.shift(), second: pair.shift(), is_online: true};
     });
     
     //вычислить уникальные пары и получить онлайн значения
-    const pairs_to_request = get_unique_pairs( await get_all_pairs(guild_pairs, false) );
+    const pairs_to_request = get_unique_pairs( await get_all_pairs(guild_pairs) );
     var calculated_pairs = [];
     for (let pair of pairs_to_request){
-        calculated_pairs.push(await getPairObj( pair, true ));
+        calculated_pairs.push(await get_pair_with_value_change( pair ));
     };
-
-    const calculated_all_pairs = await get_all_pairs(calculated_pairs, true);
-
+    
+    const calculated_all_pairs = await get_all_pairs(calculated_pairs);
+    
     const calculated_requested_pairs = calculated_all_pairs.filter( p =>
         guild_pairs.findIndex( pair => pair.first.includes(p.first) &&  pair.second.includes(p.second) ) > -1 );
 
@@ -53,21 +53,20 @@ async function getPrices(guild){
     return calculated_requested_pairs.map( p => coinpair_display(p)).join('\n') + '\n';
 }
 
-async function getPairObj(pair, is_online = false){
+async function get_pair_with_value_change(pair){
 
     async function get_value_change( pair ){
         let old_pair = await MYSQL_GET_ONE('cryptopairs', {first: pair.first, second: pair.second});
         return old_pair === null? 0: (pair.value - old_pair.dataValues.value);
     }
 
-    pair.is_online = is_online;
-    pair.value = is_online == true? await getPriceCoinPair( pair ): pair.value;
+    pair.value = pair.is_online == true? await getPriceCoinPair( pair ): pair.value;
     pair.value_change = await get_value_change( pair );
 
     return pair;
 };
 
-async function get_all_pairs( original_pairs, is_valued = false ){
+async function get_all_pairs( original_pairs ){
     var all_pairs = original_pairs.map( p=> p);
     var newPairsCount = -1;
     while (newPairsCount > 0 || newPairsCount == -1){
@@ -85,20 +84,22 @@ async function get_all_pairs( original_pairs, is_valued = false ){
 
                 if (pair1.first.includes(pair2.first)) {
                     newPairsCount++;
-                    if (is_valued == false){
-                        var new_pair = {first: pair1.second, second: pair2.second};
+                    if (pair1.value && pair2.value){
+                        const pair = {first: pair1.second, second: pair2.second, value: pair2.value / pair1.value, is_online: false };
+                        var new_pair = await get_pair_with_value_change( pair );
                     } else {
-                        var new_pair = await getPairObj( {first: pair1.second, second: pair2.second, value: pair2.value / pair1.value, is_online: false }, false );
+                        var new_pair = {first: pair1.second, second: pair2.second, is_online: true};
                     }
                     all_pairs.push( new_pair );
                 }
                 
                 if (pair1.second.includes(pair2.second)) {
                     newPairsCount++;
-                    if (is_valued == false){
-                        var new_pair =  {first: pair1.first, second: pair2.first};
+                    if (pair1.value && pair2.value){
+                        const pair = {first: pair1.first, second: pair2.first, value: pair1.value / pair2.value, is_online: false };
+                        var new_pair = await get_pair_with_value_change( pair );
                     } else {
-                        var new_pair = await getPairObj(  {first: pair1.first, second: pair2.first, value: pair1.value / pair2.value, is_online: false }, false );
+                        var new_pair =  {first: pair1.first, second: pair2.first, is_online: true};
                     }
                     all_pairs.push( new_pair );
                 }
