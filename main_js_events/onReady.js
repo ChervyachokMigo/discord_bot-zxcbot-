@@ -69,6 +69,12 @@ module.exports = {
 
                 await initGuildSettings(guild.id);
 
+                if (settings.modules.crypto){
+                    log('запуск крипты..', 'initialisation');
+                    await crypto_check_start(guild);
+                    log('крипта выполнено', 'initialisation');
+                }
+
                 if (settings.modules.voiceroles){
                     log('загрузка войсролей', 'initialisation');
                     await LOAD_ALL_VOICEROLES();
@@ -115,11 +121,6 @@ module.exports = {
                     await SendAnswer( {channel: botChannel,guildname: guild.name, messagetype: `info`, title: `Welcome`,text: msgready} );
                 };
             
-                if (settings.modules.crypto){
-                    log('запуск крипты..', 'initialisation');
-                    await crypto_check_start(guild);
-                    log('крипта выполнено', 'initialisation');
-                }
             });
             
             if (settings.modules.stalker){

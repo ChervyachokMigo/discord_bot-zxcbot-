@@ -210,7 +210,7 @@ const Token = mysql.define ('token', {
 const guildServicesTracking = mysql.define ('guildServicesTracking', {
     guildid: {type: DataTypes.STRING,  defaultvalue: '', allowNull: false},
     platformaction: {type: DataTypes.STRING,  defaultvalue: '', allowNull: false},
-    trackinguserid: {type: DataTypes.STRING,  defaultvalue: '', allowNull: false},
+    key: {type: DataTypes.STRING,  defaultvalue: '', allowNull: false},
 });
 
 const replayCache = mysql.define ('osureplaycache', {
@@ -241,6 +241,15 @@ const guildSettings = mysql.define ('guildSettings', {
 const osuHunterTrackingUser = mysql.define ('osuHunterTrackingUser', {
     userid: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false},
     lastUpdated: {type: DataTypes.DATEONLY,  defaultvalue: false, allowNull: false},    
+});
+
+const cryptopairs = mysql.define ('cryptopairs', {
+    first: {type: DataTypes.STRING, allowNull: false},
+    second: {type: DataTypes.STRING, allowNull: false},
+    value: {type: DataTypes.DOUBLE, defaultValue: 0.0},
+    value_change: {type: DataTypes.DOUBLE, defaultValue: 0.0},
+    is_online: {type: DataTypes.BOOLEAN, defaultValue: false},
+    last_update: {type: DataTypes.DATE, allowNull: false}
 });
 
 
@@ -279,55 +288,57 @@ function select_mysql_model (action){
         case `voiceroles`:
         case 'role':
             MysqlModel = Role; break;
-            case `reactionrole`:
-                MysqlModel = ReactionRole; break;
-            case `remind`:
-                MysqlModel = Remind; break;
-            case `channels_clear`:
-            case `botchannel`:
-                MysqlModel = BotChannel; break;
-            case `streamersTwitch`:
-            case `twitchdata`:
-                MysqlModel = TwitchData; break;
-            case `streamersTrovo`:
-            case `trovodata`:
-                MysqlModel = TrovoData; break;
-            case `twitchclips`:
-                MysqlModel = TwitchClips; break;
-            case `trovoclips`:
-                MysqlModel = TrovoClips; break;
-            case `steamuser`:
-                MysqlModel = SteamUserData; break;
-            case `vkuser`:
-                MysqlModel = VKUserData; break;
-            case `vkfriend`:
-                MysqlModel = VKUserFriendData; break;
-            case `twitchchat`:
-                MysqlModel = TwitchChatData; break;
-            case `osuprofile`:
-                MysqlModel = OsuProfileData; break;
-            case `osuscore`:
-                MysqlModel = OsuScoreData; break;
-            case `token`:
-                MysqlModel = Token; break;
-            case 'osuactivity':
-                MysqlModel = OsuActivity; break;
-            case 'youtubechannel':
-                MysqlModel = YoutubeChannelsData; break;
-            case 'youtubevideos':
-                MysqlModel = YoutubeVideosData; break;
-            case 'guildServicesTracking':
-                MysqlModel = guildServicesTracking; break;
-            case 'replaycache':
-                MysqlModel = replayCache; break;
-            case 'replayattachment':
-                MysqlModel = replayAttachment; break;
-            case 'nibbers':
-                MysqlModel = nibbers; break;
-            case 'guildSettings':
-                MysqlModel = guildSettings; break;
-            case 'osuHunterTrackingUser':
-                MysqlModel = osuHunterTrackingUser; break;
+        case `reactionrole`:
+            MysqlModel = ReactionRole; break;
+        case `remind`:
+            MysqlModel = Remind; break;
+        case `channels_clear`:
+        case `botchannel`:
+            MysqlModel = BotChannel; break;
+        case `streamersTwitch`:
+        case `twitchdata`:
+            MysqlModel = TwitchData; break;
+        case `streamersTrovo`:
+        case `trovodata`:
+            MysqlModel = TrovoData; break;
+        case `twitchclips`:
+            MysqlModel = TwitchClips; break;
+        case `trovoclips`:
+            MysqlModel = TrovoClips; break;
+        case `steamuser`:
+            MysqlModel = SteamUserData; break;
+        case `vkuser`:
+            MysqlModel = VKUserData; break;
+        case `vkfriend`:
+            MysqlModel = VKUserFriendData; break;
+        case `twitchchat`:
+            MysqlModel = TwitchChatData; break;
+        case `osuprofile`:
+            MysqlModel = OsuProfileData; break;
+        case `osuscore`:
+            MysqlModel = OsuScoreData; break;
+        case `token`:
+            MysqlModel = Token; break;
+        case 'osuactivity':
+            MysqlModel = OsuActivity; break;
+        case 'youtubechannel':
+            MysqlModel = YoutubeChannelsData; break;
+        case 'youtubevideos':
+            MysqlModel = YoutubeVideosData; break;
+        case 'guildServicesTracking':
+            MysqlModel = guildServicesTracking; break;
+        case 'replaycache':
+            MysqlModel = replayCache; break;
+        case 'replayattachment':
+            MysqlModel = replayAttachment; break;
+        case 'nibbers':
+            MysqlModel = nibbers; break;
+        case 'guildSettings':
+            MysqlModel = guildSettings; break;
+        case 'osuHunterTrackingUser':
+            MysqlModel = osuHunterTrackingUser; break;
+        case 'cryptopairs':
+            MysqlModel = cryptopairs; break;
         default:
             console.error(`DB: (selectMysqlModel) undefined action: ${action}`);
             throw new Error('unknown mysql model', action);
@@ -453,6 +464,8 @@ async function MYSQL_GET_ALL(action, params = {}){
         case 'youtubechannel':
         case 'guildServicesTracking':
         case 'guildSettings':
+        case 'cryptopairs':
+        default:
             condition = params?params:{};
         break;
     }
@@ -535,7 +548,7 @@ async function getTrackingUsersForGuild(guildid, platformaction, mysql_tablename
     });
 
     if (guildServicesTracking_data.length>0){
-        let guildServicesTracking_userdata = GET_VALUES_FROM_OBJECT_BY_KEY(guildServicesTracking_data, 'trackinguserid');
+        let guildServicesTracking_userdata = GET_VALUES_FROM_OBJECT_BY_KEY(guildServicesTracking_data, 'key');
 
         var searchUserID = table_id_names.filter( obj => obj.platforms.includes(platformaction.split("_")[0]));
         
@@ -635,10 +648,18 @@ module.exports = {
     getTrackingInfo: getTrackingInfo,
     getTrackingUsersForGuild: getTrackingUsersForGuild,
     MYSQL_GET_TRACKING_DATA_BY_ACTION: MYSQL_GET_TRACKING_DATA_BY_ACTION,
-    getGuildidsOfTrackingUserService: async function (platformaction, trackinguserid){
+    getGuildidsOfTrackingUserServiceByGuildId: async function (platformaction, guildid){
         var mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('guildServicesTracking', {
             platformaction: platformaction,
-            trackinguserid: trackinguserid.toString()
+            guildid: guildid.toString()
+        }));
+        return GET_VALUES_FROM_OBJECT_BY_KEY(mysql_data, 'key');
+    },
+
+    getGuildidsOfTrackingUserService: async function (platformaction, key){
+        var mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('guildServicesTracking', {
+            platformaction: platformaction,
+            key: key.toString()
         }));
         var guildids = GET_VALUES_FROM_OBJECT_BY_KEY(mysql_data, 'guildid');
         return guildids.filter( (value, index, self) => self.indexOf(value) === index );
@@ -683,21 +704,21 @@ module.exports = {
             await MYSQL_SAVE('guildServicesTracking', {
                 guildid: guildid,
                 platformaction: `${platform}_${action}`,
-                trackinguserid: trackingdata[1]}, 
-                {trackinguserid: trackingdata[1]});
+                key: trackingdata[1]}, 
+                {key: trackingdata[1]});
             await MYSQL_SAVE(mysql_tablename, {[trackingdata[0]]: trackingdata[1]}, {[action]: value});
             log('Добавлен новый канал в тренкинг лист '+trackingdata[1], moduleName);
         } else {
             await MYSQL_DELETE('guildServicesTracking', {
                 guildid: guildid,
                 platformaction: `${platform}_${action}`,
-                trackinguserid: trackingdata[1]});
+                key: trackingdata[1]});
             log('Удален канал из тренкинг листа гильдии '+trackingdata[1], moduleName);
 
             //поиск по всем гильдиям
             let foundedchannel = await MYSQL_GET_ONE('guildServicesTracking', {
                 platformaction: `${platform}_${action}`, 
-                trackinguserid: trackingdata[1]});
+                key: trackingdata[1]});
             if (foundedchannel === null){
                 await MYSQL_SAVE(mysql_tablename, {[trackingdata[0]]: trackingdata[1]}, {[action]: value});
                 log('Будет отключен общий трекинг. Канал не отслеживается не одной гильдией '+trackingdata[1], moduleName);
