@@ -726,4 +726,22 @@ module.exports = {
         }
     },
 
+    manageGuildCryptoTracking: async function (guildid, platform, action, pair, is_tracking ){
+        const key = `${pair.first}-${pair.second}`;
+        if (is_tracking == true){
+            await MYSQL_SAVE('guildServicesTracking', {
+                guildid: guildid,
+                platformaction: `${platform}_${action}`,
+                key: key}, 
+                {key: key});
+            log('Добавлен новая криптопара в тренкинг лист '+key, moduleName);
+        } else {
+            await MYSQL_DELETE('guildServicesTracking', {
+                guildid: guildid,
+                platformaction: `${platform}_${action}`,
+                key: key});
+            log('Удалена криптопара из тренкинг листа '+key, moduleName);
+        }
+    }
+
 }

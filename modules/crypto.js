@@ -7,7 +7,7 @@ const { getGuildChannelDB } = require("../modules/GuildChannel.js")
 const { getGuildSetting } = require('../modules/guildSettings.js');
 
 const { MYSQL_SAVE, MYSQL_GET_TRACKING_DATA_BY_ACTION, MYSQL_GET_ONE, 
-    manageGuildServiceTracking, getTrackingInfo, getGuildidsOfTrackingUserServiceByGuildId, MYSQL_GET_ALL } = require("./DB.js");
+    manageGuildCryptoTracking, getTrackingInfo, getGuildidsOfTrackingUserServiceByGuildId, MYSQL_GET_ALL } = require("./DB.js");
 
 async function crypto_check_start(guild){
     await crypto_check(guild);
@@ -26,31 +26,43 @@ async function crypto_check(guild){
         text:  cryptoinfo } );
 }
 
+//изначально все пары is_online = true, генерируются все варианты и убираются лишние, оставшиеся запрашиваются в апи, у них остается Is_online=true
+//затем эти пары снова расширяются и у новых пар считается значение и ставится is_online=false
 async function getPrices(guild){
 
     //получить пары коинов гильдии
-    const coins_in_mysql = await getGuildidsOfTrackingUserServiceByGuildId('crypto_coins', guild.id);
-
-    const guild_pairs = coins_in_mysql.map( p => {
-        let pair = p.split(',');
-        return {first: pair.shift(), second: pair.shift(), is_online: true};
-    });
-    
+    const guild_pairs = await get_guild_coinpairs (guild.id);
+        
     //вычислить уникальные пары и получить онлайн значения
     const pairs_to_request = get_unique_pairs( await get_all_pairs(guild_pairs) );
-    var calculated_pairs = [];
-    for (let pair of pairs_to_request){
-        calculated_pairs.push(await get_pair_with_value_change( pair ));
-    };
+
+    const calculated_pairs = await Promise.all( pairs_to_request.map ( async pair => await get_pair_with_value_change( pair ) ));
     
     const calculated_all_pairs = await get_all_pairs(calculated_pairs);
-    
-    const calculated_requested_pairs = calculated_all_pairs.filter( p =>
-        guild_pairs.findIndex( pair => pair.first.includes(p.first) &&  pair.second.includes(p.second) ) > -1 );
 
     await save_coinpairs (calculated_all_pairs);
 
+    const calculated_requested_pairs = calculated_all_pairs.filter( p =>
+        guild_pairs.findIndex( pair => pair.first.includes(p.first) &&  pair.second.includes(p.second) ) > -1 );
+
     return calculated_requested_pairs.map( p => coinpair_display(p)).join('\n') + '\n';
+}
+
+async function check_exist_coinpair(pair){
+    const res = await getPriceCoinPair( pair );
+    if (res.error) {
+        console.error('Пара не существует', pair);
+        return false;
+    }
+    return true;
+}
+
+async function get_guild_coinpairs(guild_id){
+    const coins_in_mysql = await getGuildidsOfTrackingUserServiceByGuildId('cryptocoins_tracking', guild_id);
+    return coins_in_mysql.map( p => {
+        const [first, second]= p.split('-');
+        return {first, second, is_online: true};
+    });
 }
 
 async function get_pair_with_value_change(pair){
@@ -168,14 +180,27 @@ async function save_coinpairs (coinpairs){
 async function getPriceCoinPair( pair ){
     let symbol = pair.first + pair.second;
     let url = `https://api.binance.com/api/v3/avgPrice?symbol=${symbol}`;
-    return new Promise(async (res,rej) =>{
+    return new Promise(async (res, rej) =>{
         await axios.get(url).then( result =>{
             res(Number(result.data.price));
+        }).catch ( (err) => {
+            res({error: err.code})
         });
     });
 }
 
 module.exports = {
     crypto_check_start: crypto_check_start,
-    getPrices: getPrices,
+    check_exist_coinpair: check_exist_coinpair,
+    get_guild_coinpairs: get_guild_coinpairs,
+    MYSQL_CRYPTO_TRACKING_CHANGE: async function (guild_id, pair, is_tracking){
+        if (is_tracking == true){
+            const guild_pairs = await get_guild_coinpairs(guild_id);
+            if (guild_pairs.findIndex( p => p.first.includes(pair.first) && p.second.includes(pair.second)) > -1){
+                return {success: false, text: `Cryptopair **${pair.first}-${pair.second}** already exists`};
+            }
+        }
+        await manageGuildCryptoTracking(guild_id, 'cryptocoins', 'tracking', pair, is_tracking);
+        return {success: true, text: `Cryptopair **${pair.first}-${pair.second}** changed tracking: ${is_tracking}`};
+    }
 };
