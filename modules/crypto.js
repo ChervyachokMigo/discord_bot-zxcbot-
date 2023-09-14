@@ -6,8 +6,7 @@ const { setInfinityTimerLoop, getBooleanFromString } = require("../modules/tools
 const { getGuildChannelDB } = require("../modules/GuildChannel.js")
 const { getGuildSetting } = require('../modules/guildSettings.js');
 
-const { MYSQL_SAVE, MYSQL_GET_TRACKING_DATA_BY_ACTION, MYSQL_GET_ONE, 
-    manageGuildCryptoTracking, getTrackingInfo, getGuildidsOfTrackingUserServiceByGuildId, MYSQL_GET_ALL } = require("./DB.js");
+const { MYSQL_SAVE,  MYSQL_GET_ONE, manageGuildCryptoTracking,  getGuildidsOfTrackingUserServiceByGuildId} = require("./DB.js");
 
 async function crypto_check_start(guild){
     await crypto_check(guild);
