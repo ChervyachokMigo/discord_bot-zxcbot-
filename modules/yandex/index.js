@@ -11,7 +11,7 @@ module.exports = {
         app.use(bodyParser.json());
         app.use(bodyParser.urlencoded({ extended: false }));
 
-        app.listen(HTTP_PORT,'192.168.2.76', ()=>{
+        app.listen(HTTP_PORT, ()=>{
             log(`Webserver listening on http://localhost:${HTTP_PORT}!`, 'Dashboard');
         });
 

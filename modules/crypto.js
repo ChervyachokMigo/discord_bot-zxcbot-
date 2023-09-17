@@ -48,6 +48,11 @@ async function getPrices(guild){
 }
 
 async function check_exist_coinpair(pair){
+    const guild_pairs = await get_guild_coinpairs ();
+    const all_pairs = await get_all_pairs(guild_pairs);
+    if (all_pairs.findIndex( p => pair.first.includes(p.first) && pair.second.includes(p.second)) > -1){
+        return true;
+    }
     const res = await getPriceCoinPair( pair );
     if (res.error) {
         console.error('Пара не существует', pair);
@@ -56,7 +61,7 @@ async function check_exist_coinpair(pair){
     return true;
 }
 
-async function get_guild_coinpairs(guild_id){
+async function get_guild_coinpairs(guild_id = 0){
     const coins_in_mysql = await getGuildidsOfTrackingUserServiceByGuildId('cryptocoins_tracking', guild_id);
     return coins_in_mysql.map( p => {
         const [first, second]= p.split('-');

@@ -48,6 +48,7 @@ async function set_tracking(message, comargs, is_tracking){
         await SendError(message, {name: module.exports.command_name, help: module.exports.command_help }, `Неверная криптопара. Напишите пару через дефис, например BTC-USDT`);
         return false
     }
+    
     const pair = {first, second};
     if( ! (await check_exist_coinpair( pair )) ){
         await SendError(message, {name: module.exports.command_name, help: module.exports.command_help }, `Не существует такая криптопара: `+ first + '-' + second);

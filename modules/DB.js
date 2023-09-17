@@ -648,11 +648,13 @@ module.exports = {
     getTrackingInfo: getTrackingInfo,
     getTrackingUsersForGuild: getTrackingUsersForGuild,
     MYSQL_GET_TRACKING_DATA_BY_ACTION: MYSQL_GET_TRACKING_DATA_BY_ACTION,
-    getGuildidsOfTrackingUserServiceByGuildId: async function (platformaction, guildid){
-        var mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('guildServicesTracking', {
-            platformaction: platformaction,
-            guildid: guildid.toString()
-        }));
+    getGuildidsOfTrackingUserServiceByGuildId: async function (platformaction, guildid = 0){
+        if (guildid == 0){
+            var query = { platformaction: platformaction };
+        } else {
+            var query = { platformaction: platformaction, guildid: guildid.toString() };
+        }
+        var mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('guildServicesTracking', query));
         return GET_VALUES_FROM_OBJECT_BY_KEY(mysql_data, 'key');
     },
 
