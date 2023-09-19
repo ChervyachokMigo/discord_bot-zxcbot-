@@ -1,4 +1,5 @@
 const fs = require(`fs`);
+const {EventEmitter} = require('events');
 
 const { SMTPServer } = require("smtp-server");
 const { MailParser } = require('mailparser');
@@ -8,6 +9,8 @@ const { getFullTimeString } = require('../tools.js');
 var server;
 const SMTP_PORT = 25;
 const mailsdbFolder = `mail_db`;
+
+const mailerEvents = new EventEmitter({captureRejections: true});
 
 const smtp_options = {
   secure: false,
@@ -35,29 +38,31 @@ const smtp_options = {
       return callback();//Accept the address
   },
   onData: function(stream, session, callback) {
-    const parser = new MailParser();
+    for (const sendTo of session.envelope.rcptTo.map( u => u.address.split('@').shift())){
+      const parser = new MailParser();
 
-    //console.log(session.envelope.rcptTo)
+      var subject = '';
+      const sender = session.envelope.mailFrom? session.envelope.mailFrom.address: 'Anonymous';
+      
+      const date_value = new Date();
+      const postname = `${getFullTimeString(date_value)}`;
 
-    var username = '';
-    var subject = '';
-    var sender = '';
-    
-    var postname = `${getFullTimeString(new Date())}`;
+      const post_filepath = `${mailsdbFolder}/${sendTo}/${postname}`;
 
-    parser.on('headers', headers => {
-      username = headers.get('to').value.shift().address.split(`@`)[0]; 
-      subject = headers.get('subject');
-      sender = headers.get('from').value.shift().address;
-    });
+      parser.on('headers', headers => {
+        subject = headers.get('subject');
+      });
 
-    parser.on('data', data => {
+      parser.on('data', data => {
 
-      if (data.type === 'text') {
-        if (username.length>0){
+        if (data.type === 'text') {
+
+          if (sendTo.length == 0) {
+            return;
+          }
 
           try{
-            fs.mkdirSync(`${mailsdbFolder}/${username}`);
+            fs.mkdirSync(`${mailsdbFolder}/${sendTo}`);
           } catch (e){
             if (e.code !== `EEXIST`){
                 console.log(e);
@@ -65,22 +70,29 @@ const smtp_options = {
             }
           }
           
-          const posttext = `From: ${sender}\nSubject: ${subject}\n${data.text}`;
+          const posttext = `From: ${sender}\nSubject: ${subject}\n${data.text || data.html || 'null'}`;
 
-          console.log(`[${postname}] new message ${posttext}`);
-          fs.writeFileSync(`${mailsdbFolder}/${username}/${postname}.txt`, posttext, {encoding:`utf-8`});
+          const post_extname = data.text ? '.txt' : data.html ? '.html' : '.empty';
+
+          console.log(`[${postname}] new message from: ${sender}\nSubject: ${subject}`);
+
+          fs.writeFileSync(`${post_filepath}${post_extname}`, posttext, {encoding:`utf-8`});
+
+          mailerEvents.emit('new_message', {date: {postname, value: date_value }, filepath: `${post_filepath}${post_extname}`, subject, sender, sendTo, data});
+          
         }
-      }
-    });
+      });
+      stream.pipe(parser);
+      stream.on("end", callback);
 
-    stream.pipe(parser); // print message to console
+    }
 
-    stream.on("end", callback);
   },
 }
 
 module.exports = {
   init: () => {
+
     try{
       fs.mkdirSync(mailsdbFolder);
     } catch (e){
@@ -99,5 +111,7 @@ module.exports = {
     server.listen(SMTP_PORT, ()=>{
       console.log("Server smtp started");
     });
+
+    return mailerEvents;
   }
 }

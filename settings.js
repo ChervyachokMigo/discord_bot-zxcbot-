@@ -281,7 +281,7 @@ module.exports = {
 
     AllowedNamesOfGuildChannels: ()=>{
         var res = [`system`,`general`,`daily`,`reminds`,`joiner`,
-        `clear`, `crypto`];
+        `clear`, `crypto`, `mailer`];
         return onlyUnique(res.concat(GET_VALUES_FROM_OBJECT_BY_KEY(guild_setting_events_deps, 'channel')));
 },
 

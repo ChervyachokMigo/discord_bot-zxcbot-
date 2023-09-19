@@ -28,6 +28,8 @@ const yandex = require('../modules/yandex/index.js');
 
 const smtp = require('../modules/mailer/mailer-main.js');
 
+const smtp_events = require('../modules/mailer/mailer-events.js');
+
 module.exports = {
     initAll: async (client) =>{
         try{
@@ -47,8 +49,6 @@ module.exports = {
             }
 
             yandex.init();
-
-            smtp.init();
 
             if (settings.modules.stalker){  
                 if (settings.modules_stalker.twitchchat){     
@@ -70,6 +70,12 @@ module.exports = {
             guilds.forEach( async( guild )=>{
 
                 log('Старт гильдии ['+guild.id+'] ' + guild.name, 'initialisation');
+
+                if (guild.id.toString().includes('1118103232082882610')){
+                    const mailerEvents = smtp.init();
+                    smtp_events.init(mailerEvents, guild);
+                }
+                
 
                 await initGuildSettings(guild.id);
 
