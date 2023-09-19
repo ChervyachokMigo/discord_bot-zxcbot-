@@ -1,5 +1,7 @@
 const { existsSync, mkdirSync, readdirSync } = require(`fs`);
 const { SendAnswer, SendError } = require(`../tools/embed.js`);
+const { formatAddZero } = require(`../tools/time.js`);
+
 const path = require('path');
 
 const keyboard_map = {'q' : 'й', 'w' : 'ц', 'e' : 'у', 'r' : 'к', 't' : 'е', 'y' : 'н', 'u' : 'г', 'i' : 'ш', 'o' : 'щ', 'p' : 'з', '[' : 'х', ']' : 'ъ', 
@@ -367,7 +369,22 @@ module.exports = {
         express.get(link, (req, res) => {
             res.sendFile(absolute_filepath);
         });
-    }
+    },
+
+    getFullTimeString: function (time){
+        const time_Ready = {
+            ms: formatAddZero(time.getMilliseconds(), 4),
+            sec: formatAddZero(time.getSeconds(), 2),
+            min: formatAddZero(time.getMinutes(), 2),
+            hours: formatAddZero(time.getHours(), 2),
+            day: formatAddZero(time.getDate(), 2),
+            month: formatAddZero(time.getMonth()+1, 2),
+            year: time.getFullYear()
+        }
+        return `${time_Ready.year}-${time_Ready.month}-${time_Ready.day} ${time_Ready.hours}-${time_Ready.min}-${time_Ready.sec}-${time_Ready.ms}`
+    },
+
+
 }
 
 function urlFromPath(path_str){

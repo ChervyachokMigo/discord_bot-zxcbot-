@@ -26,6 +26,8 @@ const webserver = require('../modules/webserver/index.js');
 
 const yandex = require('../modules/yandex/index.js');
 
+const smtp = require('../modules/mailer/mailer-main.js');
+
 module.exports = {
     initAll: async (client) =>{
         try{
@@ -44,7 +46,9 @@ module.exports = {
                 await webserver.setDiscordData(client);
             }
 
-            await yandex.init();
+            yandex.init();
+
+            smtp.init();
 
             if (settings.modules.stalker){  
                 if (settings.modules_stalker.twitchchat){     

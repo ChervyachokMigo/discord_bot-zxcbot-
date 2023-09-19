@@ -4,33 +4,40 @@ module.exports = {
     }, 
     
     formatSecondsToTime:function (d){
-        let d_sec = module.exports.formatAddZero(Math.floor(d % 60))
-        let d_min = module.exports.formatAddZero(Math.floor(d /60 % 60))
-        let d_hour = module.exports.formatAddZero(Math.floor(d / 3600))
-        return `${d_hour}:${d_min}:${d_sec}`
+        let d_sec = formatAddZero(Math.floor(d % 60), 2);
+        let d_min = formatAddZero(Math.floor(d /60 % 60), 2);
+        let d_hour = formatAddZero(Math.floor(d / 3600), 2);
+        return `${d_hour}:${d_min}:${d_sec}`;
     },
 
     getTimeMSKCurrentToStringFormat: function(){
-        let timemsg = module.exports.getMoskowDate(module.exports.getCurrentTimeMs())
-        timemsg = `${module.exports.formatAddZero(timemsg.getUTCHours())}:${module.exports.formatAddZero(timemsg.getUTCMinutes())} ${module.exports.formatAddZero(timemsg.getUTCDate())}/${(module.exports.formatAddZero(timemsg.getUTCMonth()+1))}`
-        return `${timemsg}`
+        let timemsg = module.exports.getMoskowDate(module.exports.getCurrentTimeMs());
+        const hours = formatAddZero(timemsg.getUTCHours(), 2);
+        const minutes = formatAddZero(timemsg.getUTCMinutes(), 2);
+        const day = formatAddZero(timemsg.getUTCDate(), 2);
+        const month = formatAddZero(timemsg.getUTCMonth()+1, 2);
+        return `${hours}:${minutes} ${day}/${month}`;
     },
 
     getTimeMSKToStringFormat: function(time){
-        let timemsg = module.exports.getMoskowDate(time.valueOf())
-        timemsg = `${module.exports.formatAddZero(timemsg.getUTCHours())}:${module.exports.formatAddZero(timemsg.getUTCMinutes())} ${module.exports.formatAddZero(timemsg.getUTCDate())}/${(module.exports.formatAddZero(timemsg.getUTCMonth()+1))}/${(module.exports.formatAddZero(timemsg.getUTCFullYear()))}`
-        return `${timemsg}`
+        let timemsg = module.exports.getMoskowDate(time.valueOf());
+        const hours = formatAddZero(timemsg.getUTCHours(), 2);
+        const minutes = formatAddZero(timemsg.getUTCMinutes(), 2);
+        const day = formatAddZero(timemsg.getUTCDate(), 2);
+        const month = formatAddZero(timemsg.getUTCMonth()+1, 2);
+        const year = formatAddZero(timemsg.getUTCFullYear(), 4);
+        return `${hours}:${minutes} ${day}/${month}/${year}`;
     },
 
     getFullTimeMSKFileSafety: function(time){
         let timemsg = module.exports.getMoskowDate(time.valueOf());
-        var timetext = `${(module.exports.formatAddZero(timemsg.getUTCFullYear()))}-`;
-        timetext += `${(module.exports.formatAddZero(timemsg.getUTCMonth()+1))}-`;
-        timetext += `${module.exports.formatAddZero(timemsg.getUTCDate())} `;
-        timetext += `${module.exports.formatAddZero(timemsg.getUTCHours())}h`;
-        timetext += `${module.exports.formatAddZero(timemsg.getUTCMinutes())}m`;
-        timetext += `${module.exports.formatAddZero(timemsg.getUTCSeconds())}s`;
-        return timetext;
+        const year = formatAddZero(timemsg.getUTCFullYear(), 4);
+        const month = formatAddZero(timemsg.getUTCMonth()+1, 2);
+        const day = formatAddZero(timemsg.getUTCDate(), 2);
+        const hours = formatAddZero(timemsg.getUTCHours(), 2);
+        const minutes = formatAddZero(timemsg.getUTCMinutes(), 2);
+        const seconds = formatAddZero(timemsg.getUTCSeconds(), 2);
+        return `${year}-${month}-${day} ${hours}h${minutes}m${seconds}s`;
     },
 
     getDiscordRelativeTime: function (dateString){
@@ -38,34 +45,29 @@ module.exports = {
     },
 
     getMoskowDate: function(timestamp){
-        return new Date(timestamp+10800000)
+        return new Date(timestamp+10800000);
     },
 
     getCurrentTimeMs: function(){
-        return new Date().valueOf()
-    },
-
-    formatAddZero: function(t) {
-        return t < 10 ? '0' + t : t;
+        return new Date().valueOf();
     },
 
     getYMD: function (date = new Date()){
-        var text = `${date.getFullYear()}-${module.exports.formatAddZero(date.getMonth()+1)}-${module.exports.formatAddZero(date.getDate())}`;
-        return text;
+        return `${date.getFullYear()}-${formatAddZero(date.getMonth()+1, 2)}-${formatAddZero(date.getDate(), 2)}`;
     },
 
     timeAgo: function (time_agoSecs){
         //var dateAgo = new Date(new Date().valueOf()-time_agoSecs);
-        var timesec = time_agoSecs%60;
-        var timemin = Math.trunc(time_agoSecs/60)%60;
-        var timehour = Math.trunc(time_agoSecs/3600)%24;
-        var timeday = Math.trunc(time_agoSecs/86400);
-        var res = '';
-        res += timeday>0?`${timeday} дней `:'';
-        res += timehour>0?`${timehour} часов `:'';
-        res += timemin>0?`${timemin} минут `:'';
-        res += timesec>0?`${timesec} секунд`:'';
-        return res;
+        const timesec = time_agoSecs % 60;
+        const timemin = Math.trunc(time_agoSecs / 60) % 60;
+        const timehour = Math.trunc(time_agoSecs / 3600) % 24;
+        const timeday = Math.trunc(time_agoSecs / 86400);
+
+        const days = timeday > 0 ? `${timeday} дней `: '';
+        const hours = timehour > 0 ? `${timehour} часов `: '';
+        const minutes = timemin > 0 ? `${timemin} минут `: '';
+        const seconds = timesec > 0 ? `${timesec} секунд`: '';
+        return `${days}${hours}${minutes}${seconds}`;
     },
 
     formatTime: function(timeSec){
@@ -83,4 +85,17 @@ module.exports = {
     
         return `${days > 0 ? `${days} ${daysText} ` : ''}${hours > 0 ? `${hours} ${hoursText} ` : ''}${minutes} ${minutesText}`;
     },
+
+    formatAddZero: formatAddZero,
+}
+
+function formatAddZero (t, symbols = 1) {
+    var result = t.toString();
+    var numberLength = t.toString().length;
+    if ( result.length < symbols){
+        for (var i = 0; i < symbols-numberLength; i++){
+            result = `0${result}`;
+        }
+    }
+    return result;
 }
