@@ -1,3 +1,5 @@
+const express = require('express');
+const express_subdomain = require('express-subdomain');
 const { existsSync, mkdirSync, readdirSync } = require(`fs`);
 const { SendAnswer, SendError } = require(`../tools/embed.js`);
 const { formatAddZero } = require(`../tools/time.js`);
@@ -354,21 +356,27 @@ module.exports = {
         return result;
     },
     
-    listenWebFolder: ( express, weblink, folderpath) => {
+    listenWebFolder: ( weblink, folderpath, router) => {
         const absolute_folderpath = path.resolve(folderpath);
         for (const filename of readdirSync(absolute_folderpath)){
             const url = urlFromPath(path.join( path.sep, weblink, filename));
             const _filepath = path.join(absolute_folderpath, filename);
-            module.exports.listenWebFile(express, url, _filepath);
+            module.exports.listenWebFile(url, _filepath, router);
         }
     },
 
-    listenWebFile: (express, link, filepath) => {
+    listenWebFile: (link, filepath, router ) => {
         const absolute_filepath = path.resolve(filepath);
         console.log('Listen file: ', link, '->',  absolute_filepath);
-        express.get(link, (req, res) => {
+        router.get(link, (req, res) => {
             res.sendFile(absolute_filepath);
         });
+    },
+
+    set_router_subdomain: (app, subdomain) => {
+        var router = express.Router();
+        app.use(express_subdomain(subdomain, router));
+        return router;
     },
 
     getFullTimeString: function (time){

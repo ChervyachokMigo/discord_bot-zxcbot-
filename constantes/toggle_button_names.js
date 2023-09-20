@@ -33,5 +33,5 @@ module.exports = [
     'osu_replay_toggle',
     'crypto_toggle',
     'taiko_map_recomend_toggle',
-    'webserver_toggle'
+    'websettings_toggle'
 ];

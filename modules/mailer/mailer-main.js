@@ -8,7 +8,7 @@ const { getFullTimeString } = require('../tools.js');
 
 var server;
 const SMTP_PORT = 25;
-const mailsdbFolder = `mail_db`;
+const mailsdbFolder = `data/mail_db`;
 
 const mailerEvents = new EventEmitter({captureRejections: true});
 
@@ -72,13 +72,17 @@ const smtp_options = {
           
           const posttext = `From: ${sender}\nSubject: ${subject}\n${data.text || data.html || 'null'}`;
 
-          const post_extname = data.text ? '.txt' : data.html ? '.html' : '.empty';
+          const post_extname = data.html ? '.html' : data.txt ? '.txt' : '.empty';
 
           console.log(`[${postname}] new message from: ${sender}\nSubject: ${subject}`);
 
           fs.writeFileSync(`${post_filepath}${post_extname}`, posttext, {encoding:`utf-8`});
 
-          mailerEvents.emit('new_message', {date: {postname, value: date_value }, filepath: `${post_filepath}${post_extname}`, subject, sender, sendTo, data});
+          mailerEvents.emit('new_message', 
+          { date: {postname, value: date_value }, 
+            link: `${sendTo}/${postname}${post_extname}`,
+            filepath: `${post_filepath}${post_extname}`, 
+            subject, sender, sendTo, data});
           
         }
       });

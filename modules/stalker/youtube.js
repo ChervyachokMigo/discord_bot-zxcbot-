@@ -16,8 +16,8 @@ const { emoji_youtube } = require("../../constantes/emojis.js");
 
 const moduleName = `Stalker Youtube`;
 
-var youtube_client_secret_path = './youtube-data/youtube_client_secret';
-var youtube_tokens_path = './youtube-data/youtube-tokens.json';
+var youtube_client_secret_path = './data/youtube/youtube_client_secret';
+var youtube_tokens_path = './youtube/youtube-tokens.json';
 
 var google_client_data = {
     client_id: '',

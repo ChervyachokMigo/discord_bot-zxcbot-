@@ -308,7 +308,7 @@ module.exports = {
 
                     //бест скоры
                     log(`Проверка лучших скоров осу у ${osuUserDataNew.username}`, moduleName)
-                    let topscores = await v2.user.scores.category(osuUserDataNew.userid, "best", {limit: stalkerBestScoresLimit});
+                    let topscores = await v2.scores.user.category(osuUserDataNew.userid, "best", {limit: stalkerBestScoresLimit});
 
                     for (let score of topscores){
                         if (score.pp !== null){

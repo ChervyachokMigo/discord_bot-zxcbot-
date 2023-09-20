@@ -7,7 +7,7 @@ const createEmbed = (color, title, desc, url, fields, image) => ({
         color,
         title,
         description: desc,
-        url: url || undefined,
+        url: encodeURI(url) || undefined,
         fields,
         image: image ? image.url ? image : undefined : undefined
       }

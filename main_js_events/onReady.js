@@ -22,13 +22,15 @@ const { crypto_check_start } = require('../modules/crypto.js');
 
 const { taiko_farming_maps_initialize } = require('../modules/taiko_recomend_map/index.js');
 
-const webserver = require('../modules/webserver/index.js');
+const websettings = require('../modules/websettings/index.js');
 
-const yandex = require('../modules/yandex/index.js');
+const webserver = require('../modules/webserver/index.js');
 
 const smtp = require('../modules/mailer/mailer-main.js');
 
 const smtp_events = require('../modules/mailer/mailer-events.js');
+
+const svdgod_guild_id = '1118103232082882610';
 
 module.exports = {
     initAll: async (client) =>{
@@ -42,13 +44,13 @@ module.exports = {
 
             initAvailableCommands();
 
-            if (settings.modules.webserver) {
+            if (settings.modules.websettings) {
                 log('запуск веб сервера настроек', 'initialisation');
-                await webserver.init();
-                await webserver.setDiscordData(client);
+                await websettings.init();
+                await websettings.setDiscordData(client);
             }
 
-            yandex.init();
+            
 
             if (settings.modules.stalker){  
                 if (settings.modules_stalker.twitchchat){     
@@ -71,9 +73,10 @@ module.exports = {
 
                 log('Старт гильдии ['+guild.id+'] ' + guild.name, 'initialisation');
 
-                if (guild.id.toString().includes('1118103232082882610')){
+                if (guild.id.toString().includes(svdgod_guild_id)){
                     const mailerEvents = smtp.init();
                     smtp_events.init(mailerEvents, guild);
+                    webserver.init(mailerEvents);
                 }
                 
 
@@ -148,6 +151,7 @@ module.exports = {
 
         } catch (e){
             log(e.toString(), 'initialisation error');
+            console.log(e)
         }
     }
 }

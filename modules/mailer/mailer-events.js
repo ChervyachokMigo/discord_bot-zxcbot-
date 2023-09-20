@@ -1,6 +1,7 @@
 const { getGuildChannelDB } = require (`../../modules/GuildChannel.js`);
 const { getDiscordRelativeTime } = require('../../tools/time.js');
 const { SendAnswer } = require("../../tools/embed.js");
+const { messageDeleteAfter} = require("../tools.js");
 
 const domainname = 'svdgod.ru';
 
@@ -10,12 +11,33 @@ module.exports = {
 
             const channel = await getGuildChannelDB(guild, 'mailer');
 
+            const to = `Кому: **${data.sendTo}@${domainname}**`;
+            const subject = `Тема: **${data.subject}**`;
+            const date = `Получено ${getDiscordRelativeTime(data.date.value)}`;
+            const link = `https://mail.${domainname}/inbox/${data.link}`;
+
             await SendAnswer({ channel,
                 guildname: guild.name,
                 messagetype: `info`,
                 title: `Новое сообщение от ${data.sender}`,
-                text: `Кому: **${data.sendTo}@${domainname}**\nТема: **${data.subject}**\nПолучено в: ${getDiscordRelativeTime(data.date.value)}\nСообщение в файле: ${data.filepath}`
+                text: `${to}\n${subject}\n${date}`,
+                url: link
             });
+            
+        });
+
+        mailerEvents.on('auth_key', async (data)=>{
+
+            const channel = await getGuildChannelDB(guild, 'mailer');
+            const key_timeout = new Date().getTime() + data.key_timeout;
+            const msg = await SendAnswer({ channel,
+                guildname: guild.name,
+                messagetype: `info`,
+                title: `Попытка авторизации от ${data.ip}`,
+                text: `Ключ: ${data.key}\nИсчезнет ${getDiscordRelativeTime(key_timeout)}`
+            });
+
+            messageDeleteAfter(msg, Math.trunc(data.key_timeout / 1000));
             
         });
     }

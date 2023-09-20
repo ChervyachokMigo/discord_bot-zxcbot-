@@ -4,7 +4,7 @@ const axios = require('axios');
 const { CreateFolderSync_IsNotExists } = require('../tools.js');
 
 module.exports = async function (file, user){
-    var localTempOfUser = `data_osuReplays/${user.id}/temp/`;
+    var localTempOfUser = `data/osuReplays/${user.id}/temp/`;
     try{
         return new Promise(async (resolveFilename,  rejectError)=>{
             try{

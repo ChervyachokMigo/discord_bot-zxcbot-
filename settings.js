@@ -111,8 +111,8 @@ function check_values(){
     if (typeof settings.taiko_map_recomend_toggle === "undefined") {
         settings.taiko_map_recomend_toggle = true;
     }
-    if (typeof settings.webserver_toggle === "undefined") {
-        settings.webserver_toggle = true;
+    if (typeof settings.websettings_toggle === "undefined") {
+        settings.websettings_toggle = true;
     }
     if (typeof settings.coins_daily_reward === "undefined") {
         settings.coins_daily_reward = 1000;
@@ -214,10 +214,10 @@ function check_values(){
     settings.osuPath = `E:\\osu!`;
     }
     if (typeof settings.osuBeatmapDownloadsDir === "undefined") {
-    settings.osuBeatmapDownloadsDir = `data_osuBeatmapDownloads`;
+    settings.osuBeatmapDownloadsDir = `data/osuBeatmapDownloads`;
     }
     if (typeof settings.osuNewBeatmapDir === "undefined") {
-    settings.osuNewBeatmapDir = `data_osuNewBeatmaps`;
+    settings.osuNewBeatmapDir = `data/osuNewBeatmaps`;
     }
     if (typeof settings.restricted_words === "undefined") {
     settings.restricted_words = [];
@@ -356,7 +356,7 @@ module.exports = {
         crypto: settings.crypto_toggle,
         taiko_map_recomend: settings.taiko_map_recomend_toggle,
 
-        webserver: settings.webserver_toggle
+        websettings: settings.websettings_toggle
     },
 
     modules_stalker: {

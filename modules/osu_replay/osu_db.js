@@ -8,7 +8,7 @@ const { readLocalBeatmap } = require('./osu_beatmap.js');
 
 const { osuPath, osuNewBeatmapDir } = require('../../settings.js');
 
-const osu_db_JSON_filename = 'data_osuReplays/osudb_data.json';
+const osu_db_JSON_filename = 'data/osuReplays/osudb_data.json';
 
 var osu_db = {
     beatmaps: {},

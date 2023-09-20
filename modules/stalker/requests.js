@@ -226,7 +226,7 @@ async function getTwitchFolowers(TwitchUserID){
     await checkTokenExpires('twitch');
 
     var url1 = 'https://api.twitch.tv';
-    var url2 = `/helix/users/follows?to_id=${TwitchUserID}&first=1`;
+    var url2 = `/helix/channels/followers?broadcaster_id=${TwitchUserID}&first=1`;
     
     var twitch = await axios.create({
         baseURL: url1,
