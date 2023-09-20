@@ -1,5 +1,5 @@
 const { getTimeMSKCurrentToStringFormat } = require('./time.js');
-const { saveLog } = require('../logserver/displaydata.js');
+const { saveLog } = require('../modules/logserver/index.js');
 
 module.exports = {
     LogString: function(guildname, type, name, text ){

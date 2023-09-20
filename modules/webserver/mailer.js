@@ -1,7 +1,10 @@
+const express = require('express');
 const fs = require('fs');
 const path = require('path');
 
-const { listenWebFolder, listenWebFile, set_router_subdomain } = require('../tools.js');
+const { set_router_subdomain } = require('../tools.js');
+
+const public_path = path.join(__dirname,'/../../data/webserver_mail_public');
 
 const key_timeout = 150000;
 
@@ -42,11 +45,12 @@ module.exports = {
     },
 
     mail_init: (app) => {
+
         const mail_router = set_router_subdomain(app, 'mail');
-        listenWebFolder('/', 'data/webserver_mail_public', mail_router);
-        listenWebFile('/', 'data/webserver_mail_public/index.html', mail_router);
+
+        app.use(express.static(public_path));
     
-        const back_button = '<div><a href="javascript:history.back()">Back</a></div>';
+        const back_button = '<div><a href="./../">Back</a></div>';
     
         mail_router.get('/auth', (req, res) => {
             const ip = req.headers['x-forwarded-for'];
@@ -101,59 +105,63 @@ module.exports = {
         });
     
         mail_router.get('/inbox', (req, res) => {
-            if (!check_auth(req.headers['x-forwarded-for'])) {
-                res.redirect('/auth');
-                return;
-            }
+            check_and_send (req, res, () => {
+                const inbox = fs.readdirSync('data/mail_db');
+                const header = `<h2>Inbox</h2>`;
+                const empty =  '<div>< Пусто ></div>';
+                const out = `<div><a href="/auth/out">Quit</a></div>`;
     
-            const inbox = fs.readdirSync('data/mail_db');
-            const header = `<h2>Inbox</h2>`;
-            const inbox_list = inbox.length > 0? inbox.map( sendTo => `<div><a href="/inbox/${sendTo}">${sendTo}</a></div>`).join(''): '<div>< Пусто ></div>';
-            const out = `<div><a href="/auth/out">Quit</a></div>`;
-            var content = header + back_button + inbox_list + out;
-            
-            res.send(content);
-            return;
+                const inbox_list = inbox.length > 0? inbox.map( sendTo => `<div><a href="/inbox/${sendTo}">${sendTo}</a></div>`).join(''): empty;
+
+                return header + back_button + inbox_list + out;
+            });
         });
     
         mail_router.get('/inbox/:sendTo', (req, res) => {
-            if (!check_auth(req.headers['x-forwarded-for'])) {
-                res.redirect('/auth');
-                return;
-            }
-    
-            const sendTo = req.params.sendTo;
-            const header = `<h2>To: ${sendTo}</h2>`;
-    
-            const posts = fs.readdirSync(`data/mail_db/${sendTo}`);
-            const posts_list = posts.length > 0? posts.map( post => `<div><a href="/inbox/${sendTo}/${post}">${post}</a></div>`).join(''): '<div>< Пусто ></div>';
-            var content = header + back_button + posts_list;
-            
-            res.send(content);
-            return;
+            check_and_send (req, res, () => {
+                const sendTo = req.params.sendTo;
+                const header = `<h2>To: ${sendTo}</h2>`;
+                const empty =  '<div>< Пусто ></div>';
+
+                const posts = fs.readdirSync(`data/mail_db/${sendTo}`);
+                const posts_list = posts.length > 0? posts.map( post => `<div><a href="/inbox/${sendTo}/${post}">${post}</a></div>`).join(''): empty;
+
+                return header + back_button + posts_list;
+            });
         });
     
         mail_router.get('/inbox/:sendTo/:post', (req, res) => {
-            if (!check_auth(req.headers['x-forwarded-for'])) {
-                res.redirect('/auth');
-                return;
-            }
-    
-            const sendTo = req.params.sendTo;
-            const post = path.basename(req.params.post);
-            const extname = path.extname(post);
-    
-            var postdata = fs.readFileSync(`data/mail_db/${sendTo}/${post}`);
-    
-            if (extname.includes('txt')){
-                postdata = `<pre>${postdata}</pre>`;
-            }
-    
-            var content = back_button + postdata;
-            
-            res.send(content);
-            return;
+            check_and_send (req, res, () => {
+                const sendTo = req.params.sendTo;
+                const post = path.basename(req.params.post);
+                const extname = path.extname(post);
+        
+                var postdata = fs.readFileSync(`data/mail_db/${sendTo}/${post}`);
+        
+                if (extname.includes('txt') || !postdata.includes('<div')){
+                    postdata = `<pre>${postdata}</pre>`;
+                }
+        
+                return back_button + postdata;
+            });
         });
         
     },
+}
+
+function check_and_send(req, res, callback){
+    const ip = req.headers['x-forwarded-for'];
+    
+    if (!ip) {
+        res.redirect('/');
+        return;
+    }
+
+    if (!check_auth(ip)) {
+        res.redirect('/auth');
+        return;
+    }
+
+    res.send(callback( req, res ));
+    return;
 }

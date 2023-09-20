@@ -1,14 +1,16 @@
 
 
 const express = require('express');
+const path = require('path');
 
 const bodyParser = require('body-parser');
 const { log } = require("../../tools/log.js");
 
-const { listenWebFolder, listenWebFile } = require('../tools.js');
 const { mail_init, set_events } = require('./mailer.js');
 
 const HTTP_PORT = 80;
+
+const public_path = path.join(__dirname,'/../../data/webserver_public');
 
 var app = express();
 
@@ -37,8 +39,7 @@ const server_listen = (port)=>{
 
     mail_init(app);
     
-    listenWebFolder('/', 'data/webserver_public', app);
-    listenWebFile('/', 'data/webserver_public/index.html', app);
+    app.use(express.static(public_path));
 
     app.listen(port, ()=>{
         log(`Webserver listening on http://localhost:${port}!`, 'Webserver');

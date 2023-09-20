@@ -1,7 +1,5 @@
 :loop
 @echo off
-cd /D "F:\node_js_stuff\node_projects\!discord_bot"
-title "Discord Bot"
 :Restart
-node.exe --inspect --trace-warnings main.js 
+start "Discord bot" /D "F:\node_js_stuff\node_projects\!discord_bot" /MIN /WAIT /B npm run start 
 goto loop

@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "Luminite bot",
   "main": "bottest.js",
-  "scripts": {},
+  "scripts": {
+    "start": "node.exe --inspect --trace-warnings main.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ChervyachokMigo/luminite-bot.git"

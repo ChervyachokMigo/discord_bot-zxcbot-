@@ -11,7 +11,7 @@ const { prepareDB } = require("../modules/DB.js")
 const { StalkerStartListeners, StalkerStartLoop } = require(`../modules/stalker.js`);
 const { twitchchat } = require(`../modules/stalker/twitchchat.js`);
 
-const { initLogServer } = require('../logserver/displaydata.js');
+const { initLogServer } = require('../modules/logserver/index.js');
 
 const autoRestartInit  = require('../modules/autoRestart.js');
 const { init_osu_db } = require('../modules/osu_replay/osu_db.js');

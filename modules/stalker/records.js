@@ -184,7 +184,7 @@ async function StartRecording(user, platform, stalkerEvents){
 
     setrecording(platform, user.username, true);
 
-    player.play('streamstart.mp3');
+    player.play('data/streamstart.mp3');
 
     var proc = spawn(`streamlink`, processArgs);   
 

@@ -155,7 +155,7 @@ module.exports = {
                             statusChanges.text += `Фоловеров: **${userdataNew.followers}**\n`;
                             statusChanges.text += `Категория: **${userdataNew.cat}**\n`;
                             statusChanges.text +=`Название: **${userdataNew.title}**\n`;
-                            player.play('streamstart.mp3');
+                            player.play('data/streamstart.mp3');
                         }
                         
                         if (userdataNew.status === 'offline'){

@@ -2,19 +2,22 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
+const path = require('path');
+
 const port = 3000
 
 var logData = [];
 
 module.exports = {
     initLogServer : function (){
-        
-        app.use(express.static(__dirname));
+        const public_path = path.join(__dirname, '/../../data/logserver_public');
+        app.use(express.static(public_path));
         app.use(bodyParser.urlencoded({ extended: true }));
 
         app.get('/', (req, res) => {
-            res.sendFile(__dirname + '/displaydata.html');
-            })
+            console.log(__dirname)
+            res.sendFile( path.join(public_path, '/index.html') );
+        });
 
         app.post('/', (req, res) => {
             if (typeof req.body !=='undefined'){
