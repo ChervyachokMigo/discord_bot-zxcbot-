@@ -48,7 +48,7 @@ module.exports = {
 
         const mail_router = set_router_subdomain(app, 'mail');
 
-        app.use(express.static(public_path));
+        mail_router.use(express.static(public_path));
     
         const back_button = '<div><a href="./../">Back</a></div>';
     
