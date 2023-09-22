@@ -6,9 +6,17 @@ const { MailParser } = require('mailparser');
 
 const { getFullTimeString } = require('../tools.js');
 
+const { SMTP_PORT } = require('../../config.js');
+
 var server;
-const SMTP_PORT = 25;
+
 const mailsdbFolder = `data/mail_db`;
+
+const ignore_list = [
+  'jcom.home.ne.jp',
+  'tiscali.it',
+  'centrefile7@gmail.com'
+];
 
 const mailerEvents = new EventEmitter({captureRejections: true});
 
@@ -44,6 +52,11 @@ const smtp_options = {
       var subject = '';
       const sender = session.envelope.mailFrom? session.envelope.mailFrom.address: 'Anonymous';
       
+      if ( ignore_list.findIndex( from => from.includes(sender)) > -1 ){
+        console.log( 'skip', sender, ' cause in ignore list');
+        callback();return;
+      }
+
       const date_value = new Date();
       const postname = `${getFullTimeString(date_value)}`;
 

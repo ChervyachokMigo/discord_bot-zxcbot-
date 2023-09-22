@@ -4,6 +4,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 
+const { YOUTUBE_TOKEN_CALLBACK_HTTP_PORT } = require('../../config.js');
+
 const { MYSQL_SAVE, MYSQL_GET_ONE, MYSQL_GET_TRACKING_DATA_BY_ACTION, 
     manageGuildServiceTracking, getTrackingInfo, getGuildidsOfTrackingUserService } = require("../DB.js");
 
@@ -173,7 +175,7 @@ async function init(){
         log('не найден файл с секретом, войдите и скачайте заново: https://console.cloud.google.com/apis/credentials', moduleName);
         return false;
     }
-    const myserver = new server(3333);
+    const myserver = new server(YOUTUBE_TOKEN_CALLBACK_HTTP_PORT);
     loadtokens();
     log(moduleName+' запущен', moduleName);
 }

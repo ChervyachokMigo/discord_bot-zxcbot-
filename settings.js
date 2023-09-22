@@ -99,9 +99,6 @@ function check_values(){
     if (typeof settings.joiner_toggle === 'undefined') {
     settings.joiner_toggle = true;
     }
-    if (typeof settings.auto_restart_toggle === 'undefined') {
-    settings.auto_restart_toggle = true;
-    }
     if (typeof settings.osu_replay_toggle === 'undefined') {
     settings.osu_replay_toggle = true;
     }      
@@ -350,7 +347,6 @@ module.exports = {
 
         stalker: settings.stalker_toggle,
         joiner:  settings.joiner_toggle,
-        autorestart: settings.auto_restart_toggle,
 
         osu_replay: settings.osu_replay_toggle,
         crypto: settings.crypto_toggle,

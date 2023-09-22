@@ -29,7 +29,6 @@ module.exports = [
     'reminds_toggle',
     'restricts_toggle',
     'joiner_toggle',
-    'auto_restart_toggle',
     'osu_replay_toggle',
     'crypto_toggle',
     'taiko_map_recomend_toggle',

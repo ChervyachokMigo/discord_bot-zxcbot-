@@ -1,5 +1,5 @@
 const express = require('express');
-const { HTTP_PORT } = require('../../config.js');
+const { WEBSETTINGS_HTTP_PORT, WEBSETTINGS_SOCKET_PORT } = require('../../config.js');
 const path = require('path');
 const bodyParser = require('body-parser')
 require('../../settings.js');
@@ -7,10 +7,10 @@ const fs = require('fs');
 const WebSocket = require('ws');
 const { MYSQL_GET_TRACKING_DATA_BY_ACTION, MYSQL_GET_ALL_RESULTS_TO_ARRAY, MYSQL_GET_ALL, MYSQL_DELETE, MYSQL_SAVE } = require("../../modules/DB.js");
 const { log } = require("../../tools/log.js");
-const { isJSON, groupBy, listenWebFolder, listenWebFile, set_router_subdomain} = require('../tools.js');
+const { isJSON, groupBy, listenWebFolder, listenWebFile } = require('../tools.js');
 
 var app = express();
-const webs = new WebSocket.WebSocketServer({ port: 8888 });
+const webs = new WebSocket.WebSocketServer({ port: WEBSETTINGS_SOCKET_PORT });
 
 var main_loop;
 
@@ -62,13 +62,15 @@ const db_data_deps = [
     {tablename: 'twitchchat', action: 'twitchchat', tracking_props: {twitchchat: 'tracking'} }
 ];
 
+const public_path = 'data/websettings_public/';
+
 module.exports = {
     init: async () => {
         app.use(bodyParser.json());
         app.use(bodyParser.urlencoded({ extended: false }));
 
-        app.listen(HTTP_PORT, ()=>{
-            log(`Websettings server listening on http://localhost:${HTTP_PORT}!`, 'Dashboard');
+        app.listen(WEBSETTINGS_HTTP_PORT, ()=>{
+            log(`Websettings server listening on http://localhost:${WEBSETTINGS_HTTP_PORT}!`, 'Dashboard');
         });
 
         app.on('error', (e) => {
@@ -77,14 +79,11 @@ module.exports = {
             }
         });
 
+        app.use(express.static(path.join(__dirname, '/../../', public_path)));
 
-
-        listenWebFolder('/', 'data/websettings_public/', app);
-
-        listenWebFile('/', 'data/websettings_public/index.html', app);
-        listenWebFile( '/settings', 'data/websettings_public/index_settings.html', app);
-        listenWebFile( '/status', 'data/websettings_public/index_status.html', app);
-        listenWebFile( '/favicon.ico', 'data/websettings_public/favicon.png', app);
+        listenWebFile( '/settings', path.join(public_path, 'index_settings.html'), app);
+        listenWebFile( '/status', path.join(public_path, 'index_status.html'), app);
+        listenWebFile( '/favicon.ico', path.join(public_path, 'favicon.png'), app);
 
         app.post('/save_settings', async (req, res) => {
             try{

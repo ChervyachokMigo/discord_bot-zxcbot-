@@ -252,6 +252,11 @@ const cryptopairs = mysql.define ('cryptopairs', {
     last_update: {type: DataTypes.DATE, allowNull: false}
 });
 
+const authorizedMailUsers = mysql.define ('authorizedMailUsers', {
+    ip: {type: DataTypes.STRING, allowNull: false},
+    token: {type: DataTypes.STRING, allowNull: false},
+});
+
 
 function updateAll(Model, condition, values ){
     return Model.update(values, {where : condition, logging: ''})
@@ -339,6 +344,8 @@ function select_mysql_model (action){
             MysqlModel = osuHunterTrackingUser; break;
         case 'cryptopairs':
             MysqlModel = cryptopairs; break;
+        case 'authorizedMailUsers':
+            MysqlModel = authorizedMailUsers; break;
         default:
             console.error(`DB: (selectMysqlModel) undefined action: ${action}`);
             throw new Error('unknown mysql model', action);
@@ -454,17 +461,7 @@ async function MYSQL_GET_ALL(action, params = {}){
                 userid: params.userid
             }
         break;
-        case `botchannel`:
-        case `streamersTwitch`:
-        case `streamersTrovo`:
-        case `steamuser`:
-        case `vkuser`:
-        case `twitchchat`:
-        case `osuprofile`:
-        case 'youtubechannel':
-        case 'guildServicesTracking':
-        case 'guildSettings':
-        case 'cryptopairs':
+
         default:
             condition = params?params:{};
         break;

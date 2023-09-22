@@ -13,7 +13,6 @@ const { twitchchat } = require(`../modules/stalker/twitchchat.js`);
 
 const { initLogServer } = require('../modules/logserver/index.js');
 
-const autoRestartInit  = require('../modules/autoRestart.js');
 const { init_osu_db } = require('../modules/osu_replay/osu_db.js');
 const { initAvailableCommands } = require(`../modules/commands.js`);
 const { initGuildSettings } = require('../modules/guildSettings.js');
@@ -49,8 +48,6 @@ module.exports = {
                 await websettings.init();
                 await websettings.setDiscordData(client);
             }
-
-            
 
             if (settings.modules.stalker){  
                 if (settings.modules_stalker.twitchchat){     
@@ -141,11 +138,6 @@ module.exports = {
                 await StalkerStartLoop();
                 log('сталкер выполнено', 'initialisation');
             }
-
-            if (settings.modules.autorestart){
-                await autoRestartInit();
-            }
-
 
             log('инициализация выполнена', 'initialisation complete');
 

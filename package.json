@@ -1,25 +1,32 @@
 {
-  "name": "bottest",
+  "name": "zxc_bot",
   "version": "1.0.0",
-  "description": "Luminite bot",
-  "main": "bottest.js",
+  "description": "дискорд бот(очень масштабный проект)",
+  "private": true,
   "scripts": {
-    "start": "nodemon main.js --inspect"
+    "start": "nodemon main.js --inspect",
+    "build": "webpack --mode=production --node-env=production",
+    "build:dev": "webpack --mode=development",
+    "build:prod": "webpack --mode=production --node-env=production",
+    "watch": "webpack --watch",
+    "serve": "webpack serve",
+    "webservertest": "nodemon webservertest.js --inspect --verbose"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ChervyachokMigo/luminite-bot.git"
+    "url": "git+https://github.com/ChervyachokMigo/discord_bot-zxcbot-.git"
   },
   "keywords": [
-    "luminite",
-    "discord"
+    "zxcbot",
+    "discord",
+    "bot"
   ],
   "author": "zxcgodie",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/ChervyachokMigo/luminite-bot/issues"
+    "url": "https://github.com/ChervyachokMigo/discord_bot-zxcbot-/issues"
   },
-  "homepage": "https://github.com/ChervyachokMigo/luminite-bot#readme",
+  "homepage": "https://github.com/ChervyachokMigo/discord_bot-zxcbot-#readme",
   "dependencies": {
     "@sequelize/core": "^7.0.0-alpha.10",
     "axios": "^0.27.2",
@@ -27,6 +34,7 @@
     "body-parser": "^1.20.2",
     "canvas": "^2.10.2",
     "child_process": "^1.0.2",
+    "cors": "^2.8.5",
     "dank-twitch-irc": "^4.3.0",
     "discord.js": "^13.12.0",
     "events": "^3.3.0",
@@ -43,6 +51,9 @@
     "osu-api-extended": "^2.5.12",
     "play-sound": "^1.1.5",
     "process": "^0.11.10",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-icons": "^4.11.0",
     "smtp-server": "^3.13.0",
     "steamapi": "^2.2.0",
     "stream": "^0.0.2",
@@ -50,7 +61,19 @@
     "ws": "^8.13.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.22.20",
+    "@babel/preset-env": "^7.22.20",
+    "@babel/preset-react": "^7.22.15",
     "@types/node": "^18.15.11",
-    "nodemon": "^3.0.1"
+    "@webpack-cli/generators": "^3.0.7",
+    "babel-loader": "^9.1.3",
+    "css-loader": "^6.8.1",
+    "html-webpack-plugin": "^5.5.3",
+    "nodemon": "^3.0.1",
+    "prettier": "^3.0.3",
+    "style-loader": "^3.3.3",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1"
   }
 }

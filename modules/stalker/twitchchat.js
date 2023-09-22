@@ -213,7 +213,7 @@ module.exports = {
         client.on("JOIN", async (msg) => {
             log(`Подключен к чату: ${msg.channelName}`, moduleName);
         });
-    
+
         async function sendMessages(){
             if (MessagesBuffer.length > 0){
                 for (let chatmessages of MessagesBuffer){

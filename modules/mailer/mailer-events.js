@@ -33,7 +33,7 @@ module.exports = {
             const msg = await SendAnswer({ channel,
                 guildname: guild.name,
                 messagetype: `info`,
-                title: `Попытка авторизации от ${data.ip}`,
+                title: `Авторизация от ${data.ip}`,
                 text: `Ключ: ${data.key}\nИсчезнет ${getDiscordRelativeTime(key_timeout)}`
             });
 

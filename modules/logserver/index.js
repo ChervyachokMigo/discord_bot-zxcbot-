@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const app = express();
 const path = require('path');
 
-const port = 3000
+const { LOGSERVER_HTTP_PORT } = require('../../config.js');
 
 var logData = [];
 
@@ -25,7 +25,7 @@ module.exports = {
                 if (typeof data.action !=='undefined'){
                     switch (data.action){
                         case 'log':
-                            res.send(renderLog());
+                            //res.send(renderLog());
                             break;
                         default:
                             break;
@@ -35,8 +35,8 @@ module.exports = {
                 
         });
 
-        app.listen(port, () => {
-            console.log(`Display Data listening on port ${port}`)
+        app.listen(LOGSERVER_HTTP_PORT, () => {
+            console.log(`Log server listening on port ${LOGSERVER_HTTP_PORT}`)
         })
 
     },

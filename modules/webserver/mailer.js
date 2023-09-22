@@ -31,7 +31,7 @@ function generate_key (ip){
     keys.push(ip_key_pair);
     mailerEvents.emit('auth_key', ip_key_pair);
     setTimeout( remove_key, key_timeout, ip);
-    console.log('создана ключ пара для авторизации: ' + ip_key_pair);
+    console.log('создана ключ пара для авторизации: ', ip_key_pair);
 }
 
 function check_auth(ip) {
@@ -40,7 +40,7 @@ function check_auth(ip) {
 }
 
 module.exports = {
-    set_events: (smtp_events) => {
+    preinit_set_events: (smtp_events) => {
         mailerEvents = smtp_events;
     },
 
