@@ -4,7 +4,7 @@
   "description": "дискорд бот(очень масштабный проект)",
   "private": true,
   "scripts": {
-    "start": "nodemon main.js --inspect",
+    "start": "nodemon main.js --inspect --ignore ./data/mailer_react_public/",
     "build": "webpack --mode=production --node-env=production",
     "build:dev": "webpack --mode=development",
     "build:prod": "webpack --mode=production --node-env=production",

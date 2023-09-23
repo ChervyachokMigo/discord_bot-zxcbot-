@@ -1,11 +1,11 @@
 
 const bodyParser = require('body-parser');
 const fs = require('fs');
+const path = require('path');
 
 const { set_router_subdomain } = require('../tools.js');
 
-const { MYSQL_SAVE, MYSQL_GET_ONE, MYSQL_GET_TRACKING_DATA_BY_ACTION, 
-    manageGuildServiceTracking, getTrackingInfo, getGuildidsOfTrackingUserService } = require("../DB.js");
+const { MYSQL_SAVE, MYSQL_GET_ONE, MYSQL_DELETE } = require("../DB.js");
 
 var authed_ips = [];
 
@@ -14,6 +14,15 @@ const key_timeout = 150000;
 var auth_keys = [];
 
 var mailerEvents;
+
+async function auth_out (ip){
+    authed_ips = authed_ips.filter( val => !val.ip.includes(ip));
+    await MYSQL_DELETE( 'authorizedMailUsers', {ip});
+}
+
+function check_token (ip, token){
+    return authed_ips.findIndex( val => val.ip.includes(ip) &&  val.token.includes(token) ) > -1;
+}
 
 async function authtorize (ip, token) {
     console.log('авторизован ' + ip);
@@ -26,9 +35,9 @@ function remove_key (ip) {
     auth_keys = auth_keys.filter( val => !val.ip.includes(ip));
 }
 
-async function check_auth(ip) {
+async function check_auth_get_token(ip) {
     if (!ip) return false;
-    const i = authed_ips.findIndex( val => val.ip.includes(ip) || false );
+    const i = authed_ips.findIndex( val => val.ip.includes(ip));
     const is_authed =  i > -1;
     let token = '';
     if (is_authed){
@@ -36,13 +45,9 @@ async function check_auth(ip) {
     } else {
         let mysql_ip_token = await MYSQL_GET_ONE ( 'authorizedMailUsers', {ip} );
         if (mysql_ip_token !== null){
-            console.log('юзер авторизован, токена в базе')
             token = mysql_ip_token.dataValues.token;
             authed_ips.push({ip, token});
-            console.log(token);
             return {is_authed: true, token};
-        } else {
-            console.log('юзер не авторизован, нет токена в базе')
         }
     }
     return {is_authed, token}
@@ -59,8 +64,6 @@ function generate_auth_key (ip){
     console.log('создана ключ пара для авторизации: ', ip_key_pair);
 }
 
-const token_literals = '0123456789abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-
 function generate_token (length = 32){
     let token = '';
     for (let i = 0; i < length; i++) {
@@ -69,6 +72,13 @@ function generate_token (length = 32){
     }
     return token;
 }
+
+const token_literals = '0123456789abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+const mailRegex = /(?:(?![a-zA-Z0-9_]{1}[a-zA-Z0-9_.-]*[a-zA-Z0-9_-]*).)/gi
+const dateRegex = /[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{4}\.\b(txt|html|empty)/gi
+
+const mail_db_path = 'data/mail_db';
 
 const init = (app, events) => {
     mailerEvents = events;
@@ -92,7 +102,7 @@ const init = (app, events) => {
         }
         switch (request.action){
             case 'is_authed': {
-                res.send(JSON.stringify( await check_auth(ip) ));
+                res.send(JSON.stringify( await check_auth_get_token(ip) ));
                 } break;
             case 'get_new_key':
                 generate_auth_key(ip);
@@ -107,33 +117,85 @@ const init = (app, events) => {
                         let token = generate_token();
                         await authtorize(ip, token);
                     } 
-                    res.send(JSON.stringify(await check_auth(ip)));
+                    res.send(JSON.stringify(await check_auth_get_token(ip)));
                 }
                 remove_key (ip);
             } break;
-            case 'inbox':
-                res.send(JSON.stringify({ inbox: fs.readdirSync('data/mail_db') }));
-                break;
+            case 'inbox': {
+                if (request.token){
+                    if (check_token(ip, request.token)){
+                        if (fs.existsSync(mail_db_path)){
+                            res.send(JSON.stringify({ inbox: fs.readdirSync(mail_db_path) }));
+                            return;
+                        } else {
+                            await auth_out(ip);
+                            res.send(JSON.stringify({error: 'invalid path'}));
+                            return
+                        } 
+                    }
+                }
+                await auth_out(ip);
+                res.send(JSON.stringify({error: 'invalid credentials'}));
+                } break;
             case 'posts': {
-                if (!request.addressee) {
-                    res.send(JSON.stringify({error: 'no addressee'}));
-                    return;
+                if (request.token){
+                    if (check_token(ip, request.token)){
+                        const escaped_addressee = decodeURI(request.addressee).replace(mailRegex, '');
+
+                        if (!escaped_addressee) {
+                            res.send(JSON.stringify({error: 'no addressee'}));
+                            return;
+                        }
+                        let filepath = path.join( mail_db_path, escaped_addressee);
+                        if (fs.existsSync(filepath)){
+                            res.send(JSON.stringify({ posts: fs.readdirSync(filepath) }));
+                            return;
+                        } else {
+                            await auth_out(ip);
+                            res.send(JSON.stringify({error: 'invalid path'}));
+                            return;
+                        } 
+                    }
                 }
-                let filepath = `data/mail_db/${request.addressee}`;
-                res.send(JSON.stringify({ posts: fs.readdirSync(filepath) }));
-            } break;
+                await auth_out(ip);
+                res.send(JSON.stringify({error: 'invalid credentials'}));
+                } break;
             case 'posts_content': {
-                if (!request.addressee) {
-                    res.send(JSON.stringify({error: 'no addressee'}));
-                    return;
+                if (request.token){
+                    if (check_token(ip, request.token)){
+
+                        const escaped_addressee = decodeURI(request.addressee).replace(mailRegex, '');
+                        const matchedDate = decodeURI(request.post).match(dateRegex, '');
+                        const escaped_post = matchedDate !== null ? matchedDate.shift() : '';
+
+                        if (!escaped_addressee) {
+                            res.send(JSON.stringify({error: 'no addressee'}));
+                            return;
+                        }
+                        if (!escaped_post) {
+                            res.send(JSON.stringify({error: 'no post'}));
+                            return;
+                        }
+
+                        let filepath = path.join( mail_db_path, escaped_addressee, escaped_post);
+                        
+                        if (fs.existsSync(filepath)){
+                            res.send(JSON.stringify({ content: fs.readFileSync(filepath, {encoding: 'utf-8'}) }));
+                            return;
+                        } else {
+                            await auth_out(ip);
+                            res.send(JSON.stringify({error: 'invalid path'}));
+                            return;
+                        } 
+                    }
                 }
-                if (!request.post) {
-                    res.send(JSON.stringify({error: 'no post'}));
-                    return;
-                }
-                let filepath = `data/mail_db/${request.addressee}/${request.post}`;
-                res.send(JSON.stringify({ content: fs.readFileSync(filepath, {encoding: 'utf-8'}) }));
+                await auth_out(ip);
+                res.send(JSON.stringify({error: 'invalid credentials'}));
             } break;
+            case 'logout':
+                await auth_out(ip);
+                res.send(JSON.stringify({is_authed: false, token: ''}));
+                break;
             //unused
             case 'ip':
                 res.send(JSON.stringify({ ip: req.headers['x-forwarded-for'] }));

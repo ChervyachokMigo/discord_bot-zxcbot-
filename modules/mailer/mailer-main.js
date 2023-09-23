@@ -18,6 +18,8 @@ const ignore_list = [
   'centrefile7@gmail.com'
 ];
 
+const email = /(?:(?![a-zA-Z0-9_]{1}[a-zA-Z0-9_.-]*[a-zA-Z0-9_-]*).)/gi
+
 const mailerEvents = new EventEmitter({captureRejections: true});
 
 const smtp_options = {
@@ -47,6 +49,7 @@ const smtp_options = {
   },
   onData: function(stream, session, callback) {
     for (const sendTo of session.envelope.rcptTo.map( u => u.address.split('@').shift())){
+
       const parser = new MailParser();
 
       var subject = '';
@@ -54,13 +57,15 @@ const smtp_options = {
       
       if ( ignore_list.findIndex( from => from.includes(sender)) > -1 ){
         console.log( 'skip', sender, ' cause in ignore list');
-        callback();return;
+        return;
       }
 
       const date_value = new Date();
       const postname = `${getFullTimeString(date_value)}`;
 
-      const post_filepath = `${mailsdbFolder}/${sendTo}/${postname}`;
+
+      const escaped_addressee = sendTo.replace(email, '').slice(0,100);
+      const post_filepath = `${mailsdbFolder}/${escaped_addressee}/${postname}`;
 
       parser.on('headers', headers => {
         subject = headers.get('subject');
@@ -70,12 +75,12 @@ const smtp_options = {
 
         if (data.type === 'text') {
 
-          if (sendTo.length == 0) {
+          if (escaped_addressee.length == 0) {
             return;
           }
 
           try{
-            fs.mkdirSync(`${mailsdbFolder}/${sendTo}`);
+            fs.mkdirSync(`${mailsdbFolder}/${escaped_addressee}`);
           } catch (e){
             if (e.code !== `EEXIST`){
                 console.log(e);
@@ -83,9 +88,9 @@ const smtp_options = {
             }
           }
           
-          const posttext = `From: ${sender}\nSubject: ${subject}\n${data.text || data.html || 'null'}`;
+          const posttext = `From: ${sender}\nSubject: ${subject}\n${data.textAsHtml || data.text || data.html || 'null'}`;
 
-          const post_extname = data.html ? '.html' : data.txt ? '.txt' : '.empty';
+          const post_extname = '.html';
 
           console.log(`[${postname}] new message from: ${sender}\nSubject: ${subject}`);
 
@@ -93,9 +98,9 @@ const smtp_options = {
 
           mailerEvents.emit('new_message', 
           { date: {postname, value: date_value }, 
-            link: `${sendTo}/${postname}${post_extname}`,
+            link: `${escaped_addressee}/${postname}${post_extname}`,
             filepath: `${post_filepath}${post_extname}`, 
-            subject, sender, sendTo, data});
+            subject, sender, sendTo: escaped_addressee, data});
           
         }
       });

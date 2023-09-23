@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 
 const { set_router_subdomain } = require('../tools.js');
 
-const public_path = 'F:\\node_js_stuff\\node_projects\\mailer_react\\build';
+const public_path = 'F:\\node_js_stuff\\node_projects\\a_discord_bot\\data\\mailer_react_public';
 
 const init = (app) => {
     test = set_router_subdomain(app, 'test');
