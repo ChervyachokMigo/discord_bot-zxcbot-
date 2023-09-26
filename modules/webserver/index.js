@@ -5,11 +5,9 @@ const path = require('path');
 const bodyParser = require('body-parser');
 const { log } = require("../../tools/log.js");
 
-const { mail_init, preinit_set_events } = require('./mailer.js');
+const api_init = require('./subdomains/api.js');
 
-const api_init = require('./api.js');
-
-const test_init = require('./test.js');
+const mailer_init = require('./subdomains/mailer_react.js');
 
 const { WEBSERVER_HTTP_PORT } = require('../../config.js');
 
@@ -18,17 +16,14 @@ const public_path = path.join(__dirname,'/../../data/webserver_public');
 var app = express();
 
 module.exports = {
-    init: (mailerEvents) => {
+    init: () => {
         app.use(cors());
         app.use(bodyParser.json());
         app.use(bodyParser.urlencoded({ extended: false }));
 
-        preinit_set_events(mailerEvents);
-        mail_init(app);
+        api_init(app);
 
-        api_init(app, mailerEvents);
-
-        test_init(app);
+        mailer_init(app);
 
         app.use(express.static(public_path));
     

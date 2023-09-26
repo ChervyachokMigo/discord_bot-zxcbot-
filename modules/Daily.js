@@ -88,6 +88,12 @@ module.exports = {
     },
     
     dailyCreateTimer: async function( guild, userid, lastdailyTimestamp ){
+
+        if (!guild.member.fetch(userid)) {
+            console.log('невозможно создать таймер, нет юзера')
+            return
+        }
+
         //проверить существующий
         for (var dailytimer of DailyTimers){
             if (dailytimer.guildid === guild.id && dailytimer.userid === userid){
@@ -101,6 +107,7 @@ module.exports = {
             lastdailyTimestamp,
             setTimeout(
                 async () => {
+                        
                         var channel = await getGuildChannelDB( guild , `daily` )
                         await SendAnswer( {channel: channel,
                             guildname: guild.name,

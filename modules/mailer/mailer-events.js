@@ -5,8 +5,10 @@ const { messageDeleteAfter} = require("../tools.js");
 
 const domainname = 'svdgod.ru';
 
+const { mailerEvents } = require("./mailer-main.js");
+
 module.exports = {
-    init: function (mailerEvents, guild) {
+    init: function (guild) {
         mailerEvents.on('new_message', async (data)=>{
 
             const channel = await getGuildChannelDB(guild, 'mailer');
@@ -40,5 +42,9 @@ module.exports = {
             messageDeleteAfter(msg, Math.trunc(data.key_timeout / 1000));
             
         });
+    },
+
+    emit: ( name, args ) => {
+        mailerEvents.emit( name, args );
     }
 }

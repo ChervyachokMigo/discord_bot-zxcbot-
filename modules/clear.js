@@ -14,7 +14,11 @@ module.exports = {
             try{
                 let messages = await message.channel.messages.fetch({ limit: count });
                 for (deleteMessage of messages){
-                    await deleteMessage[1].delete();
+                    try{
+                        await deleteMessage[1].delete();
+                    } catch (e){
+                        console.log(e)
+                    }
                     clearcount++;
                 }
                 await SendAnswer( {channel: message.channel,

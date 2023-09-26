@@ -25,11 +25,15 @@ const websettings = require('../modules/websettings/index.js');
 
 const webserver = require('../modules/webserver/index.js');
 
-const smtp = require('../modules/mailer/mailer-main.js');
 
-const smtp_events = require('../modules/mailer/mailer-events.js');
+
+const mailer_main = require('../modules/mailer/mailer-main.js');
+
+const mailer_events = require('../modules/mailer/mailer-events.js');
 
 const svdgod_guild_id = '1118103232082882610';
+
+
 
 module.exports = {
     initAll: async (client) =>{
@@ -71,9 +75,9 @@ module.exports = {
                 log('Старт гильдии ['+guild.id+'] ' + guild.name, 'initialisation');
 
                 if (guild.id.toString().includes(svdgod_guild_id)){
-                    const mailerEvents = smtp.init();
-                    smtp_events.init(mailerEvents, guild);
-                    webserver.init(mailerEvents);
+                    mailer_main.init();
+                    mailer_events.init(guild);
+                    webserver.init();
                 }
                 
 

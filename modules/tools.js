@@ -94,7 +94,11 @@ module.exports = {
                 await SendError(message, com_text, `[Такое](${referenceUrl}) не перевести`);            
             }
 
-            message.delete();
+            try{
+                await message.delete();
+            } catch (e){
+                console.log(e)
+            }
     },
 
     checkArgsOfUser: async function (argString, com_text, message){
@@ -128,7 +132,8 @@ module.exports = {
             await SendError(message, com_text, `Число не должно быть меньше нуля`); 
             return false
         }
-        return value_result
+
+        return parseInt(value_result);
     },
 
     //unused не используется
@@ -138,7 +143,11 @@ module.exports = {
 
     messageDeleteAfter: function (message, deltime){
         setTimeout(async () => {
-            await message.delete();
+            try{
+                await message.delete();
+            } catch (e){
+                console.log(e)
+            }
         } , deltime*1000 )
     },
 

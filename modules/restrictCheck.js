@@ -9,6 +9,10 @@ var MutedList = [];
 
 module.exports = {
     restrictCheck : async function ( message ){
+        if (message.content.length < 3) {
+            return;
+        }
+
         var member = await message.guild.members.cache.find(u=>u.id === message.author.id);
         var user = message.author;
 
@@ -29,10 +33,16 @@ module.exports = {
             }
             for (var wordvalue of word.values){
                 if (message.content.indexOf(wordvalue)> -1){
+
+                    if (!wordvalue) continue;
+
+                    await member.timeout(mutetime * 1000, reason);
                     
-                    member.timeout(mutetime * 1000, reason);
-                    
-                    await message.delete();
+                    try{
+                        await message.delete();
+                    } catch (e){
+                        console.log(e)
+                    }
                     
                     MutedList.push({user: user, reason: reason,  messagetime: message.createdAt });
                     
@@ -43,12 +53,11 @@ module.exports = {
                     console.log(`${user} отправлен в мут на ${mutetime} сек по причине: ${reason}`);
 
                     if(notify_mute){
-                        let message_reply = await SendAnswer( {channel: message.channel,
+                        await SendAnswer( {channel: message.channel,
                             guildname: message.guild.name,
                             messagetype: `info`,
                             title: 'Restrict',
                             text:   `${user} отправлен в мут на ${mutetime} сек по причине: ${reason}`} );
-                        await messageDeleteAfter(message_reply, 15);
                     }
                     break;
                 }
@@ -76,10 +85,4 @@ async function checkPermissions(member){
     member.permissions.has(Permissions.FLAGS.KICK_MEMBERS) ||
     member.permissions.has(Permissions.FLAGS.MUTE_MEMBERS) ||
     member.permissions.has(Permissions.FLAGS.MODERATE_MEMBERS);
-}
-
-async function messageDeleteAfter(message, deltime){
-    await setTimeout(() => {
-        message.delete()
-    } , deltime*1000 )
 }

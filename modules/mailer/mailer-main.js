@@ -113,6 +113,8 @@ const smtp_options = {
 }
 
 module.exports = {
+  mailerEvents: mailerEvents,
+
   init: () => {
 
     try{
