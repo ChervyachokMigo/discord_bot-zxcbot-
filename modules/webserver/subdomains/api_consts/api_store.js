@@ -1,7 +1,5 @@
-const { key_timeout } = require('../api_consts/api_settings.js');
+const { key_timeout, token_literals, auth_key_digits_base_length, auth_key_digits_extra_length, token_length } = require('../api_consts/api_settings.js');
 const { MYSQL_SAVE, MYSQL_GET_ONE, MYSQL_DELETE } = require("../../../DB.js");
-
-const token_literals = '0123456789abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 
 
 let auth_keys = [];
@@ -13,7 +11,7 @@ module.exports = {
     auth_keys: auth_keys,
 
     generate_auth_key: (ip) => {
-        const digits = 6 + Math.floor(Math.random() * 2.499);
+        const digits = auth_key_digits_base_length + Math.floor(Math.random() * auth_key_digits_extra_length);
         const key = Math.random().toString().slice(2, 2 + digits);
         const ip_key_pair = {ip, key, key_timeout};
         module.exports.remove_key (ip);
@@ -25,15 +23,15 @@ module.exports = {
 
     remove_key: (ip) => {
         console.log('удалены ключи для ' + ip);
-        auth_keys = auth_keys.filter( val => !val.ip.includes(ip));
+        auth_keys = auth_keys.filter( val => !val.ip === ip);
     },
 
     valid_key: (ip, key) => {
-        return auth_keys.findIndex( val => val.ip.includes(ip) && val.key.includes(key) ) > -1;
+        return auth_keys.findIndex( val => val.ip === ip && val.key === key ) > -1;
     },
 
     authtorize: async (ip) => {
-        const token = generate_token();
+        const token = generate_token(token_length);
         console.log('авторизован ' + ip);
         await MYSQL_SAVE( 'authorizedMailUsers', {ip}, {token} )
         authed_ips.push({ip, token});
@@ -58,11 +56,11 @@ module.exports = {
     },
 
     check_token: (ip, token) => {
-        return authed_ips.findIndex( val => val.ip.includes(ip) &&  val.token.includes(token) ) > -1;
+        return authed_ips.findIndex( val => val.ip === ip &&  val.token === token ) > -1;
     },
 
     auth_out: async (ip) => {
-        authed_ips = authed_ips.filter( val => !val.ip.includes(ip));
+        authed_ips = authed_ips.filter( val => !val.ip === ip);
         await MYSQL_DELETE( 'authorizedMailUsers', {ip});
     }
 }
