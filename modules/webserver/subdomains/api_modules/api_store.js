@@ -1,5 +1,6 @@
 const { key_timeout, token_literals, auth_key_digits_base_length, auth_key_digits_extra_length, token_length } = require('../api_consts/api_settings.js');
-const { MYSQL_SAVE, MYSQL_GET_ONE, MYSQL_DELETE } = require("../../../DB.js");
+const { MYSQL_SAVE, MYSQL_GET_ONE, MYSQL_DELETE, MYSQL_GET_ALL, MYSQL_GET_ALL_RESULTS_TO_ARRAY } = require("../../../DB.js");
+const {  GET_VALUES_FROM_OBJECT_BY_KEY, onlyUnique } = require('../../../tools.js');
 
 
 let auth_keys = [];
@@ -31,7 +32,7 @@ module.exports = {
     },
 
     authtorize: async (ip) => {
-        const token = generate_token(token_length);
+        const token = module.exports.generate_token(token_length);
         console.log('авторизован ' + ip);
         await MYSQL_SAVE( 'authorizedMailUsers', {ip}, {token} )
         authed_ips.push({ip, token});
@@ -62,14 +63,52 @@ module.exports = {
     auth_out: async (ip) => {
         authed_ips = authed_ips.filter( val => !val.ip === ip);
         await MYSQL_DELETE( 'authorizedMailUsers', {ip});
-    }
-}
+    },
 
-function generate_token (length = 32){
-    let token = '';
-    for (let i = 0; i < length; i++) {
-        const randomIndex = Math.floor(Math.random() * token_literals.length);
-        token += token_literals.charAt(randomIndex);
-    }
-    return token;
+    generate_token: (length = 32) => {
+        let token = '';
+        for (let i = 0; i < length; i++) {
+            const randomIndex = Math.floor(Math.random() * token_literals.length);
+            token += token_literals.charAt(randomIndex);
+        }
+        return token;
+    },
+
+    save_mail_content: async (args) => {
+        await MYSQL_SAVE( 'mail_contents', { unique_key: args.unique_key }, args);
+    },
+
+    load_mail_addressees: async (args) => {
+        const result = onlyUnique(
+            GET_VALUES_FROM_OBJECT_BY_KEY(
+                MYSQL_GET_ALL_RESULTS_TO_ARRAY(
+                    await MYSQL_GET_ALL( 'mail_contents', {})
+                ), 
+            'addressee')
+        );
+        return result;
+    },
+
+    load_mail_posts: async (args) => {
+        const result = MYSQL_GET_ALL_RESULTS_TO_ARRAY(
+            await MYSQL_GET_ALL( 'mail_contents', {addressee: args.addressee}));
+
+        return result.map( (val) => { return { 
+            unique_key: val.unique_key,
+            addressee: val.addressee,
+            from: val.from,
+            subject: val.subject,
+            date: val.date
+        } });
+    },
+
+    load_mail_post_content: async (args) => {
+        const result = await MYSQL_GET_ONE( 'mail_contents', {unique_key: args.unique_key});
+        return result.dataValues || undefined
+    },
+
+    delete_post: async (args) => {
+        const result = await MYSQL_DELETE( 'mail_contents', {unique_key: args.unique_key});
+        return result>0
+    },
 }

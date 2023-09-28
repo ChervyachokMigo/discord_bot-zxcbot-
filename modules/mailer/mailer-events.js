@@ -16,14 +16,14 @@ module.exports = {
             const to = `Кому: **${data.sendTo}@${domainname}**`;
             const subject = `Тема: **${data.subject}**`;
             const date = `Получено ${getDiscordRelativeTime(data.date.value)}`;
-            const link = `https://mail.${domainname}/inbox/${data.link}`;
+            //const link = `https://mail.${domainname}/inbox/${data.link}`;
 
             await SendAnswer({ channel,
                 guildname: guild.name,
                 messagetype: `info`,
                 title: `Новое сообщение от ${data.sender}`,
                 text: `${to}\n${subject}\n${date}`,
-                url: link
+                //url: link
             });
             
         });

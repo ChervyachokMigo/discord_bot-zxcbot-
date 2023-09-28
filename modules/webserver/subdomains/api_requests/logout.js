@@ -1,5 +1,5 @@
 
-const { auth_out }  = require('../api_consts/api_store.js');
+const { auth_out }  = require('../api_modules/api_store.js');
 
 module.exports = {
     action: async (args) => {

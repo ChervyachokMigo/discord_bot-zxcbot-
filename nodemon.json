@@ -1,0 +1,6 @@
+{
+    "verbose": true,
+    "watch": ["**"],
+    "ignore": ["**/data/**", "**/logs/**", "**/mailer_react/**"],
+    "delay": 500
+}

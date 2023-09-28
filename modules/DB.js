@@ -152,14 +152,14 @@ const OsuProfileData = mysql.define ('osuprofile', {
 });
 
 const OsuActivity = mysql.define ('osuactivity', {
-    activityid: {type: DataTypes.BIGINT,  defaultvalue: BigInt(0), allowNull: false},
+    activityid: {type: DataTypes.BIGINT,  defaultvalue: 0, allowNull: false},
     date: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false},
     type: {type: DataTypes.STRING,  defaultvalue: '', allowNull: false},
     userid: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false},
 });
 
 const OsuScoreData = mysql.define ('osuscore', {
-    scoreid: {type: DataTypes.BIGINT,  defaultvalue: BigInt(0), allowNull: false},
+    scoreid: {type: DataTypes.BIGINT,  defaultvalue: 0, allowNull: false},
     date: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false},
     userid: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false},
     username: {type: DataTypes.STRING,  defaultvalue: '', allowNull: false},
@@ -257,6 +257,17 @@ const authorizedMailUsers = mysql.define ('authorizedMailUsers', {
     token: {type: DataTypes.STRING, allowNull: false},
 });
 
+const mail_contents = mysql.define ('mail_contents', {
+    unique_key: {type: DataTypes.STRING, allowNull: false, unique: true}, 
+    addressee: {type: DataTypes.STRING, allowNull: false}, 
+    from: {type: DataTypes.STRING, allowNull: false},
+    subject: {type: DataTypes.STRING, allowNull: false, defaultValue: ''},
+    html: {type: DataTypes.TEXT('long'), allowNull: true, defaultValue: ''},
+    text: {type: DataTypes.TEXT('long'), allowNull: true, defaultValue: ''},
+    textAsHtml: {type: DataTypes.TEXT('long'), allowNull: true, defaultValue: ''},
+    date: {type: DataTypes.DATE, allowNull: false},
+});
+
 
 function updateAll(Model, condition, values ){
     return Model.update(values, {where : condition, logging: ''})
@@ -282,76 +293,59 @@ function upsert(Model, values, condition) {
         })
 }
 
-function select_mysql_model (action){
-    let MysqlModel;
+const mysql_actions = [
+    { names: ['daily', 'user'], 
+        model: User}, 
+    { names: ['voiceroles_clear', 'voiceroles', 'role'], 
+        model: Role},
+    { names: 'reactionrole', 
+        model: ReactionRole}, 
+    { names: 'remind', 
+        model: Remind}, 
+    { names: ['channels_clear','botchannel'], model: BotChannel},
+    { names: ['streamersTwitch', 'twitchdata'], model: TwitchData},
+    { names: ['streamersTrovo', 'trovodata'], model: TrovoData},
+    { names: 'twitchclips', model: TwitchClips},
+    { names: 'trovoclips', model: TrovoClips},
+    { names: 'steamuser', model: SteamUserData},
+    { names: 'vkuser', model: VKUserData},
+    { names: 'vkfriend', model: VKUserFriendData},
+    { names: 'twitchchat', model: TwitchChatData},
+    { names: 'osuprofile', model: OsuProfileData},
+    { names: 'osuscore', model: OsuScoreData},
+    { names: 'token', model: Token},
+    { names: 'osuactivity', model: OsuActivity},
+    { names: 'youtubechannel', model: YoutubeChannelsData},
+    { names: 'youtubevideos', model: YoutubeVideosData},
+    { names: 'guildServicesTracking', model: guildServicesTracking},
+    { names: 'replaycache', model: replayCache},
+    { names: 'replayattachment', model: replayAttachment},
+    { names: 'nibbers', model: nibbers},
+    { names: 'guildSettings', model: guildSettings},
+    { names: 'osuHunterTrackingUser', model: osuHunterTrackingUser},
+    { names: 'cryptopairs', model: cryptopairs},
+    { names: 'authorizedMailUsers', model: authorizedMailUsers},
+    { names: 'mail_contents', model: mail_contents},
+];
 
-    switch (action) {
-        case `daily`:
-        case `user`:
-            MysqlModel = User; break;
-        case `voiceroles_clear`:
-        case `voiceroles`:
-        case 'role':
-            MysqlModel = Role; break;
-        case `reactionrole`:
-            MysqlModel = ReactionRole; break;
-        case `remind`:
-            MysqlModel = Remind; break;
-        case `channels_clear`:
-        case `botchannel`:
-            MysqlModel = BotChannel; break;
-        case `streamersTwitch`:
-        case `twitchdata`:
-            MysqlModel = TwitchData; break;
-        case `streamersTrovo`:
-        case `trovodata`:
-            MysqlModel = TrovoData; break;
-        case `twitchclips`:
-            MysqlModel = TwitchClips; break;
-        case `trovoclips`:
-            MysqlModel = TrovoClips; break;
-        case `steamuser`:
-            MysqlModel = SteamUserData; break;
-        case `vkuser`:
-            MysqlModel = VKUserData; break;
-        case `vkfriend`:
-            MysqlModel = VKUserFriendData; break;
-        case `twitchchat`:
-            MysqlModel = TwitchChatData; break;
-        case `osuprofile`:
-            MysqlModel = OsuProfileData; break;
-        case `osuscore`:
-            MysqlModel = OsuScoreData; break;
-        case `token`:
-            MysqlModel = Token; break;
-        case 'osuactivity':
-            MysqlModel = OsuActivity; break;
-        case 'youtubechannel':
-            MysqlModel = YoutubeChannelsData; break;
-        case 'youtubevideos':
-            MysqlModel = YoutubeVideosData; break;
-        case 'guildServicesTracking':
-            MysqlModel = guildServicesTracking; break;
-        case 'replaycache':
-            MysqlModel = replayCache; break;
-        case 'replayattachment':
-            MysqlModel = replayAttachment; break;
-        case 'nibbers':
-            MysqlModel = nibbers; break;
-        case 'guildSettings':
-            MysqlModel = guildSettings; break;
-        case 'osuHunterTrackingUser':
-            MysqlModel = osuHunterTrackingUser; break;
-        case 'cryptopairs':
-            MysqlModel = cryptopairs; break;
-        case 'authorizedMailUsers':
-            MysqlModel = authorizedMailUsers; break;
-        default:
-            console.error(`DB: (selectMysqlModel) undefined action: ${action}`);
-            throw new Error('unknown mysql model', action);
+function select_mysql_model (action){
+
+    const MysqlModel = mysql_actions.find ( model => {
+        if (typeof model.names === 'string'){
+            return model.names === action;
+        } else if (typeof model.names === 'object') {
+            return model.names.findIndex( val => val === action) > -1;
+        } else {
+            return undefined;
+        }
+    });
+
+    if (!MysqlModel){
+        console.error(`DB: (selectMysqlModel) undefined action: ${action}`);
+        throw new Error('unknown mysql model', action);
     }
 
-    return MysqlModel;
+    return MysqlModel.model;
 }
 
 async function MYSQL_SAVE( action, keys, values){
@@ -383,6 +377,8 @@ async function MYSQL_SAVE( action, keys, values){
                     values.price = coins_max
                 }
             }
+            break;
+        default:
             break;
     }
     if (keys !== 0){
@@ -467,7 +463,8 @@ async function MYSQL_GET_ALL(action, params = {}){
         break;
     }
     try{
-        return await MysqlModel.findAll ({ where: condition, logging: '' });
+        return await MysqlModel.findAll ({ where: condition, logging: '', order: 
+            [['id', 'DESC']] });
     } catch (e){
         if (e.code === 'ECONNREFUSED' || e.name === `SequelizeConnectionRefusedError`){
             throw new Error(`Нет доступа к базе данных.`);
@@ -549,7 +546,7 @@ async function getTrackingUsersForGuild(guildid, platformaction, mysql_tablename
 
         var searchUserID = table_id_names.filter( obj => obj.platforms.includes(platformaction.split("_")[0]));
         
-        if (searchUserID.length == 0){
+        if (searchUserID.length === 0){
             throw Error('getTrackingUsersForGuild: undefined platfform ' + platformaction);
         } else {
             searchUserID = (searchUserID.shift()).name_id;
@@ -563,15 +560,16 @@ async function getTrackingUsersForGuild(guildid, platformaction, mysql_tablename
 
 async function getTrackingInfo(message, mysql_tablename, trackingType, emoji, moduleName, fieldsMapping) {
     const mysql_data = await getTrackingUsersForGuild(message.guild.id, `${trackingType}_tracking`, mysql_tablename);
+    
 
     if (mysql_data.length > 0) {
-        var MessageFields = [];
-        var fieldValuesById = {};
+        let MessageFields = [];
+        let fieldValuesById = {};
 
-        for (var userdata of mysql_data) {
-            for (var field of fieldsMapping) {
-                var key = field.key;
-                var value = userdata[key].toString();
+        for (let userdata of mysql_data) {
+            for (let field of fieldsMapping) {
+                let key = field.key;
+                let value = userdata[key].toString();
 
                 if (!fieldValuesById[key]) {
                     fieldValuesById[key] = [];
@@ -581,9 +579,9 @@ async function getTrackingInfo(message, mysql_tablename, trackingType, emoji, mo
             }
         }
 
-        for (var field of fieldsMapping) {
-            var key = field.key;
-            var values = fieldValuesById[key].join('\n');
+        for (let field of fieldsMapping) {
+            let key = field.key;
+            let values = fieldValuesById[key].join('\n');
             MessageFields.push({ name: field.name, value: values, inline: true });
         }
 
@@ -646,11 +644,9 @@ module.exports = {
     getTrackingUsersForGuild: getTrackingUsersForGuild,
     MYSQL_GET_TRACKING_DATA_BY_ACTION: MYSQL_GET_TRACKING_DATA_BY_ACTION,
     getGuildidsOfTrackingUserServiceByGuildId: async function (platformaction, guildid = 0){
-        if (guildid == 0){
-            var query = { platformaction: platformaction };
-        } else {
-            var query = { platformaction: platformaction, guildid: guildid.toString() };
-        }
+
+        const query = guildid === 0? { platformaction: platformaction }: { platformaction: platformaction, guildid: guildid.toString() };
+        
         var mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('guildServicesTracking', query));
         return GET_VALUES_FROM_OBJECT_BY_KEY(mysql_data, 'key');
     },
@@ -699,7 +695,7 @@ module.exports = {
 
     manageGuildServiceTracking: async function (guildid, platform, action, value, trackingdata, mysql_tablename){
         trackingdata[1] = trackingdata[1].toString();
-        if (value == true){
+        if (value === true){
             await MYSQL_SAVE('guildServicesTracking', {
                 guildid: guildid,
                 platformaction: `${platform}_${action}`,
@@ -727,7 +723,7 @@ module.exports = {
 
     manageGuildCryptoTracking: async function (guildid, platform, action, pair, is_tracking ){
         const key = `${pair.first}-${pair.second}`;
-        if (is_tracking == true){
+        if (is_tracking === true){
             await MYSQL_SAVE('guildServicesTracking', {
                 guildid: guildid,
                 platformaction: `${platform}_${action}`,

@@ -5,6 +5,9 @@ const app = express();
 const path = require('path');
 
 const { LOGSERVER_HTTP_PORT } = require('../../config.js');
+const  fs  = require('fs');
+
+const log_path = 'logs/logs.txt';
 
 var logData = [];
 
@@ -42,6 +45,7 @@ module.exports = {
     },
 
     saveLog: function(text){
+        fs.appendFileSync(log_path, text + '\r\n', {encoding: 'utf8'});
         logData.unshift(`<div class="logstring">${text}</div>`);
     }
 }

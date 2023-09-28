@@ -3,16 +3,16 @@ const bodyParser = require('body-parser');
 
 const { set_router_subdomain } = require('../../tools.js');
 
-const api_controller = require('./api_consts/api_controller.js');
+const request_manager = require('./api_modules/request_manager.js');
 
 const init = (app) => {
 
-    api = set_router_subdomain(app, 'api');
+    const api = set_router_subdomain(app, 'api');
 
     api.use(bodyParser.json());
     api.use(bodyParser.urlencoded({ extended: false }));
 
-    api_controller.init();
+    request_manager.init();
 
     api.get('/query', async (req, res) => {
 
@@ -27,7 +27,7 @@ const init = (app) => {
             return;
         }
 
-        await api_controller.action({
+        await request_manager.action({
             ...{ ip: req.headers['x-forwarded-for'] }, 
             ...req.query,
             send: (result) => res.send(JSON.stringify(result))

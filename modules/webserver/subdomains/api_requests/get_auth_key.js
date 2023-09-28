@@ -1,5 +1,5 @@
 
-const { generate_auth_key }  = require('../api_consts/api_store.js');
+const { generate_auth_key }  = require('../api_modules/api_store.js');
 const { emit } = require('../../../mailer/mailer-events.js');
 
 module.exports = {
