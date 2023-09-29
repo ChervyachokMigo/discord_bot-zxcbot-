@@ -1,4 +1,4 @@
-import {AuthedProvider, TokenProvider} from './components/Contexts'
+import {AuthedProvider, TokenProvider, QueryProvider} from './components_mail/MailContexts'
 import Mail from './Mail';
 
 export default function AppMail () {
@@ -7,7 +7,9 @@ export default function AppMail () {
 
     <AuthedProvider>
       <TokenProvider>
-        <Mail />
+        <QueryProvider>
+          <Mail />
+        </QueryProvider>
       </TokenProvider>
     </AuthedProvider>
     )

@@ -1,7 +1,7 @@
 {
     "script": "main.js",
     "watch": true,
-    "ignore_watch": ["data", "logs", "node_modules", ".git" ],
+    "ignore_watch": ["data", "logs", "node_modules", ".git", "mailer_react" ],
     "watch_options": {
         "followSymlinks": false
     },

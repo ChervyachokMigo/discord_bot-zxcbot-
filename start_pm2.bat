@@ -1,1 +1,1 @@
-pm2 start pm2-process.json --watch
+pm2 start pm2-process.json

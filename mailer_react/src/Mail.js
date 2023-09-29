@@ -1,16 +1,30 @@
 
 import {useEffect, useContext } from 'react'
 
-import Auth from './components/Auth'
-import Inbox from './components/Inbox'
-import PostContent from './components/PostContent'
-import { isAuthedContext, PostContextProvider, SelectedPostProvider, TokenContext } from './components/Contexts'
+import Auth from './components_mail/Auth'
+import Inbox from './components_mail/Inbox'
+import PostContent from './components_mail/PostContent'
+import { isAuthedContext, PostContextProvider, QueryContext, SelectedPostProvider, TokenContext } from './components_mail/MailContexts'
 
 export default function Mail () {
 
     const {setAuth} = useContext(isAuthedContext);
     const {setToken} = useContext(TokenContext);
+    const {setQuery} = useContext(QueryContext);
 
+    useEffect(() => {
+        const url_query = new URLSearchParams(window.location.search);
+        if (url_query.size>0){
+            const action = url_query.get('action');
+            if (action && action === 'new_message'){
+                const post_key = url_query.get('post_key');
+                const addressee = url_query.get('addressee');
+                if (post_key && addressee){
+                    setQuery({post_key, addressee});
+                }
+            }
+        }
+    }, [setQuery]);
 
     useEffect(() => {
 

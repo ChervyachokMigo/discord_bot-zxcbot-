@@ -1,6 +1,6 @@
 
 import { useContext } from 'react'
-import { isAuthedContext, TokenContext, PostContentContext } from './Contexts';
+import { isAuthedContext, TokenContext, PostContentContext } from './MailContexts';
 
 export default function Logout (props){
 

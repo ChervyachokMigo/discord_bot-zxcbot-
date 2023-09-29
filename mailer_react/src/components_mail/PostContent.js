@@ -1,6 +1,6 @@
 
 import { useContext, useEffect, useState } from 'react'
-import { PostContentContext, isAuthedContext, SelectedPostContext, TokenContext } from './Contexts';
+import { PostContentContext, isAuthedContext, SelectedPostContext, TokenContext } from './MailContexts';
 import parse from 'html-react-parser';
 
 
@@ -15,7 +15,6 @@ export default function PostContent () {
     const {setContent} = useContext(PostContentContext);
 
     const sendDelete = () => {
-        console.log('send delete', selectedPost)
         fetch([
             'https://api.svdgod.ru/query?action=post_delete', 
             'unique_key=' + selectedPost, 

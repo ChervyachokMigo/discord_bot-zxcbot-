@@ -1,13 +1,14 @@
 
 import { useState, useEffect, useContext } from 'react'
 import Addressee from './Addressee';
-import { isAuthedContext, TokenContext } from './Contexts';
+import { isAuthedContext, TokenContext, SelectedPostContext } from './MailContexts';
 import Logout from './Logout';
 
 export default function Inbox (){
     const [addressees, setAddressees] = useState([]);
     const {is_authed, setAuth} = useContext(isAuthedContext);
     const {token, setToken} = useContext(TokenContext);
+    const {selectedPost} = useContext(SelectedPostContext)
 
     useEffect(() => {
         if (token && is_authed){
@@ -27,21 +28,19 @@ export default function Inbox (){
                 })
                 .catch(error => console.log(error));
         }
-    }, [token, is_authed, setAuth, setToken, setAddressees]);
+    }, [token, is_authed, setAuth, setToken, setAddressees, selectedPost]);
 
     if (is_authed){
-        if ( addressees && addressees.length > 0 ){
             return (<div className='inbox-panel'>
                 <div className='actions'>
                     <div className='inboxTitle'>Inbox</div>
                     <Logout /></div>
                 <div className='inbox'>
-                    { addressees.map( (name) => {return <Addressee key={name} className='addressee' name={name} />} )}
+                    { addressees && addressees.length > 0? 
+                        addressees.map( (name) => {return <Addressee key={name} className='addressee' name={name} />}):
+                        <div>&lt; Пусто &gt;</div>}
                 </div>
             </div>)
-        } else {
-            return (<div>&lt; Пусто &gt;</div>);
-        }
     } else {
         return (<div className='emptyDiv'></div>)
     }

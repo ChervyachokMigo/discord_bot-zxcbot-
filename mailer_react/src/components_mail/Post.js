@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useContext } from 'react'
-import { PostContentContext, isAuthedContext, TokenContext, SelectedPostContext } from './Contexts';
+import { PostContentContext, isAuthedContext, TokenContext, SelectedPostContext, QueryContext } from './MailContexts';
 
 export default function Post (props) {
 
@@ -10,6 +10,7 @@ export default function Post (props) {
     const {is_authed, setAuth} = useContext(isAuthedContext);
     const {token, setToken} = useContext(TokenContext);
     const {selectedPost, setSelectedPost} = useContext(SelectedPostContext)
+    const {query} = useContext(QueryContext);
 
     useEffect( () => {
         if (!token){
@@ -59,6 +60,12 @@ export default function Post (props) {
             }
         }
     }, [selectedPost, props.args.from, setSelectedPost, props.args.unique_key, props.args.subject])
+
+    useEffect( () => {
+        if (props.args.unique_key === query.post_key){
+            openPost();
+        }
+    }, [query, props.args.unique_key])
 
     return (
         <div className={isOpened? 'PostOpen' : 'PostClose'} 

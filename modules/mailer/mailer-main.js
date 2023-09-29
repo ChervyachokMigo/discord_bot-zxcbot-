@@ -68,8 +68,10 @@ const smtp_options = {
 
           console.log(`new email \nto: ${escaped_addressee} \nfrom: ${sender}\nSubject: ${subject}`);
 
+          const unique_key = generate_token(32);
+
           await save_mail_content({
-            unique_key: generate_token(32),
+            unique_key ,
             addressee: escaped_addressee,
             from: sender,
             subject: subject,
@@ -81,7 +83,7 @@ const smtp_options = {
 
           mailerEvents.emit('new_message', { 
             date: { value: date_value }, 
-            link: ``,
+            link: `?action=new_message&addressee=${escaped_addressee}&post_key=${unique_key}`,
             subject, sender, sendTo: escaped_addressee, data
           });
         }

@@ -5,6 +5,7 @@ const isAuthedContext = createContext( null );
 const PostContentContext = createContext( null );
 const TokenContext = createContext( null );
 const SelectedPostContext = createContext( null );
+const QueryContext = createContext( null );
 
 function AuthedProvider({children}) {
   const [is_authed, setAuth] = useState(false);
@@ -30,6 +31,12 @@ function SelectedPostProvider({children}) {
   return (<SelectedPostContext.Provider value={value}>{children}</SelectedPostContext.Provider>);
 }
 
-export {  isAuthedContext, PostContentContext, TokenContext, SelectedPostContext,
-          AuthedProvider, PostContextProvider, TokenProvider, SelectedPostProvider
+function QueryProvider({children}) {
+  const [query, setQuery] = useState({});
+  const value = {query, setQuery};
+  return (<QueryContext.Provider value={value}>{children}</QueryContext.Provider>);
+}
+
+export {  isAuthedContext, PostContentContext, TokenContext, SelectedPostContext, QueryContext,
+          AuthedProvider, PostContextProvider, TokenProvider, SelectedPostProvider, QueryProvider
         }

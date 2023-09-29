@@ -1,3 +1,9 @@
+
+body {
+    margin: 0;
+    padding: 0;
+}
+
 .AddresseeOpen, .PostOpen{
     color: #007bff;
     background-color: #007bff21;
@@ -80,6 +86,7 @@ header {
     margin: 0 5px 5px 15px;
     padding: 2px 0 2px 10px;
     border-radius: 8px;
+    overflow-wrap: anywhere;
 }
 
 /* Style for the post content section */
@@ -91,7 +98,7 @@ header {
     scroll-padding: auto;
     overflow-y: revert;
     height: max-content;
-    max-height: 77vh;
+    max-height: 67vh;
     overflow: auto;
     min-height: 50px;
 }
@@ -153,11 +160,12 @@ header {
     justify-content: center;
     align-items: center;
     display: flex;
-    height: 100vh;
+    height: 90vh;
+    max-width: inherit;
 }
 
 /* Style for the root container */
-.body_root, .body_mail {
+.body_mail {
     /*height: max-content;*/
     max-width: fit-content;
     margin: 0 auto;
@@ -165,7 +173,13 @@ header {
 
 }
 
-.root_content, .mailer_root {
+.root_content {
+    padding: 20px;
+    margin: 0 auto;
+    width: 100vw;
+}
+
+.mailer_root {
     background-color: #FFF;
     border: 1px solid #CCC;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -222,11 +236,9 @@ label {
     padding: 15px 0 0 15px;
 }
 
-.root_block_title {
-    display: flex;
-    justify-content: space-around;
-    font-weight: 600;
-    font-size: larger;
+@font-face {
+    font-family: 'vag world';
+    src: url('./vag-world-bold.ttf')  format('truetype'), /* Safari, Android, iOS */
 }
 
 .mailer_root {
@@ -264,11 +276,138 @@ label {
         padding: 0;
         width: -webkit-fill-available;
     }
+}
 
-    .Logout {
+.root_page {
+    background: rgb(23,35,89);
+    background: linear-gradient(180deg, rgba(23,35,89,1) 0%, rgba(145,33,58,1) 100%);
+}
+
+.root_selected_link {
+    display: flex;
+    justify-content: space-around;
+    font-weight: 600;
+    font-size: xxx-large;
+    font-family: "vag world";
+    color: #fff;
+    margin-top: 20px;
+    height: 40px;
+    text-shadow: 2px 2px 4px rgb(0, 0, 0);
+}
+
+.root_header {
+    display: flex;
+    flex-direction: row-reverse;
+
+
+
+}
+
+.alias_text {
+    color: #fff;
+    font-family: "vag world";
+    font-size: x-large;
+    text-shadow: 2px 2px 4px rgb(0, 0, 0);
+    display: flex;
+    height: 10vh;
+    width: max-content;
+    align-items: center;
+    justify-content: center;
+    margin-right: 20px;
+}
+
+.root_header_content {
+    display: flex;
+    height: 10vh;
+    color: #fff;
+    font-family: "vag world";
+    font-size: xx-large;
+    text-shadow: 2px 2px 4px rgb(0, 0, 0);
+    align-items: flex-end;
+    margin-right: 100px;
+
+}
+
+.root_header_content div {
+    margin-left: 50px;
+    cursor: pointer;
+}
+
+.services_panel, .extra_panel, .aliases_panel{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.aliases_panel {
+    flex-wrap: wrap;
+}
+
+.service_icon {
+    -webkit-transition: all 0.3s ease;
+    -moz-transition: all 0.3s ease;
+    -o-transition: all 0.3s ease;
+    transition: all 0.3s ease;
+    display: block;
+    padding: 0;
+}
+
+.service_icon img {
+    width: 100px;
+}
+
+.service_icon:hover {
+    -webkit-transform: scale(2);
+    -ms-transform: scale(2);
+    transform: scale(2);
+    margin: 0 40px 0 40px;
+}
+
+.root_content {
+    z-index: 200;
+}
+
+.background_particle {
+    position: absolute;
+    border-radius: 50%;
+    z-index: 100;
+  }
+ 
+  @for $i from 1 through 90 {
+    .background_particle:nth-child(#{$i}){
+        animation: particle-animation-#{$i} 8s infinite ;
+        opacity: 0;
+        $size: random(3) + 1;
        
+        height: $size + px;
+        width: $size + px;
+        animation-delay: -$i * .2s;
+        transform: translate3d(0, random(90) * 1vh, 0);
+        background-color: #fff;
+        
+      }
+
+    @keyframes particle-animation-#{$i} {
+        0% {
+
+            opacity: 0;
+        }
+
+        45% {
+            opacity: random(100)/100;
+            height: 5 + px;
+            width:  5 + px;
+            background: hsl(310 +random(40), 50, 50)
+            
+        }
+      100% {
+        transform: translate3d(99vw, (random(90) * 1vh), (random(90) * 1px));
+        opacity: 0;
+        height: 1px;
+        width: 1px;
+        background-color: #fff;
+      }
     }
     
-
-    /* Другие стили для мобильных устройств здесь */
+    
 }

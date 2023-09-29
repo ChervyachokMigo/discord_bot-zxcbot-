@@ -1,6 +1,6 @@
 
 import { useContext, useState, useEffect } from 'react'
-import { isAuthedContext, TokenContext } from './Contexts';
+import { isAuthedContext, TokenContext } from './MailContexts';
 
 export default function Auth () {
 
