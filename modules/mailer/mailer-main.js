@@ -6,11 +6,12 @@ const { MailParser } = require('mailparser');
 
 const { SMTP_PORT } = require('../../config.js');
 
-const { mail_db_path, mail_ignore_list, mailRegex, mail_addressee_max_length, mail_db_key_length } = require('../webserver/subdomains/api_consts/api_settings.js')
+const { mailRegex, mail_addressee_max_length, mail_db_key_length } = require('../webserver/subdomains/api_consts/api_settings.js')
 
-const { save_mail_content, generate_token } = require('../webserver/subdomains/api_modules/api_store.js')
+const { save_mail_content, generate_token, load_ignore_emails } = require('../webserver/subdomains/api_modules/api_store_mail.js')
 
 var server;
+
 
 const mailerEvents = new EventEmitter({captureRejections: true});
 
@@ -55,7 +56,8 @@ const smtp_options = {
       });
 
       parser.on('data', async (data) => {
-        if ( mail_ignore_list.findIndex( from => sender.includes(from)) > -1 ){
+
+        if ((await load_ignore_emails()).findIndex ( from => sender.includes(from)) > -1) {
           console.log( 'skip', sender, ' cause in ignore list');
           return;
         }
@@ -68,7 +70,7 @@ const smtp_options = {
 
           console.log(`new email \nto: ${escaped_addressee} \nfrom: ${sender}\nSubject: ${subject}`);
 
-          const unique_key = generate_token(32);
+          const unique_key = generate_token(mail_db_key_length);
 
           await save_mail_content({
             unique_key ,
@@ -99,16 +101,7 @@ const smtp_options = {
 module.exports = {
   mailerEvents: mailerEvents,
 
-  init: () => {
-
-    try{
-      fs.mkdirSync(mail_db_path);
-    } catch (e){
-      if (e.code !== `EEXIST`){
-          console.log(e);
-          throw new Error(e);
-      }
-    }
+  init: async () => {
 
     server = new SMTPServer(smtp_options);
 

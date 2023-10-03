@@ -268,6 +268,21 @@ const mail_contents = mysql.define ('mail_contents', {
     date: {type: DataTypes.DATE, allowNull: false},
 });
 
+const mail_ignores =  mysql.define ('mail_ignores', {
+    email_name: {type: DataTypes.STRING, allowNull: false, unique: true}, 
+});
+
+const authorizedControls = mysql.define ('authorizedControls', {
+    ip: {type: DataTypes.STRING, allowNull: false},
+    token: {type: DataTypes.STRING, allowNull: false},
+});
+
+const savedControlCommands = mysql.define ('savedControlCommands', {
+    name: {type: DataTypes.STRING, allowNull: false},
+    text: {type: DataTypes.STRING, allowNull: false},
+    args: {type: DataTypes.STRING, defaultValue: ''},
+});
+
 
 function updateAll(Model, condition, values ){
     return Model.update(values, {where : condition, logging: ''})
@@ -326,6 +341,9 @@ const mysql_actions = [
     { names: 'cryptopairs', model: cryptopairs},
     { names: 'authorizedMailUsers', model: authorizedMailUsers},
     { names: 'mail_contents', model: mail_contents},
+    { names: 'mail_ignores', model: mail_ignores},
+    { names: 'authorizedControls', model: authorizedControls},
+    { names: 'savedControlCommands', model: savedControlCommands},
 ];
 
 function select_mysql_model (action){

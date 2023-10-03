@@ -1,20 +1,18 @@
-const { key_timeout, token_literals, auth_key_digits_base_length, auth_key_digits_extra_length, token_length } = require('../api_consts/api_settings.js');
+const { key_timeout, token_length } = require('../api_consts/api_settings.js');
 const { MYSQL_SAVE, MYSQL_GET_ONE, MYSQL_DELETE, MYSQL_GET_ALL, MYSQL_GET_ALL_RESULTS_TO_ARRAY } = require("../../../DB.js");
-const {  GET_VALUES_FROM_OBJECT_BY_KEY, onlyUnique } = require('../../../tools.js');
-
+const { GET_VALUES_FROM_OBJECT_BY_KEY, onlyUnique } = require('../../../tools.js');
+const { generate_auth_key, generate_token } = require('./apt_store_general.js');
 
 let auth_keys = [];
 
 let authed_ips = [];
 
+let emails_ignore_list = [];
 
 module.exports = {
-    auth_keys: auth_keys,
 
-    generate_auth_key: (ip) => {
-        const digits = auth_key_digits_base_length + Math.floor(Math.random() * auth_key_digits_extra_length);
-        const key = Math.random().toString().slice(2, 2 + digits);
-        const ip_key_pair = {ip, key, key_timeout};
+    get_auth_key: (ip) => {
+        const ip_key_pair = generate_auth_key(ip);
         module.exports.remove_key (ip);
         auth_keys.push(ip_key_pair);
         setTimeout( module.exports.remove_key, key_timeout, ip);
@@ -32,7 +30,7 @@ module.exports = {
     },
 
     authtorize: async (ip) => {
-        const token = module.exports.generate_token(token_length);
+        const token = generate_token(token_length);
         console.log('авторизован ' + ip);
         await MYSQL_SAVE( 'authorizedMailUsers', {ip}, {token} )
         authed_ips.push({ip, token});
@@ -63,15 +61,6 @@ module.exports = {
     auth_out: async (ip) => {
         authed_ips = authed_ips.filter( val => !val.ip === ip);
         await MYSQL_DELETE( 'authorizedMailUsers', {ip});
-    },
-
-    generate_token: (length = 32) => {
-        let token = '';
-        for (let i = 0; i < length; i++) {
-            const randomIndex = Math.floor(Math.random() * token_literals.length);
-            token += token_literals.charAt(randomIndex);
-        }
-        return token;
     },
 
     save_mail_content: async (args) => {
@@ -110,5 +99,17 @@ module.exports = {
     delete_post: async (args) => {
         const result = await MYSQL_DELETE( 'mail_contents', {unique_key: args.unique_key});
         return result>0
+    },
+
+    load_ignore_emails: async () => {
+        emails_ignore_list = GET_VALUES_FROM_OBJECT_BY_KEY(
+            MYSQL_GET_ALL_RESULTS_TO_ARRAY(
+            await MYSQL_GET_ALL( 'mail_ignores', {})
+        ), 'email_name');
+        return emails_ignore_list;
+    },
+
+    add_ignore_email: async (email_name) => {
+        await MYSQL_SAVE( 'mail_ignores', { email_name }, { email_name });
     },
 }

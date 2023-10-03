@@ -1,6 +1,6 @@
 
 
-const { auth_out, check_token, load_mail_posts }  = require('../api_modules/api_store.js');
+const { auth_out, check_token, load_mail_posts }  = require('../api_modules/api_store_mail.js');
 
 const { mailRegex } = require('../api_consts/api_settings.js');
 

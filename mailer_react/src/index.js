@@ -4,6 +4,7 @@ import './src/styles.scss';
 import AppMail from './AppMail';
 import AppRoot from './AppRoot';
 import AppTest from './AppTest';
+import AppControl from './AppControl';
 import { HoverElementProvider, SelectedHeaderProvider } from './components_root/RootContexts';
 
 const root = createRoot(document.getElementById('root'));
@@ -12,12 +13,13 @@ const location = window.location.host.split('.');
 
 switch(location[0]){
   case window.location.host.replace('.ru', ''):
-    root.render(
+    root.render(<>
         <HoverElementProvider>
           <SelectedHeaderProvider>
             <AppRoot />
           </SelectedHeaderProvider>
         </HoverElementProvider>
+        </>
     );
   break;
 
@@ -25,6 +27,14 @@ switch(location[0]){
     root.render(
       <div className='body_mail'>
         <AppMail />
+      </div>
+    );
+  break;
+
+  case 'control':
+    root.render(
+      <div className='body_control'>
+        <AppControl />
       </div>
     );
   break;

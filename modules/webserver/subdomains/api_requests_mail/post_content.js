@@ -1,5 +1,4 @@
-
-const { auth_out, check_token, delete_post }  = require('../api_modules/api_store.js');
+const { auth_out, check_token, load_mail_post_content }  = require('../api_modules/api_store_mail.js');
 
 const { postKeyRegex } = require('../api_consts/api_settings.js');
 
@@ -17,11 +16,11 @@ module.exports = {
                 return {error: 'no unique_key'};
             }
 
-            const result = await delete_post({unique_key});
+            const result = await load_mail_post_content({unique_key});
             if (!result) {
                 return {error: 'post not found'}
             }
-            return { delete: true };
+            return { post: result };
 
         }
     }

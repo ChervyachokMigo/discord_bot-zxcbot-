@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { auth_out, check_token, load_mail_addressees }  = require('../api_modules/api_store.js');
+const { auth_out, check_token, load_mail_addressees }  = require('../api_modules/api_store_mail.js');
 
 const { mail_db_path } = require('../api_consts/api_settings.js');
 

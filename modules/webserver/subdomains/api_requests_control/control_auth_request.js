@@ -1,4 +1,4 @@
-const { valid_key, remove_key, authtorize, validate_token }  = require('../api_modules/api_store.js');
+const {  valid_key, authtorize, remove_key, validate_token }  = require('../api_modules/api_store_control.js');
 
 module.exports = {
     action: async (args) => {

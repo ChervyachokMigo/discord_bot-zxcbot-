@@ -42,6 +42,21 @@ module.exports = {
             messageDeleteAfter(msg, Math.trunc(data.key_timeout / 1000));
             
         });
+
+        mailerEvents.on('auth_control_key', async (data)=>{
+
+            const channel = await getGuildChannelDB(guild, 'control');
+            const key_timeout = new Date().getTime() + data.key_timeout;
+            const msg = await SendAnswer({ channel,
+                guildname: guild.name,
+                messagetype: `info`,
+                title: `Авторизация от ${data.ip}`,
+                text: `Ключ: ${data.key}\nИсчезнет ${getDiscordRelativeTime(key_timeout)}`
+            });
+
+            messageDeleteAfter(msg, Math.trunc(data.key_timeout / 1000));
+            
+        });
     },
 
     emit: ( name, args ) => {

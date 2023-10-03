@@ -309,12 +309,38 @@ label {
     font-size: x-large;
     text-shadow: 2px 2px 4px rgb(0, 0, 0);
     display: flex;
-    height: 10vh;
+    height: 6vh;
     width: max-content;
     align-items: center;
     justify-content: center;
     margin-right: 20px;
+    cursor: pointer;
 }
+
+.root_title {
+    color: #fff;
+    font-family: "vag world";
+    text-shadow: 2px 2px 4px rgb(0, 0, 0);
+    display: flex;
+    width: max-content;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    justify-content: center;
+    margin: 0 auto 50px auto;
+
+}
+
+.root_title_name {
+    font-size: xxx-large;
+    height: 75px;
+}
+
+.root_title_desc {
+    font-size: xx-large;
+    height: fit-content;
+}
+
 
 .root_header_content {
     display: flex;
@@ -360,6 +386,7 @@ label {
     -webkit-transform: scale(2);
     -ms-transform: scale(2);
     transform: scale(2);
+    animation: wiggle 8s infinite ;
     margin: 0 40px 0 40px;
 }
 
@@ -371,25 +398,23 @@ label {
     position: absolute;
     border-radius: 50%;
     z-index: 100;
-  }
- 
-  @for $i from 1 through 90 {
+}
+
+@for $i from 1 through 90 {
     .background_particle:nth-child(#{$i}){
         animation: particle-animation-#{$i} 8s infinite ;
         opacity: 0;
         $size: random(3) + 1;
-       
         height: $size + px;
         width: $size + px;
         animation-delay: -$i * .2s;
         transform: translate3d(0, random(90) * 1vh, 0);
         background-color: #fff;
         
-      }
+    }
 
     @keyframes particle-animation-#{$i} {
         0% {
-
             opacity: 0;
         }
 
@@ -400,14 +425,36 @@ label {
             background: hsl(310 +random(40), 50, 50)
             
         }
-      100% {
-        transform: translate3d(99vw, (random(90) * 1vh), (random(90) * 1px));
-        opacity: 0;
-        height: 1px;
-        width: 1px;
-        background-color: #fff;
-      }
+        100% {
+            transform: translate3d(99vw, (random(90) * 1vh), (random(90) * 1px));
+            opacity: 0;
+            height: 1px;
+            width: 1px;
+            background-color: #fff;
+        }
     }
     
     
+}
+
+.control-panel {
+    margin: 15px;
+    width: calc(100vw - 32px);
+}
+
+.control-panel * {
+    margin-bottom: 5px;
+}
+
+.control-panel input{
+    width: calc(100vw - 32px - 100px);
+    min-width: 150px;
+}
+
+.control-panel button {
+    width: 100px;
+}
+
+pre.command_display {
+    text-wrap: balance;
 }

@@ -1,5 +1,5 @@
 
-const { validate_token }  = require('../api_modules/api_store.js');
+const { validate_token }  = require('../api_modules/api_store_control.js');
 
 module.exports = {
     action: async (args) => {

@@ -1,4 +1,4 @@
-const { auth_out, check_token, load_mail_post_content }  = require('../api_modules/api_store.js');
+const { auth_out, check_token, load_mail_post_content, add_ignore_email }  = require('../api_modules/api_store_mail.js');
 
 const { postKeyRegex } = require('../api_consts/api_settings.js');
 
@@ -20,7 +20,11 @@ module.exports = {
             if (!result) {
                 return {error: 'post not found'}
             }
-            return { post: result };
+            const email_name = result.from;
+
+            await add_ignore_email(email_name);
+
+            return { email_name };
 
         }
     }

@@ -7,8 +7,6 @@ const { log } = require("../../tools/log.js");
 
 const api_init = require('./subdomains/api.js');
 
-const mailer_init = require('./subdomains/mailer_react.js');
-
 const { WEBSERVER_HTTP_PORT } = require('../../config.js');
 
 const public_path = path.join(__dirname,'/../../data/mailer_react_build');
@@ -22,8 +20,6 @@ module.exports = {
         app.use(bodyParser.urlencoded({ extended: false }));
 
         api_init(app);
-
-        //mailer_init(app);
 
         app.use(express.static(public_path));
     
