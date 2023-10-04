@@ -2,6 +2,7 @@ const { key_timeout, token_length } = require('../api_consts/api_settings.js');
 const { MYSQL_SAVE, MYSQL_GET_ONE, MYSQL_DELETE, MYSQL_GET_ALL, MYSQL_GET_ALL_RESULTS_TO_ARRAY } = require("../../../DB.js");
 const { GET_VALUES_FROM_OBJECT_BY_KEY, onlyUnique } = require('../../../tools.js');
 const { generate_auth_key, generate_token } = require('./api_store_general.js');
+const { emit } = require('../../../mailer/mailer-events.js');
 
 let auth_keys = [];
 
@@ -34,6 +35,7 @@ module.exports = {
         console.log('авторизован ' + ip);
         await MYSQL_SAVE( 'authorizedMailUsers', {ip}, {token} )
         authed_ips.push({ip, token});
+        emit('mailer_event', { title: `Авторизован в Mailer`, text: `IP: ${ip}` });
     },
 
     validate_token: async (ip) => {
@@ -61,6 +63,7 @@ module.exports = {
     auth_out: async (ip) => {
         authed_ips = authed_ips.filter( val => !val.ip === ip);
         await MYSQL_DELETE( 'authorizedMailUsers', {ip});
+        emit('mailer_event', { title: `Юзер вышел из Mailer`, text: `IP: ${ip}` });
     },
 
     save_mail_content: async (args) => {

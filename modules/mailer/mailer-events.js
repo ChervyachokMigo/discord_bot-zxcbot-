@@ -5,10 +5,25 @@ const { messageDeleteAfter} = require("../tools.js");
 
 const domainname = 'svdgod.ru';
 
-const { mailerEvents } = require("./mailer-main.js");
+const {EventEmitter} = require('events');
+const mailerEvents = new EventEmitter({captureRejections: true});
 
 module.exports = {
     init: function (guild) {
+        
+        mailerEvents.on('mailer_event', async ({ title, text })=>{
+
+            const channel = await getGuildChannelDB(guild, 'mailer');
+
+            await SendAnswer({ channel,
+                guildname: guild.name,
+                messagetype: `info`,
+                title,
+                text
+            });
+            
+        });
+        
         mailerEvents.on('new_message', async (data)=>{
 
             const channel = await getGuildChannelDB(guild, 'mailer');
@@ -43,6 +58,19 @@ module.exports = {
             
         });
 
+        mailerEvents.on('control_event', async ({ title, text })=>{
+
+            const channel = await getGuildChannelDB(guild, 'control');
+
+            await SendAnswer({ channel,
+                guildname: guild.name,
+                messagetype: `info`,
+                title,
+                text
+            });
+            
+        });
+
         mailerEvents.on('auth_control_key', async (data)=>{
 
             const channel = await getGuildChannelDB(guild, 'control');
@@ -60,6 +88,11 @@ module.exports = {
     },
 
     emit: ( name, args ) => {
+        console.log( 'emit', name, args)
         mailerEvents.emit( name, args );
+    },
+
+    getEventer: () => {
+        return mailerEvents;
     }
 }

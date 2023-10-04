@@ -1,6 +1,7 @@
 const { key_timeout, token_length } = require('../api_consts/api_settings.js');
 const { MYSQL_SAVE, MYSQL_GET_ONE, MYSQL_DELETE, MYSQL_GET_ALL, MYSQL_GET_ALL_RESULTS_TO_ARRAY } = require("../../../DB.js");
 const { generate_auth_key, generate_token } = require('./api_store_general.js');
+const { emit } = require('../../../mailer/mailer-events.js');
 
 let control_auth_keys = [];
 
@@ -10,9 +11,9 @@ module.exports = {
 
     get_auth_key: (ip) => {
         const ip_key_pair = generate_auth_key(ip);
-        module.exports.remove_control_key (ip);
+        module.exports.remove_key (ip);
         control_auth_keys.push(ip_key_pair);
-        setTimeout( module.exports.remove_control_key, key_timeout, ip);
+        setTimeout( module.exports.remove_key, key_timeout, ip);
         console.log('создана ключ пара для авторизации: ', ip_key_pair);
         return ip_key_pair;
     },
@@ -31,6 +32,7 @@ module.exports = {
         console.log('авторизован ' + ip);
         await MYSQL_SAVE( 'authorizedControls', {ip}, {token} )
         control_authed_ips.push({ip, token});
+        emit('control_event', { title: `Авторизован в CONTROL`, text: `IP: ${ip}` });
     },
 
     validate_token: async (ip) => {

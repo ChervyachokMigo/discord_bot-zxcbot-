@@ -1,5 +1,4 @@
 const fs = require(`fs`);
-const {EventEmitter} = require('events');
 
 const { SMTPServer } = require("smtp-server");
 const { MailParser } = require('mailparser');
@@ -13,8 +12,8 @@ const { generate_token } = require('../webserver/subdomains/api_modules/api_stor
 
 var server;
 
+const { emit } = require('./mailer-events.js');
 
-const mailerEvents = new EventEmitter({captureRejections: true});
 
 const smtp_options = {
   secure: false,
@@ -84,7 +83,7 @@ const smtp_options = {
             date: date_value
           });
 
-          mailerEvents.emit('new_message', { 
+          emit('new_message', { 
             date: { value: date_value }, 
             link: `?action=new_message&addressee=${escaped_addressee}&post_key=${unique_key}`,
             subject, sender, sendTo: escaped_addressee, data
@@ -100,10 +99,8 @@ const smtp_options = {
 }
 
 module.exports = {
-  mailerEvents: mailerEvents,
 
   init: async () => {
-
     server = new SMTPServer(smtp_options);
 
     server.on("error", err => {
@@ -113,7 +110,5 @@ module.exports = {
     server.listen(SMTP_PORT, ()=>{
       console.log("Server smtp started");
     });
-
-    return mailerEvents;
   }
 }

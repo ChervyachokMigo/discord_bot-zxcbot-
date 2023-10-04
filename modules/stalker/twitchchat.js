@@ -1,5 +1,5 @@
 const { EventEmitter } = require('events');
-
+const tmi = require('tmi.js');
 const fs = require('fs');
 
 const { MYSQL_GET_ONE, MYSQL_GET_TRACKING_DATA_BY_ACTION,
@@ -172,8 +172,6 @@ module.exports = {
         }
 
         setInfinityTimerLoop(sendMessages, stalkerChatRefreshRate);        
-        
-        const tmi = require('tmi.js');
 
         const TwitchChatNames = await MYSQL_GET_TRACKING_TWITCH_CHATS();
         if (TwitchChatNames.length === 0){

@@ -27,10 +27,10 @@ const websettings = require('../modules/websettings/index.js');
 const webserver = require('../modules/webserver/index.js');
 
 
-
+const mailer_events = require('../modules/mailer/mailer-events.js');
 const mailer_main = require('../modules/mailer/mailer-main.js');
 
-const mailer_events = require('../modules/mailer/mailer-events.js');
+
 
 const svdgod_guild_id = '1118103232082882610';
 
