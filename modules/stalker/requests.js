@@ -1,7 +1,8 @@
 const axios = require('axios');
 const SteamAPI = require('steamapi');
 const { auth } = require ('osu-api-extended');
-
+const express = require('express');
+const bodyParser = require('body-parser');
 const { log, LogString } = require("../../tools/log.js");
 const { MYSQL_SAVE, MYSQL_GET_ONE } = require("../DB.js");
 
@@ -107,7 +108,7 @@ async function initOsu(){
     async function relogin_osu(){
         log('Получение Осу токена');        
         var token = await auth.login_lazer(OSU_LOGIN, OSU_PASSWORD);
-        console.log('osu token',token)
+        log('Установлен новый Осу токен'); 
         tokens.osu = {
             value: token.access_token,
             type: 'oauth',
@@ -135,6 +136,52 @@ async function initTwitch(){
         return false
     }
 }
+
+class server {
+    constructor (port){
+        this.port = port;
+        this.app = express();
+
+        this.app.use(express.static(__dirname));
+        this.app.use(bodyParser.urlencoded({ extended: true }));
+
+        this.app.get('/', (req, res) => {
+            console.log(req.query, res);
+            res.send('404');
+        });
+
+        this.app.post('/', (req, res) => {
+            console.log(req.query, res);
+            res.send('404');
+        });
+
+        this.app.listen(port, () => {
+            log(`twitch chat token callback server listening on port ${port}`, 'twitchchat')
+        });
+    }
+}
+
+//const myserver = new server(3000);
+
+/*async function getTwitchOauthToken(){
+    var token_url = `https://id.twitch.tv/oauth2/authorize?`;
+    return new Promise(async (res,rej)=>{
+        await axios.get(
+            token_url + [
+                `response_type=token`,
+                `client_id=${TWITCH_CLIENT_ID}`,
+                `redirect_uri=http://localhost:3000`,
+                `scope=${decodeURI('chat:edit chat:read')}`
+            ].join('&'))
+        .then(function (response) {
+            console.log(response.data)
+            LogString(`System`, `info`, `Stalker Twitch Token`,`Логин на твич совершен`);
+            res(response.data);
+        }).catch(function (error) {
+            rej(error.code);
+        });
+    });
+}*/
 
 async function getTwitchToken(){
     var token_url = `https://id.twitch.tv/oauth2/token`;
@@ -516,6 +563,9 @@ async function getVKClubWall(club_id, count=3){
 
 
 module.exports = {
+    //getActualTwitchToken: async () => (await MYSQL_GET_ONE('token', {platform: 'twitch'} )).dataValues.value,
+    //getTwitchOauthToken: getTwitchOauthToken,
+
     getTwitchFolowers: getTwitchFolowers,
     getTwitchUserStatus: getTwitchUserStatus,
     getLastTwitchClips: getLastTwitchClips,

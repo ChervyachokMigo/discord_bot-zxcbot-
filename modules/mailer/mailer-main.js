@@ -8,7 +8,8 @@ const { SMTP_PORT } = require('../../config.js');
 
 const { mailRegex, mail_addressee_max_length, mail_db_key_length } = require('../webserver/subdomains/api_consts/api_settings.js')
 
-const { save_mail_content, generate_token, load_ignore_emails } = require('../webserver/subdomains/api_modules/api_store_mail.js')
+const { save_mail_content, load_ignore_emails } = require('../webserver/subdomains/api_modules/api_store_mail.js')
+const { generate_token } = require('../webserver/subdomains/api_modules/api_store_general.js');
 
 var server;
 

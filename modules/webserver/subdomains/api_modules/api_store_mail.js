@@ -1,7 +1,7 @@
 const { key_timeout, token_length } = require('../api_consts/api_settings.js');
 const { MYSQL_SAVE, MYSQL_GET_ONE, MYSQL_DELETE, MYSQL_GET_ALL, MYSQL_GET_ALL_RESULTS_TO_ARRAY } = require("../../../DB.js");
 const { GET_VALUES_FROM_OBJECT_BY_KEY, onlyUnique } = require('../../../tools.js');
-const { generate_auth_key, generate_token } = require('./apt_store_general.js');
+const { generate_auth_key, generate_token } = require('./api_store_general.js');
 
 let auth_keys = [];
 

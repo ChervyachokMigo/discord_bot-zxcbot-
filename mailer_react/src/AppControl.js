@@ -6,7 +6,7 @@ export default function AppControl () {
 
     return (
 
-    <div><h1>Test</h1>
+    <div><header>Control Panel</header>
       <AuthedProvider>
         <TokenProvider>
 

@@ -132,7 +132,49 @@ function getOsuProfileChanges(userinfo_new, userinfo_old){
 }
 
 module.exports = {
-    
+    getBeatmapInfoByUrl: async (url) => {
+        if (!await checkTokenExpires('osu')){
+            log('cant get osu token');
+            return false;
+        };
+        const url_parts = url.match(/https:\/\/osu\.ppy\.sh\/beatmapsets\/([0-9]+)(\#([A-Za-z]+)\/([0-9]+)?)*/i );
+
+        if (url_parts === null) {
+            return false
+        } else {
+            const request = {
+                beatmapset_id: url_parts[1],
+                gamemode: url_parts[3],
+                beatmap_id: url_parts[4]
+            };
+            const beatmapset_info = await v2.beatmap.set.details(request.beatmapset_id);
+            if (request.beatmap_id){
+                const beatmap = beatmapset_info.beatmaps.find( b => Number(b.id) === Number(request.beatmap_id));
+                if (!beatmap) {
+                    return false;
+                }
+                return {
+                    id: beatmap.id,
+                    artist: beatmapset_info.artist, 
+                    title: beatmapset_info.title,
+                    diff: beatmap.version,
+                    creator: beatmapset_info.creator,
+                    mode: beatmap.mode,
+                    status: beatmap.status,
+                    length: beatmap.hit_length,
+                    max_combo: beatmap.max_combo,
+                    bpm: beatmap.bpm,
+                    stars: beatmap.difficulty_rating,
+                    ar: beatmap.ar,
+                    cs: beatmap.cs,
+                    od: beatmap.accuracy,
+                    hp: beatmap.drain,
+                }
+            }
+        }
+
+    },
+
     getOsuUserInfoByCommand: async function (comargs, message, com_text){
     
         if (!comargs[0]){

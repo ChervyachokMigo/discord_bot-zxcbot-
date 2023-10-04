@@ -1,10 +1,11 @@
 const { EventEmitter } = require('events');
-const { ChatClient } = require("dank-twitch-irc");
+
+const fs = require('fs');
 
 const { MYSQL_GET_ONE, MYSQL_GET_TRACKING_DATA_BY_ACTION,
     manageGuildServiceTracking, getTrackingUsersForGuild, getGuildidsOfTrackingUserService } = require("../DB.js");
 const { GET_VALUES_FROM_OBJECT_BY_KEY } = require("../../modules/tools.js");
-const { LogString, log } = require("../../tools/log.js");
+const { log } = require("../../tools/log.js");
 const { setInfinityTimerLoop, SortObjectByValues } = require("../../modules/tools.js");
 const { SendAnswer } = require("../../tools/embed.js");
 
@@ -14,18 +15,14 @@ const { emoji_twitch } = require("../../constantes/emojis.js");
 const { stalkerChatRefreshRate } = require('../../settings.js');
 const { modules, modules_stalker } = require('../../settings.js');
 
+//const { getTwitchOauthToken } = require('./requests.js');
+const { twitch_chat_token } = require('../../config.js')
 
 var ev = new EventEmitter();
 
 var chatconfiguration = {};
 
 const moduleName = `Stalker Twitch Chat`;
-
-try{
-    var client = new ChatClient(chatconfiguration);
-} catch (e){
-    LogString(`System`, `Error`, moduleName, e);
-}
 
 const TalalaToBoldRegexp = /[тТ]ал((ыч|ый|ому)|[аы]л(а|уш)?)(.*|а|е|у)?|talal(a|usha|.*)?|[иИ]гнат(ий|ию|у|е|.*)?|[Аа]ртем(.*|у|е|ы|а)?|[Аа]н(д)?жел(.*|у|е|ы|а)?|[Aa]ngel(.*)?|[Tt]alov(.*)?|[Тт]алов(.*)?/gi;
 
@@ -91,6 +88,7 @@ module.exports = {
     getChatters:getChatters,
     getUserMessagesCount:getUserMessagesCount,
     ClearChatters:ClearChatters,
+    initAvailableCommands: initAvailableCommands,
 
     MYSQL_TWITCH_CHAT_TRACKING_CHANGE: async function(message, username, option){
         //проверка юзера и создаание нового юзера
@@ -115,13 +113,7 @@ module.exports = {
 
         if (modules.stalker){  
             if (modules_stalker.twitchchat){  
-                try{
-                    client.close();
-                    client = new ChatClient(chatconfiguration);
-                } catch (e){
-                    LogString(`System`, `Error`, moduleName, e);
-                }
-                module.exports.twitchchat();
+                //need restart
             }
         }
 
@@ -162,65 +154,17 @@ module.exports = {
         }
     },
 
-    twitchchat: function (){    
+    twitchchat_init: async function (discord_client){    
         log('Загрузка твич чатов', moduleName);
 
-        client.on("ready", () => log('Соединение с twitch irc установлено!', moduleName) );
-
-        client.on("close", (error) => {
-            if (error != null) {
-                console.error("Client closed due to error", error);
-            }
-        });
-
-        client.on('error', (e)=> console.error(e));
-
-        client.on("PRIVMSG", async (msg) => {
-            var messageText = '';
-            if (msg.channelName === 'talalusha'){
-                messageText = boldSelectedWords(TalalaToBoldRegexp, msg.messageText);
-            } else {
-                messageText = msg.messageText;
-            }
-
-            var messageFormatedText = `**${msg.displayName}**: ${messageText}`;
-
-            var bufferLength = 0;
-            if (MessagesBuffer.length>0){
-                for (let messagedata of MessagesBuffer){
-                    for (let messagetext of messagedata.messagetext){
-                        bufferLength += messagetext.length;
-                    }
-                }
-            }
-
-            if ((bufferLength + messageFormatedText.length + (MessagesBuffer.length * 2)) >= 2000){//max discord message length
-                await sendMessages();
-            };
-
-            var UserIndexInMessageBuffer = MessagesBuffer.findIndex((val) => {
-                return val.username === msg.channelName
-            });
-            if (UserIndexInMessageBuffer == -1){
-                MessagesBuffer.push({username: msg.channelName, messagetext: [messageFormatedText]});
-            } else {
-                MessagesBuffer[UserIndexInMessageBuffer].messagetext.push(messageFormatedText);
-            }
-
-            ChattersNewMessage(msg.channelName, msg.displayName);
-        });
-
-        client.on("JOIN", async (msg) => {
-            log(`Подключен к чату: ${msg.channelName}`, moduleName);
-        });
+        initAvailableCommands();
 
         async function sendMessages(){
             if (MessagesBuffer.length > 0){
-                for (let chatmessages of MessagesBuffer){
-                    let messagestext = chatmessages.messagetext.join(`\n`);
-                    log(`Новое сообщение из чата "${chatmessages.username}":\n`+ messagestext + '\n', moduleName);
-                    let TwitchChatGuildids = await getGuildidsOfTrackingUserService('twitchchat_tracking', chatmessages.username);
-                    ev.emit('newChatMessage', {guildids: TwitchChatGuildids, chatname: chatmessages.username, messagetext: messagestext});
+                for (const messages of MessagesBuffer){
+                    const text = messages.texts.join(`\n`);
+                    log(`Новое сообщение из чата "${messages.channelname}":\n`+ text + '\n', moduleName);
+                    ev.emit('newChatMessage', {channelname: messages.channelname, text});
                 }
                 MessagesBuffer = [];
                 bufferLength = 0;
@@ -228,20 +172,155 @@ module.exports = {
         }
 
         setInfinityTimerLoop(sendMessages, stalkerChatRefreshRate);        
-
-        ChatsJoin();
         
-        return ev;
+        const tmi = require('tmi.js');
+
+        const TwitchChatNames = await MYSQL_GET_TRACKING_TWITCH_CHATS();
+        if (TwitchChatNames.length === 0){
+            log('no selected channels', moduleName)
+            return false;
+        }
+
+        const tmic = new tmi.Client({
+            options: { debug: true },
+            identity: {
+                username: 'sed_god',
+                password: `oauth:${twitch_chat_token}`
+            },
+            channels: TwitchChatNames
+        });
+
+        tmic.on('join', async (channelname, username) => {
+            const new_channelname = channelname.replace('#', '');
+            log(`${username} подключен к чату ${new_channelname}`, moduleName);
+            ev.emit('UserJoin', {channelname: new_channelname, username});
+        });
+
+        tmic.connect();
+
+        tmic.on('message', async (channel, tags, message, self) => {
+            if(self) return;
+
+            const escaped_message = message.trim();
+            const channelname = channel.toString().replace(/#/g, "");
+            const username = tags.username;
+
+            const messageFormatedText = `**${username}**: ${
+                channelname === 'talalusha'? 
+                    boldSelectedWords(TalalaToBoldRegexp, message): 
+                    message}`;
+
+            const bufferLength = MessagesBuffer.length > 0? MessagesBuffer.map( (messages) => 
+                messages.texts.map( text => text.length).reduce( (a, b) => a + b) ).reduce( (a,b) => a + b ): 0;
+
+            if ((bufferLength + messageFormatedText.length + (MessagesBuffer.length * 2)) >= 2000){//max discord message length
+                await sendMessages();
+            };
+
+            const UserIndexInMessageBuffer = MessagesBuffer.findIndex( val => val.channelname === channelname );
+            if (UserIndexInMessageBuffer == -1){
+                MessagesBuffer.push({
+                    channelname: channelname, 
+                    texts: [messageFormatedText]
+                });
+            } else {
+                MessagesBuffer[UserIndexInMessageBuffer].texts.push(
+                    messageFormatedText
+                );
+            }
+
+            ChattersNewMessage(channelname, username);
+
+            if ( ! await run_command({ escaped_message, channelname, tags, twitchchat: tmic }) ){
+                tmic.say(channelname, `@${username}, такой команды нет.`)
+            }
+
+        });
+
+    },
+
+    twitchchat_load_events: (guild) => {
+        ev.on('newChatMessage', async ({channelname, text}) => {
+            const guildids = await getGuildidsOfTrackingUserService('twitchchat_tracking', channelname);
+            if (guildids && guildids.includes(guild.id)){
+                const channel = await getGuildChannelDB( guild, `twitchchat_${channelname}` );
+                await SendAnswer({
+                    channel: channel, 
+                    guildname: guild.name, 
+                    messagetype:`chat`, 
+                    title: `${channelname} chat`, 
+                    text: text });
+            }
+        });
+
+        ev.on('UserJoin', async ({channelname, username}) => {
+            const guildids = await getGuildidsOfTrackingUserService('twitchchat_tracking', channelname);
+            if (guildids && guildids.includes(guild.id)){
+                const channel = await getGuildChannelDB( guild, `twitchchat_${channelname}` );
+                await SendAnswer({
+                    channel: channel, 
+                    guildname: guild.name, 
+                    messagetype:`chat`, 
+                    title: `${channelname} chat`, 
+                    text: `**${username}** присоединился к чату` });
+            }
+        });
+
     }
 }
 
-async function ChatsJoin(){
-    await client.connect();
-    var TwitchChatNames = await MYSQL_GET_TRACKING_TWITCH_CHATS();
-    if (TwitchChatNames.length > 0){
-        await client.joinAll(TwitchChatNames);
+var AvailableCommands = [];
+
+function initAvailableCommands (){
+    log('Загрузка доступных комманд', 'Commands');
+    const command_files = fs.readdirSync(`modules/twitchchat/commands`, {encoding:'utf-8'});
+    for (const command_file of command_files){
+        log('Загрузка команды: ' + command_file ,'Commands');
+        let { command_aliases, command_description, command_name, command_help } = require(`../twitchchat/commands/${command_file}`);
+        AvailableCommands.push({
+            filename: command_file,
+            name: command_name,
+            desc: command_description,
+            alias: command_aliases,
+            help: command_help
+        });
+    }
+}
+
+function getAvailableCommands(){
+    return AvailableCommands;
+}
+
+async function run_command({escaped_message, channelname, tags, twitchchat}) {
+    if ( escaped_message.startsWith('https://osu.ppy.sh/beatmapsets/') ){
+        if ( escaped_message.match(/https:\/\/osu\.ppy\.sh\/beatmapsets\/[0-9]+\#[A-Za-z]+\/[0-9]+/gi ) !== null  ){
+            const commandBody = escaped_message.replace(/ +/g, ' ');
+            var comargs = commandBody.split(' ');
+            await (require(`../twitchchat/commands/request.js`))
+                .action({ channelname, tags, comargs, twitchchat });
+        } else {
+            return false;
+        }
+        return true;
     }
 
+    if ( escaped_message.startsWith('!') ){
+        const commandBody = escaped_message.slice(1).replace(/ +/g, ' ');
+        var comargs = commandBody.split(' ');
+        const command = comargs.shift().toLowerCase();
+
+        for (const AvailableCommand of AvailableCommands){
+            if (AvailableCommand.alias.includes(command)){
+                await (require(`../twitchchat/commands/${AvailableCommand.filename}`))
+                    .action({ channelname, tags, comargs, twitchchat });
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    return true;
 }
 
 function boldSelectedWords(regexp, str){

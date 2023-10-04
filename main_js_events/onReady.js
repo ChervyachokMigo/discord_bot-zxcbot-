@@ -9,12 +9,13 @@ const { SendAnswer } = require("../tools/embed.js")
 const { dailyesTimers_onStart } = require (`../modules/Daily.js`);
 const { prepareDB } = require("../modules/DB.js")
 const { StalkerStartListeners, StalkerStartLoop } = require(`../modules/stalker.js`);
-const { twitchchat } = require(`../modules/stalker/twitchchat.js`);
+const { twitchchat_init, twitchchat_load_events } = require(`../modules/stalker/twitchchat.js`);
 
 const { initLogServer } = require('../modules/logserver/index.js');
 
 const { init_osu_db } = require('../modules/osu_replay/osu_db.js');
-const { initAvailableCommands } = require(`../modules/commands.js`);
+const discord_commands = require(`../modules/commands.js`);
+
 const { initGuildSettings } = require('../modules/guildSettings.js');
 
 const { crypto_check_start } = require('../modules/crypto.js');
@@ -45,7 +46,7 @@ module.exports = {
             var botname = client.user.username;
             var guilds = client.guilds.cache;
 
-            initAvailableCommands();
+            discord_commands.initAvailableCommands();
 
             if (settings.modules.websettings) {
                 log('запуск веб сервера настроек', 'initialisation');
@@ -53,10 +54,8 @@ module.exports = {
                 await websettings.setDiscordData(client);
             }
 
-            if (settings.modules.stalker){  
-                if (settings.modules_stalker.twitchchat){     
-                    var chatevents = twitchchat();
-                }
+            if (settings.modules_stalker.twitchchat){   
+                await twitchchat_init(client);
             }
 
             if (settings.modules.osu_replay){
@@ -112,18 +111,8 @@ module.exports = {
                     await StalkerStartListeners(guild);
                     log('запуск слушателей событий выполнено', 'initialisation');
                     if (settings.modules_stalker.twitchchat){
-                        log('запуск чата', 'initialisation');
-                        chatevents.on('newChatMessage', async (args) => {
-                            if (args.guildids && args.guildids.includes(guild.id)){
-                                let channel = await getGuildChannelDB( guild, `twitchchat_${args.chatname}` );
-                                await SendAnswer({
-                                    channel: channel, 
-                                    guildname: guild.name, 
-                                    messagetype:`chat`, 
-                                    title: `${args.chatname} chat`, 
-                                    text: args.messagetext });
-                            }
-                        });
+                        log('запуск событий чата', 'initialisation');
+                        twitchchat_load_events(guild);
                     }
                 }
 
@@ -136,7 +125,7 @@ module.exports = {
                 };
             
             });
-            
+
             if (settings.modules.stalker){
                 log('запуск сталкера ожидание..', 'initialisation');
                 await StalkerStartLoop();
