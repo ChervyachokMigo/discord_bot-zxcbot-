@@ -88,7 +88,7 @@ module.exports = {
     },
 
     emit: ( name, args ) => {
-        console.log( 'emit', name, args)
+        //console.log( 'emit', name, args)
         mailerEvents.emit( name, args );
     },
 

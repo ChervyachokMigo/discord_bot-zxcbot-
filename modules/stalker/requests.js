@@ -17,6 +17,7 @@ const {
 } = require('../../config.js');
 
 const { stalkerTrovoClipsPeriod } = require('../../settings.js');
+const { GET_VALUES_FROM_OBJECT_BY_KEY } = require('../tools.js');
 
 var tokens = {
     twitch: {},
@@ -163,7 +164,7 @@ class server {
 
 //const myserver = new server(3000);
 
-/*async function getTwitchOauthToken(){
+async function getTwitchOauthToken(){
     var token_url = `https://id.twitch.tv/oauth2/authorize?`;
     return new Promise(async (res,rej)=>{
         await axios.get(
@@ -181,7 +182,39 @@ class server {
             rej(error.code);
         });
     });
-}*/
+}
+
+async function getTwitchSteamsByCategory({game_id, language}){
+    await checkTokenExpires('twitch');
+    
+    var base_url = 'https://api.twitch.tv';
+    var request_url = `/helix/streams?` + [
+        `game_id=${game_id}`,
+        `type=live`,
+        `language=${language}`,
+        'first=100'
+    ].join('&');
+
+    var request = await axios.create({
+        baseURL: base_url,
+        url: request_url,
+        headers: {
+            'Accept': 'application/json',   
+            'Client-ID': TWITCH_CLIENT_ID,
+            'Authorization': `Bearer ${tokens.twitch.value}`
+        }
+    });
+
+    return new Promise(async (res,rej)=>{
+        await request.get(`${base_url}${request_url}`).then(function (response) {
+            res(GET_VALUES_FROM_OBJECT_BY_KEY(response.data.data, 'user_login'));
+        }).catch(function (error) {
+            rej(error);
+        });
+    });
+}
+
+
 
 async function getTwitchToken(){
     var token_url = `https://id.twitch.tv/oauth2/token`;
@@ -569,18 +602,20 @@ module.exports = {
     getTwitchFolowers: getTwitchFolowers,
     getTwitchUserStatus: getTwitchUserStatus,
     getLastTwitchClips: getLastTwitchClips,
-    getTwitchUserID:getTwitchUserID, 
+    getTwitchUserID: getTwitchUserID, 
+
+    getTwitchSteamsByCategory: getTwitchSteamsByCategory,
 
     getTrovoUserStatus: getTrovoUserStatus,
     getTrovoUserID: getTrovoUserID,
-    getTrovoClips:getTrovoClips,
+    getTrovoClips: getTrovoClips,
 
     getSteamUserData: getSteamUserData,
 
-    getVKUsersData:getVKUsersData,
-    getVKUserFriendsCount:getVKUserFriendsCount,
-    getVKUserWall:getVKUserWall,
-    getVKClubWall:getVKClubWall,
+    getVKUsersData: getVKUsersData,
+    getVKUserFriendsCount: getVKUserFriendsCount,
+    getVKUserWall: getVKUserWall,
+    getVKClubWall: getVKClubWall,
 
     checkTokenExpires: checkTokenExpires,
 };

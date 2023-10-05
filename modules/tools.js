@@ -231,7 +231,7 @@ module.exports = {
     },
 
     setInfinityTimerLoop: function (func, timeSec){
-        setInterval(func, timeSec * 1000);
+        return setInterval(func, timeSec * 1000);
     },
 
     GET_VALUES_FROM_OBJECT_BY_KEY: function (arrayobject, valuekey){

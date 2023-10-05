@@ -283,6 +283,10 @@ const savedControlCommands = mysql.define ('savedControlCommands', {
     args: {type: DataTypes.STRING, defaultValue: ''},
 });
 
+const twitchchat_ignores = mysql.define ('twitchchat_ignores', {
+    channelname: {type: DataTypes.STRING, allowNull: false}
+});
+
 
 function updateAll(Model, condition, values ){
     return Model.update(values, {where : condition, logging: ''})
@@ -344,6 +348,7 @@ const mysql_actions = [
     { names: 'mail_ignores', model: mail_ignores},
     { names: 'authorizedControls', model: authorizedControls},
     { names: 'savedControlCommands', model: savedControlCommands},
+    { names: 'twitchchat_ignores', model: twitchchat_ignores},
 ];
 
 function select_mysql_model (action){
@@ -529,7 +534,7 @@ async function MYSQL_DELETE(action, condition){
         if (e.code === 'ECONNREFUSED' || e.name === `SequelizeConnectionRefusedError`){
             throw new Error(`Нет доступа к базе данных.`);
         } else {
-            throw new Error(e);
+            console.error('can not delete', action, condition);
         }
     }   
 }

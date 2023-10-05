@@ -9,7 +9,7 @@ const { SendAnswer } = require("../tools/embed.js")
 const { dailyesTimers_onStart } = require (`../modules/Daily.js`);
 const { prepareDB } = require("../modules/DB.js")
 const { StalkerStartListeners, StalkerStartLoop } = require(`../modules/stalker.js`);
-const { twitchchat_init, twitchchat_load_events } = require(`../modules/stalker/twitchchat.js`);
+const { twitchchat_init, twitchchat_reinit, twitchchat_load_events } = require(`../modules/stalker/twitchchat.js`);
 
 const { initLogServer } = require('../modules/logserver/index.js');
 
@@ -29,6 +29,7 @@ const webserver = require('../modules/webserver/index.js');
 
 const mailer_events = require('../modules/mailer/mailer-events.js');
 const mailer_main = require('../modules/mailer/mailer-main.js');
+const { setInfinityTimerLoop } = require("../modules/tools.js")
 
 
 
@@ -56,6 +57,7 @@ module.exports = {
 
             if (settings.modules_stalker.twitchchat){   
                 await twitchchat_init(client);
+                setInfinityTimerLoop(twitchchat_reinit, 600); 
             }
 
             if (settings.modules.osu_replay){

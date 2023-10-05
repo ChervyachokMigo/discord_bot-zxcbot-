@@ -10,13 +10,18 @@ let authed_ips = [];
 
 let emails_ignore_list = [];
 
+const remove_key = (ip) => {
+    console.log('удалены ключи для ' + ip);
+    auth_keys = auth_keys.filter( val => !val.ip === ip);
+}
+
 module.exports = {
 
     get_auth_key: (ip) => {
         const ip_key_pair = generate_auth_key(ip);
-        module.exports.remove_key (ip);
+        remove_key (ip);
         auth_keys.push(ip_key_pair);
-        setTimeout( module.exports.remove_key, key_timeout, ip);
+        setTimeout( remove_key, key_timeout, ip);
         console.log('создана ключ пара для авторизации: ', ip_key_pair);
         return ip_key_pair;
     },

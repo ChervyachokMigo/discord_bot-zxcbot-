@@ -5,6 +5,8 @@ module.exports = {
     command_aliases: [`contacts`, `personal`, `site`, `контакты`, `сайт`],
     command_help: `contacts`,
     action: async ({channelname, tags, comargs, twitchchat})=>{
-        await twitchchat.say( channelname, `Мой сайт: https://svdgod.ru` );
+        if (channelname === 'sed_god'){
+            await twitchchat.say( channelname, `Мой сайт: https://svdgod.ru` );
+        }
     }
 }

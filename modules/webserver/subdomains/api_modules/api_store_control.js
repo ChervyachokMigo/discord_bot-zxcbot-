@@ -7,21 +7,23 @@ let control_auth_keys = [];
 
 let control_authed_ips = [];
 
+const remove_key = (ip) => {
+    console.log('удалены ключи для ' + ip);
+    control_auth_keys = control_auth_keys.filter( val => !val.ip === ip);
+}
+
 module.exports = {
 
     get_auth_key: (ip) => {
         const ip_key_pair = generate_auth_key(ip);
-        module.exports.remove_key (ip);
+        remove_key (ip);
         control_auth_keys.push(ip_key_pair);
-        setTimeout( module.exports.remove_key, key_timeout, ip);
+        setTimeout( remove_key, key_timeout, ip);
         console.log('создана ключ пара для авторизации: ', ip_key_pair);
         return ip_key_pair;
     },
 
-    remove_key: (ip) => {
-        console.log('удалены ключи для ' + ip);
-        control_auth_keys = control_auth_keys.filter( val => !val.ip === ip);
-    },
+    remove_key: remove_key,
 
     valid_key: (ip, key) => {
         return control_auth_keys.findIndex( val => val.ip === ip && val.key === key ) > -1;

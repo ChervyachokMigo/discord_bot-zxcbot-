@@ -1,4 +1,3 @@
-const { getTimeMSKCurrentToStringFormat } = require("../../../tools/time.js");
 
 module.exports = {
     command_name: `test`,
@@ -6,6 +5,6 @@ module.exports = {
     command_aliases: [`test`],
     command_help: `test`,
     action: async ({channelname, tags, comargs, twitchchat})=>{
-        await twitchchat.say( channelname, `Время московское: ${getTimeMSKCurrentToStringFormat()}` );
+        console.log('test')
     }
 }
