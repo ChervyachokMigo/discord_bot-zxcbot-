@@ -1,5 +1,5 @@
 const { EventEmitter } = require('events');
-const tmi = require('tmi.js');
+const { Client, MsgID } = require('tmi.js');
 const fs = require('fs');
 
 const { MYSQL_GET_ONE, MYSQL_GET_TRACKING_DATA_BY_ACTION,
@@ -104,17 +104,19 @@ const twitchchat_refresh_category = async () =>{
     const old_channels = [...this.twitchchat_client.getChannels().map( val => val.replace('#', '') )];
 
     const channels_to_join = TwitchChatNames.filter( val => old_channels.indexOf(val) === -1 );
-    for (let channelname of channels_to_join) {
-        console.log('joined to',
-            await this.twitchchat_client.join(channelname)
-        );
+    if (channels_to_join.length > 0){
+        log(`joined to `+channels_to_join.join(', '), moduleName);
+        for (let channelname of channels_to_join) {
+            await this.twitchchat_client.join(channelname);
+        }
     }
 
     const channels_to_part = old_channels.filter( val => TwitchChatNames.indexOf(val) === -1 );
-    for (let channelname of channels_to_part) {
-        console.log('part from',
-            await this.twitchchat_client.part(channelname)
-        );
+    if (channels_to_part.length > 0){
+        log(`leave from `+channels_to_part.join(', '), moduleName);
+        for (let channelname of channels_to_part) {
+            await this.twitchchat_client.part(channelname);
+        }
     }
 }
 
@@ -446,7 +448,8 @@ async function get_twitch_channels_names(){
     });
 
     const TwitchChatIgnoreChannels = await MYSQL_GET_IGNORE_TWITCH_CHATS();
-    const TwitchChatNames = onlyUnique([...TwitchChatTrackingNames, ...TwitchChatLiveNames]);
+    const TwitchChatNames = onlyUnique([...TwitchChatTrackingNames, ...TwitchChatLiveNames])
+    .filter( val => banned_channels.indexOf(val) === -1);
 
     return { TwitchChatNames, TwitchChatIgnoreChannels };
 }
@@ -467,6 +470,8 @@ function add_message_to_buffer (channelname, message_formated){
         );
     }
 }
+
+let banned_channels = [];
 
 async function twitchchat_init (){    
     log('Загрузка твич чатов', moduleName);
@@ -489,7 +494,7 @@ async function twitchchat_init (){
         return false;
     }
 
-    let tmic = new tmi.Client({
+    let tmic = new Client({
         options: { debug: false },
         identity: {
             username: 'sed_god',
@@ -503,6 +508,15 @@ async function twitchchat_init (){
         if (new_channelname === ModerationName){
             log(`${username} подключен к чату ${new_channelname}`, moduleName);
              //ev.emit('UserJoin', {channelname: new_channelname, username});
+        }
+    });
+
+    tmic.on('notice', async (channelname, msgid, message) => {
+        log(`[notice] ${channelname} > ${msgid} > ${message}`, moduleName);
+        if (msgid === 'msg_banned'){
+            //await tmic.part(channel);
+            banned_channels.push(channelname.replace('#', '') )
+            console.log('banned_channels', banned_channels)
         }
     });
 
@@ -542,11 +556,11 @@ async function twitchchat_init (){
         if ( command_response.success ){
             tmic.say (channel, command_response.success );
             ev.emit('runCommand', {channelname, text: messageFormatedText});
-            console.log(`[${channelname}] ${tags.username} >  ${messageFormatedText} `);
+            log(`[${channelname}] ${tags.username} >  ${messageFormatedText} `, moduleName);
         } else if (command_response.error) {
-            console.log(command_response.error);
+            console.error(command_response.error);
         } else if (command_response.channelignore) {
-            console.log(command_response.channelignore);
+            //console.log(command_response.channelignore); //чатики
         } else if ( command_response.not_enabled) {
             //console.log(command_response.not_enabled) //чатики
         } else if ( command_response.disallowed_command){
