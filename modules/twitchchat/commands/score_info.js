@@ -1,4 +1,5 @@
 const { log } = require('../../../tools/log.js');
+const { MYSQL_GET_IGNORE_TWITCH_CHATS } = require('../../DB.js');
 const { getScoreInfoByUrl } = require('../../stalker/osu.js');
 
 module.exports = {
@@ -6,13 +7,19 @@ module.exports = {
     command_description: `информация о скоре`,
     command_aliases: [`score`, `скор`],
     command_help: `score_info`,
-    action: async ({channelname, tags, comargs, url, twitchchat})=>{
+    action: async ({channelname, tags, comargs, url})=>{
+        
+        const TwitchChatIgnoreChannels = await MYSQL_GET_IGNORE_TWITCH_CHATS();
+
+        if ( TwitchChatIgnoreChannels.includes(tags.username)) {
+            return {error: `[${channelname}] ${tags.username} > в списке игнорируемых каналов `}
+        }
+        
         let score_url = url;
 
         if (!url){
-            if (comargs.length == 0){
-                //await twitchchat.say( channelname, `Нет ссылки` );
-                return;
+            if (url_parts === null) {
+                return {error: `ссылка не скор`};
             }
     
             score_url = comargs.shift();
@@ -20,13 +27,11 @@ module.exports = {
 
         const score_info = await getScoreInfoByUrl( score_url );
 
-        if ( ! score_info) {
-            //log(  `[${channelname}] Неверная ссылка или карта не существует` );
-            return;
+        if ( score_info.error) {
+            return {error: `[${channelname}] ${tags.username} > ${beatmap_info.error} > `};
         }
 
-        console.log(`[${channelname}] ${tags.username} > score_info (${score_url}) `);
-        await twitchchat.say( channelname, formatScoreInfo(score_info) );
+        return {success: formatScoreInfo(score_info.success)};
 
     }
 }

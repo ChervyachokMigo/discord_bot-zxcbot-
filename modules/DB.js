@@ -287,6 +287,14 @@ const twitchchat_ignores = mysql.define ('twitchchat_ignores', {
     channelname: {type: DataTypes.STRING, allowNull: false}
 });
 
+const twitchchat_enabled = mysql.define ('twitchchat_enabled', {
+    channelname: {type: DataTypes.STRING, allowNull: false}
+});
+
+const twitchchat_sended_notify = mysql.define ('twitchchat_sended_notify', {
+    channelname: {type: DataTypes.STRING, allowNull: false}
+});
+
 
 function updateAll(Model, condition, values ){
     return Model.update(values, {where : condition, logging: ''})
@@ -349,6 +357,8 @@ const mysql_actions = [
     { names: 'authorizedControls', model: authorizedControls},
     { names: 'savedControlCommands', model: savedControlCommands},
     { names: 'twitchchat_ignores', model: twitchchat_ignores},
+    { names: 'twitchchat_enabled', model: twitchchat_enabled},
+    { names: 'twitchchat_sended_notify', model: twitchchat_sended_notify},
 ];
 
 function select_mysql_model (action){
@@ -663,6 +673,24 @@ async function MYSQL_GET_TRACKING_DATA_BY_ACTION(action, custom_query_params = {
 
 
 module.exports = {
+    MYSQL_GET_IGNORE_TWITCH_CHATS: async function (){
+        let mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('twitchchat_ignores'));
+        var usernames = [];
+        if (mysql_data.length > 0){
+            usernames = GET_VALUES_FROM_OBJECT_BY_KEY(mysql_data, 'channelname');
+        }
+        return usernames;
+    },
+
+    MYSQL_GET_ENABLED_TWITCH_CHATS : async function (){
+        let mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('twitchchat_enabled'));
+        var usernames = [];
+        if (mysql_data.length > 0){
+            usernames = GET_VALUES_FROM_OBJECT_BY_KEY(mysql_data, 'channelname');
+        }
+        return usernames;
+    },
+    
     getTrackingInfo: getTrackingInfo,
     getTrackingUsersForGuild: getTrackingUsersForGuild,
     MYSQL_GET_TRACKING_DATA_BY_ACTION: MYSQL_GET_TRACKING_DATA_BY_ACTION,

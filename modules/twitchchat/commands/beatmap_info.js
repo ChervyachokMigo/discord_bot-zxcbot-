@@ -1,5 +1,6 @@
 const { log } = require('../../../tools/log.js');
 const { formatAddZero } = require('../../../tools/time.js');
+const { MYSQL_GET_IGNORE_TWITCH_CHATS } = require('../../DB.js');
 const { getBeatmapInfoByUrl } = require('../../stalker/osu.js');
 
 module.exports = {
@@ -7,14 +8,19 @@ module.exports = {
     command_description: `информация о карте`,
     command_aliases: [`request`, `map`, `beatmap`, `карта`, `мапа`, `реквест`],
     command_help: `beatmap_info`,
-    action: async ({channelname, tags, comargs, url, twitchchat})=>{
+    action: async ({channelname, tags, comargs, url})=>{
+        
+        const TwitchChatIgnoreChannels = await MYSQL_GET_IGNORE_TWITCH_CHATS();
 
+        if ( TwitchChatIgnoreChannels.includes(tags.username)) {
+            return {error: `[${channelname}] ${tags.username} > в списке игнорируемых каналов `}
+        }
+    
         let beatmap_url = url;
 
         if (!url){
             if (comargs.length == 0){
-                //await twitchchat.say( channelname, `Нет ссылки` );
-                return;
+                return {error: `[${channelname}] ${tags.username} > Нет ссылки `}
             }
     
             beatmap_url = comargs.shift();
@@ -22,14 +28,11 @@ module.exports = {
 
         const beatmap_info = await getBeatmapInfoByUrl( beatmap_url );
 
-        if ( ! beatmap_info) {
-            //log(  `[${channelname}] Неверная ссылка или карта не существует` );
-            return;
+        if ( beatmap_info.error ) {
+            return {error: `[${channelname}] ${tags.username} > ${beatmap_info.error} > `}
         }
 
-        console.log(`[${channelname}] ${tags.username} > beatmap_info (${beatmap_url}) `);
-        await twitchchat.say( channelname, formatBeatmapInfo(beatmap_info) );
-
+        return  {success: formatBeatmapInfo(beatmap_info.success)}
     }
 }
 
@@ -40,11 +43,11 @@ const formatBeatmapInfo = (info) => {
         `${info.status}`,
         `${info.stars} ★`,
         `${info.bpm} BPM`,
-        `length: ${formatAddZero(Math.trunc(info.length / 60), 2)}:${formatAddZero(info.length % 60, 2)}`,
+        `Length: ${formatAddZero(Math.trunc(info.length / 60), 2)}:${formatAddZero(info.length % 60, 2)}`,
         `${info.max_combo}x`,
         `AR: ${info.ar}`,
         `CS: ${info.cs}`,
         `OD: ${info.od}`,
         `HP: ${info.hp}`
-    ].join(' | ');
+    ].join(' ▸');
 }

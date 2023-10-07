@@ -31,11 +31,11 @@ async function checkTokenExpires(platform){
     var endtime = 0;
     switch(platform){
         case 'twitch':
-            log('twitch token checking', 'twitch token')
             if (typeof tokens.twitch.value === 'undefined'){
                 var tokendata = await MYSQL_GET_ONE('token', {platform: platform});
                 if (tokendata === null){
                     if(!(await initTwitch())){
+                        log('twitch token failed', 'twitch token')
                         return false;
                     }
                 } else {
@@ -50,7 +50,6 @@ async function checkTokenExpires(platform){
             }
         break;
         case 'steam': 
-            log('steam token checking', 'steam token')
             if (typeof steam === 'undefined'){
                 await initSteam();
             }
@@ -60,15 +59,16 @@ async function checkTokenExpires(platform){
             }
         break;
         case 'osu': 
-            log('osu token checking', 'osu token')
             if (typeof tokens.osu.value === 'undefined'){
                 if (await initOsu() == false){
+                    log('osu token failed', 'osu token')
                     return false
                 }
             }
             endtime = tokens.osu.getdate + tokens.osu.expires;
             if (endtime < (new Date().valueOf()-60)/1000){
                 if (await initOsu() == false){
+                    log('osu token failed', 'osu token')
                     return false
                 }
                 return true

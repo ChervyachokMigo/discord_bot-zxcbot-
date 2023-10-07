@@ -9,7 +9,7 @@ const { SendAnswer } = require("../tools/embed.js")
 const { dailyesTimers_onStart } = require (`../modules/Daily.js`);
 const { prepareDB } = require("../modules/DB.js")
 const { StalkerStartListeners, StalkerStartLoop } = require(`../modules/stalker.js`);
-const { twitchchat_init, twitchchat_reinit, twitchchat_load_events } = require(`../modules/stalker/twitchchat.js`);
+const { twitchchat_init, twitchchat_reinit, twitchchat_load_events, initAvailableCommands, twitchchat_refresh_category } = require(`../modules/stalker/twitchchat.js`);
 
 const { initLogServer } = require('../modules/logserver/index.js');
 
@@ -26,16 +26,10 @@ const websettings = require('../modules/websettings/index.js');
 
 const webserver = require('../modules/webserver/index.js');
 
-
 const mailer_events = require('../modules/mailer/mailer-events.js');
 const mailer_main = require('../modules/mailer/mailer-main.js');
 const { setInfinityTimerLoop } = require("../modules/tools.js")
-
-
-
-const svdgod_guild_id = '1118103232082882610';
-
-
+const { svdgod_guild_id } = require("../constantes/general.js")
 
 module.exports = {
     initAll: async (client) =>{
@@ -56,8 +50,9 @@ module.exports = {
             }
 
             if (settings.modules_stalker.twitchchat){   
-                await twitchchat_init(client);
-                setInfinityTimerLoop(twitchchat_reinit, 600); 
+                initAvailableCommands();
+                await twitchchat_init();
+                setInfinityTimerLoop(twitchchat_refresh_category, 300); 
             }
 
             if (settings.modules.osu_replay){
@@ -75,10 +70,15 @@ module.exports = {
 
                 log('Старт гильдии ['+guild.id+'] ' + guild.name, 'initialisation');
 
-                if (guild.id.toString().includes(svdgod_guild_id)){
+                if ( guild.id.toString() === svdgod_guild_id ){
                     mailer_main.init();
                     mailer_events.init(guild);
                     webserver.init();
+
+                    if (settings.modules_stalker && settings.modules_stalker.twitchchat){
+                        log('запуск событий чата', 'initialisation');
+                        twitchchat_load_events(guild);
+                    }
                 }
                 
 
@@ -112,10 +112,6 @@ module.exports = {
                     log('запуск слушателей событий', 'initialisation');
                     await StalkerStartListeners(guild);
                     log('запуск слушателей событий выполнено', 'initialisation');
-                    if (settings.modules_stalker.twitchchat){
-                        log('запуск событий чата', 'initialisation');
-                        twitchchat_load_events(guild);
-                    }
                 }
 
                 if (settings.sendBotAppears){

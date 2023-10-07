@@ -278,7 +278,7 @@ module.exports = {
 
     AllowedNamesOfGuildChannels: ()=>{
         var res = [`system`,`general`,`daily`,`reminds`,`joiner`,
-        `clear`, `crypto`, `mailer`, 'control'];
+        `clear`, `crypto`, `mailer`, 'control', 'twitchchat_commands', 'twitchchat_mentions'];
         return onlyUnique(res.concat(GET_VALUES_FROM_OBJECT_BY_KEY(guild_setting_events_deps, 'channel')));
 },
 
