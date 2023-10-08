@@ -1,5 +1,8 @@
-const { MYSQL_SAVE, MYSQL_GET_TRACKING_DATA_BY_ACTION, MYSQL_GET_ONE, 
-    manageGuildServiceTracking, getTrackingInfo, getGuildidsOfTrackingUserService } = require("../DB.js");
+const { MYSQL_GET_TRACKING_DATA_BY_ACTION, manageGuildServiceTracking, getTrackingInfo, 
+    getGuildidsOfTrackingUserService } = require("../DB.js");
+
+const { MYSQL_SAVE, MYSQL_GET_ONE } = require("../DB/base.js");
+
 const { LogString, log } = require("../../tools/log.js");
 const { GET_VALUES_FROM_OBJECT_BY_KEY } = require("../../modules/tools.js");
 

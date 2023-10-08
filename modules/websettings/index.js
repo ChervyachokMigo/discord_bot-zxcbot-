@@ -1,13 +1,17 @@
-const express = require('express');
-const { WEBSETTINGS_HTTP_PORT, WEBSETTINGS_SOCKET_PORT } = require('../../config.js');
-const path = require('path');
-const bodyParser = require('body-parser')
 require('../../settings.js');
+const { WEBSETTINGS_HTTP_PORT, WEBSETTINGS_SOCKET_PORT } = require('../../config.js');
+
+const bodyParser = require('body-parser')
 const fs = require('fs');
 const WebSocket = require('ws');
-const { MYSQL_GET_TRACKING_DATA_BY_ACTION, MYSQL_GET_ALL_RESULTS_TO_ARRAY, MYSQL_GET_ALL, MYSQL_DELETE, MYSQL_SAVE } = require("../../modules/DB.js");
+const express = require('express');
+
+const path = require('path');
+
+const { MYSQL_GET_TRACKING_DATA_BY_ACTION, MYSQL_GET_ALL_RESULTS_TO_ARRAY } = require("../DB.js");
+const { MYSQL_SAVE, MYSQL_GET_ALL, MYSQL_DELETE } = require("../DB/base.js");
 const { log } = require("../../tools/log.js");
-const { isJSON, groupBy, listenWebFolder, listenWebFile } = require('../tools.js');
+const { isJSON, groupBy, listenWebFile } = require('../tools.js');
 
 var app = express();
 const webs = new WebSocket.WebSocketServer({ port: WEBSETTINGS_SOCKET_PORT });

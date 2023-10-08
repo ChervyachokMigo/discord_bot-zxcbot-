@@ -7,7 +7,10 @@ const { getGuildChannelDB } = require (`../modules/GuildChannel.js`);
 const { emoji_twitch } = require("../constantes/emojis.js");
 const { stalkerClipsCheckLastDays, twitchclipsTitleMinChars } = require('../settings.js');
 
-const { MYSQL_SAVE, MYSQL_GET_TRACKING_DATA_BY_ACTION } = require("../modules/DB.js");
+const { MYSQL_GET_TRACKING_DATA_BY_ACTION } = require("../modules/DB.js");
+
+const { MYSQL_SAVE } = require("../modules/DB/base.js");
+
 const { LogString, log } = require("../tools/log.js");
 const { GET_VALUES_FROM_OBJECT_BY_KEY } = require("../modules/tools.js");
 

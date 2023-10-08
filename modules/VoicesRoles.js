@@ -1,4 +1,5 @@
-const { MYSQL_UPDATE, MYSQL_SAVE, MYSQL_GET_ALL, MYSQL_DELETE } = require (`./DB.js`);
+
+const { MYSQL_UPDATE, MYSQL_SAVE, MYSQL_GET_ALL, MYSQL_DELETE } = require("./DB/base.js");
 
 const { fetchVoiceChannel, comargQuotesStringJoin, getLinkFromRoleID } = require("./tools.js")
 const { checkArgsOfRole, isRoleBot, RoleToUser, fetchRole } = require("./roles.js")

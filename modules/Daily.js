@@ -5,7 +5,7 @@ const { formatSecondsToTime, getCurrentTimeMs } = require("../tools/time.js")
 
 const { CheckUser } = require("./DB_tools.js")
 
-const {  MYSQL_SAVE, MYSQL_GET_ALL } = require("./DB.js")
+const { MYSQL_SAVE,  MYSQL_GET_ALL } = require("./DB/base.js");
 
 const { LogString } = require("../tools/log.js")
 const { SendAnswer } = require("../tools/embed.js")

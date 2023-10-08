@@ -1,4 +1,6 @@
-const { MYSQL_SAVE,   MYSQL_GET_TRACKING_DATA_BY_ACTION} = require (`./DB.js`)
+const { MYSQL_GET_TRACKING_DATA_BY_ACTION} = require (`./DB.js`)
+const { MYSQL_SAVE } = require("./DB/base.js");
+
 const { log } = require("../tools/log.js")
 const { available_guildSettings } = require('../settings.js')
 var guildSettingsCache = [];

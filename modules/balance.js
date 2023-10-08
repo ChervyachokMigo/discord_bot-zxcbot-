@@ -1,6 +1,6 @@
 const { coins_name, coins_max } = require("../settings.js")
 const { checkArgsOfUser, checkArgsOfValue } = require("./tools.js")
-const { MYSQL_SAVE } = require("./DB.js")
+const { MYSQL_SAVE } = require("./DB/base.js");
 const { RoleToUser } = require("./roles.js")
 const { CheckUser, CheckRole } = require("./DB_tools.js")
 const { SendAnswer, SendError } = require("../tools/embed.js")

@@ -1,7 +1,7 @@
 const { checkReply, getMessageDiscordURL, checkArgsOfEmoji } = require("./tools.js")
 const { checkArgsOfRole, fetchRole, RoleToUser } = require("./roles.js")
-const { MYSQL_SAVE, MYSQL_DELETE, MYSQL_GET_ONE } = require (`./DB.js`)
 
+const { MYSQL_SAVE, MYSQL_DELETE, MYSQL_GET_ONE } = require("./DB/base.js");
 const { SendAnswer, SendError } = require("../tools/embed.js")
 const { getGuildChannelDB } = require (`./GuildChannel.js`)
 

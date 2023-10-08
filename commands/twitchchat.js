@@ -3,7 +3,7 @@ const { modules } = require (`../settings.js`);
 const { getStringBetweenQuotes, getBooleanFromString } = require(`../modules/tools.js`);
 const { SendAnswer, SendError } = require("../tools/embed.js");
 
-const { MYSQL_TWITCH_CHAT_TRACKING_CHANGE, TWITCHCHAT_TRACKING_INFO } = require (`../modules/stalker/twitchchat.js`);
+const { MYSQL_TWITCH_CHAT_TRACKING_CHANGE, TWITCHCHAT_TRACKING_INFO } = require (`../modules/DB.js`);
 
 const { emoji_twitch } = require("../constantes/emojis.js");
 
@@ -15,7 +15,10 @@ module.exports = {
     action: async (comargs, message)=>{
         if (modules.stalker){
             if (!await message.guild.members.cache.find(u=>u.id === message.author.id).permissions.has('ADMINISTRATOR')){
-                await SendError(message, {name: module.exports.command_name, help: module.exports.command_help }, `${message.author.username}, у Вас нет прав для этого действия.`);
+                await SendError(message, {
+                    name: module.exports.command_name, 
+                    help: module.exports.command_help 
+                }, `${message.author.username}, у Вас нет прав для этого действия.`);
                 return
             }
             var comaction = comargs.shift();
@@ -48,11 +51,13 @@ module.exports = {
 
                     let result = await MYSQL_TWITCH_CHAT_TRACKING_CHANGE (message, username, {action: comaction, value: trackingOption});
                     if (result.success){
-                        await SendAnswer( {channel:  message.channel,
+                        await SendAnswer({
+                            channel:  message.channel,
                             guildname: message.guild.name,
                             messagetype: `info`,
                             title: `${emoji_twitch} ${module.exports.command_name}`,
-                            text: `${result.text}`});
+                            text: `${result.text}`
+                        });
                     } else {
                         await SendError(message, {name: module.exports.command_name, help: module.exports.command_help }, `${result.text}`);  
                     }

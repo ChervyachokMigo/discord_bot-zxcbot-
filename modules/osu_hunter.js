@@ -15,7 +15,7 @@ const { checkTokenExpires } = require (`./stalker/requests.js`);
 const { OsuHunter_updateTime } = require('../settings.js');
 const { getYMD, formatSecondsToTime } = require('../tools/time.js');
 
-const { MYSQL_SAVE, MYSQL_GET_ONE } = require('../modules/DB.js');
+const { MYSQL_SAVE,  MYSQL_GET_ONE } = require("./DB/base.js");
 
 async function hunter(user, mode = 'taiko'){
     if (!await checkTokenExpires('osu')){

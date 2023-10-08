@@ -1,4 +1,5 @@
-const { MYSQL_SAVE, MYSQL_GET_ALL, MYSQL_DELETE } = require (`./DB.js`)
+
+const { MYSQL_SAVE,  MYSQL_GET_ALL, MYSQL_DELETE } = require("./DB/base.js");
 
 const { LogString } = require("../tools/log.js")
 

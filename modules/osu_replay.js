@@ -7,7 +7,9 @@ const { MessageButton, MessageActionRow, MessageSelectMenu } = require('discord.
 const { getBooleanFromString, messageDeleteAfter, getObjectKeyByValue } = require("./tools.js");
 const { getGuildSetting } = require('./guildSettings.js');
 const { getDiscordRelativeTime, WindowsTicksToUTC } = require('../tools/time.js');
-const { MYSQL_GET_ONE, MYSQL_SAVE } = require('./DB.js');
+
+const { MYSQL_SAVE,  MYSQL_GET_ONE } = require("./DB/base.js");
+
 const { formatSecondsToTime } = require('../tools/time.js');
 
 const { osu_db_isLoaded } = require('./osu_replay/osu_db.js');

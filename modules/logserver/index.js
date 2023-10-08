@@ -46,7 +46,7 @@ module.exports = {
 
     saveLog: function(text){
         fs.appendFileSync(log_path, text + '\r\n', {encoding: 'utf8'});
-        logData.unshift(`<div class="logstring">${text}</div>`);
+        //logData.unshift(`<div class="logstring">${text}</div>`);
     }
 }
 

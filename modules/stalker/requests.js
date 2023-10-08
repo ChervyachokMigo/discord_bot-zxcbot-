@@ -4,7 +4,8 @@ const { auth } = require ('osu-api-extended');
 const express = require('express');
 const bodyParser = require('body-parser');
 const { log, LogString } = require("../../tools/log.js");
-const { MYSQL_SAVE, MYSQL_GET_ONE } = require("../DB.js");
+
+const { MYSQL_SAVE, MYSQL_GET_ONE } = require("../DB/base.js");
 
 const {
     TWITCH_CLIENT_ID,

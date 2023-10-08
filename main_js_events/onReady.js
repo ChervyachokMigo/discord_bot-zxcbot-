@@ -7,9 +7,9 @@ const { getGuildChannelDB } = require("../modules/GuildChannel.js")
 const { SendAnswer } = require("../tools/embed.js")
 
 const { dailyesTimers_onStart } = require (`../modules/Daily.js`);
-const { prepareDB } = require("../modules/DB.js")
+
 const { StalkerStartListeners, StalkerStartLoop } = require(`../modules/stalker.js`);
-const { twitchchat_init, twitchchat_reinit, twitchchat_load_events, initAvailableCommands, twitchchat_refresh_category } = require(`../modules/stalker/twitchchat.js`);
+const { twitchchat_init, twitchchat_load_events, initAvailableCommands, twitchchat_refresh_category } = require(`../modules/stalker/twitchchat.js`);
 
 const { initLogServer } = require('../modules/logserver/index.js');
 
@@ -30,11 +30,12 @@ const mailer_events = require('../modules/mailer/mailer-events.js');
 const mailer_main = require('../modules/mailer/mailer-main.js');
 const { setInfinityTimerLoop } = require("../modules/tools.js")
 const { svdgod_guild_id } = require("../constantes/general.js")
+const { prepareDB } = require("../modules/DB/defines.js")
 
 module.exports = {
     initAll: async (client) =>{
         try{
-            initLogServer();
+            //initLogServer();
 
             await prepareDB();
 

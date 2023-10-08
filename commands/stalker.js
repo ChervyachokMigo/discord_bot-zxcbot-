@@ -5,7 +5,7 @@ const { TWITCH_TRACKING_INFO } = require (`../modules/stalker/twitch.js`);
 const { TROVO_TRACKING_INFO } = require (`../modules/stalker/trovo.js`);
 const { STEAM_TRACKING_INFO } = require (`../modules/stalker/steam.js`);
 const { VK_TRACKING_INFO } = require (`../modules/stalker/VK.js`);
-const { TWITCHCHAT_TRACKING_INFO } = require (`../modules/stalker/twitchchat.js`);
+const { TWITCHCHAT_TRACKING_INFO } = require (`../modules/DB.js`);
 const { OSU_TRACKING_INFO } = require (`../modules/stalker/osu.js`);
 const { YOUTUBE_TRACKING_INFO } = require (`../modules/stalker/youtube.js`);
 

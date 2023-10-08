@@ -6,8 +6,11 @@ const fs = require('fs');
 
 const { YOUTUBE_TOKEN_CALLBACK_HTTP_PORT } = require('../../config.js');
 
-const { MYSQL_SAVE, MYSQL_GET_ONE, MYSQL_GET_TRACKING_DATA_BY_ACTION, 
-    manageGuildServiceTracking, getTrackingInfo, getGuildidsOfTrackingUserService } = require("../DB.js");
+const { MYSQL_GET_TRACKING_DATA_BY_ACTION, manageGuildServiceTracking, getTrackingInfo, 
+    getGuildidsOfTrackingUserService } = require("../DB.js");
+
+const { MYSQL_SAVE, MYSQL_GET_ONE } = require("../DB/base.js");
+
 
 const { CreateFolderSync_IsNotExists } = require('../../modules/tools.js');
 const { getDiscordRelativeTime } = require('../../tools/time.js');

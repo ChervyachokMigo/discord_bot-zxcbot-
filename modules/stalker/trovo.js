@@ -1,7 +1,10 @@
 var player = require('play-sound')(opts = {player:'mplayer'});
 
-const { MYSQL_SAVE, MYSQL_GET_ONE, MYSQL_GET_TRACKING_DATA_BY_ACTION, 
-    manageGuildServiceTracking, getTrackingInfo, getGuildidsOfTrackingUserService } = require("../DB.js");
+const { MYSQL_GET_TRACKING_DATA_BY_ACTION, manageGuildServiceTracking, getTrackingInfo, 
+    getGuildidsOfTrackingUserService } = require("../DB.js");
+
+const { MYSQL_SAVE, MYSQL_GET_ONE } = require("../DB/base.js");
+
 const { getTrovoUserStatus, getTrovoUserID, getTrovoClips } = require (`../../modules/stalker/requests.js`);
 const { LogString, log } = require("../../tools/log.js");
 const { getNumberWithSign } = require("../../modules/tools.js");

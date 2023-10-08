@@ -41,8 +41,11 @@ userWallNew.groups[i].id
 userWallNew.groups[i].name
 */
 
-const { MYSQL_SAVE, MYSQL_GET_ONE, MYSQL_DELETE, MYSQL_GET_TRACKING_DATA_BY_ACTION, 
-    manageGuildServiceTracking, getTrackingInfo, getGuildidsOfTrackingUserService } = require("../DB.js");
+const { MYSQL_GET_TRACKING_DATA_BY_ACTION, manageGuildServiceTracking, getTrackingInfo, 
+    getGuildidsOfTrackingUserService } = require("../DB.js");
+
+const { MYSQL_SAVE, MYSQL_GET_ONE, MYSQL_DELETE } = require("../DB/base.js");
+
 const { LogString, log } = require("../../tools/log.js");
 const { GET_VALUES_FROM_OBJECT_BY_KEY, getNumberWithSign } = require("../../modules/tools.js");
 

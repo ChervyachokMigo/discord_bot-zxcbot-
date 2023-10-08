@@ -1,4 +1,5 @@
-const { MYSQL_GET_ALL, MYSQL_SAVE, MYSQL_DELETE } = require("./DB")
+
+const { MYSQL_SAVE, MYSQL_GET_ALL, MYSQL_DELETE } = require("./DB/base.js");
 
 const { checkArgsOfValue } = require("./tools")
 const { getGuildChannelDB } = require (`./GuildChannel.js`)

@@ -1,5 +1,3 @@
-const fs = require(`fs`);
-
 const { SMTPServer } = require("smtp-server");
 const { MailParser } = require('mailparser');
 
@@ -13,7 +11,9 @@ const { generate_token } = require('../webserver/subdomains/api_modules/api_stor
 var server;
 
 const { emit } = require('./mailer-events.js');
+const { log } = require("../../tools/log.js");
 
+const moduleName = 'SMTP';
 
 const smtp_options = {
   secure: false,
@@ -104,11 +104,11 @@ module.exports = {
     server = new SMTPServer(smtp_options);
 
     server.on("error", err => {
-      console.log("Error %s", err.message);
+      console.error("Error %s", err.message);
     });
     
     server.listen(SMTP_PORT, ()=>{
-      console.log("Server smtp started");
+      log("Server smtp started", moduleName);
     });
   }
 }

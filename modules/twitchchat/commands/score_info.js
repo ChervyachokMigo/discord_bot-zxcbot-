@@ -1,4 +1,3 @@
-const { log } = require('../../../tools/log.js');
 const { MYSQL_GET_IGNORE_TWITCH_CHATS } = require('../../DB.js');
 const { getScoreInfoByUrl } = require('../../stalker/osu.js');
 

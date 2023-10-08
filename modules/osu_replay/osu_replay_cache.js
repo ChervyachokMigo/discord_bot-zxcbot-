@@ -1,4 +1,4 @@
-const { MYSQL_SAVE, MYSQL_GET_ONE } = require("../DB.js");
+const { MYSQL_SAVE, MYSQL_GET_ONE } = require("../DB/base.js");
 
 var beatmaps_cached = [];
 var ReplaysCache = [];

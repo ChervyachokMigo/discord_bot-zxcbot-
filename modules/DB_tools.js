@@ -1,6 +1,6 @@
 const { checkArgsOfRole } = require("./roles.js")
 const { checkArgsOfUser } = require("./tools.js")
-const { MYSQL_SAVE, MYSQL_GET_ONE } = require (`./DB.js`)
+const { MYSQL_SAVE,  MYSQL_GET_ONE } = require("./DB/base.js");
 
 const { getGuildChannelDB } = require (`./GuildChannel.js`)
 const { SendAnswer, SendError } = require("../tools/embed.js")
