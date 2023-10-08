@@ -3,6 +3,9 @@ module.exports = {
         return `[https://www.twitch.tv/${channelname}] ${username} > ${command}`;
     },
 
+    /*how to use: channelname === 'talalusha'? 
+    boldSelectedWords(TalalaToBoldRegexp, message)*/
+
     boldSelectedWords: (regexp, str) => {
         let messages = str.split(' ');
         messages.map((val,idx,arr)=>{
