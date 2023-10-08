@@ -1,11 +1,13 @@
 const { MYSQL_GET_IGNORE_TWITCH_CHATS } = require('../../DB.js');
 const { getScoreInfoByUrl } = require('../../stalker/osu.js');
+const { ALL } = require('../constants/enumPermissions.js');
 
 module.exports = {
     command_name: `score_info`,
     command_description: `информация о скоре`,
     command_aliases: [`score`, `скор`],
     command_help: `score_info`,
+    command_permission: ALL,
     action: async ({channelname, tags, comargs, url})=>{
         
         const TwitchChatIgnoreChannels = await MYSQL_GET_IGNORE_TWITCH_CHATS();

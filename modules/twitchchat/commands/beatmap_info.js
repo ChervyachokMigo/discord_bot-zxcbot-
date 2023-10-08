@@ -1,13 +1,15 @@
 const { formatAddZero } = require('../../../tools/time.js');
 const { MYSQL_GET_IGNORE_TWITCH_CHATS } = require('../../DB.js');
 const { getBeatmapInfoByUrl } = require('../../stalker/osu.js');
+const { ALL } = require('../constants/enumPermissions.js');
 
 module.exports = {
     command_name: `beatmap_info`,
     command_description: `информация о карте`,
     command_aliases: [`request`, `map`, `beatmap`, `карта`, `мапа`, `реквест`],
     command_help: `beatmap_info`,
-    action: async ({channelname, tags, comargs, url})=>{
+    command_permission: ALL,
+    action: async ({channelname, tags, comargs, url}) => {
         
         const TwitchChatIgnoreChannels = await MYSQL_GET_IGNORE_TWITCH_CHATS();
 

@@ -76,6 +76,8 @@ discord api missing  permissions видимо из-за роли выше рол
 
 соединить мейл и дискорд бота
 
+osu activity Ругается на title
+
 */ 
 const log = console.log.bind(console)
 const {DISCORD_TOKEN} = require('./config.js');

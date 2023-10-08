@@ -9,7 +9,7 @@ const { SendAnswer } = require("../tools/embed.js")
 const { dailyesTimers_onStart } = require (`../modules/Daily.js`);
 
 const { StalkerStartListeners, StalkerStartLoop } = require(`../modules/stalker.js`);
-const { twitchchat_init, twitchchat_load_events, initAvailableCommands, twitchchat_refresh_category } = require(`../modules/twitchchat/twitchchat.js`);
+const { twitchchat_init, twitchchat_refresh_category } = require(`../modules/twitchchat/twitchchat.js`);
 
 const { initLogServer } = require('../modules/logserver/index.js');
 
@@ -31,6 +31,8 @@ const mailer_main = require('../modules/mailer/mailer-main.js');
 const { setInfinityTimerLoop } = require("../modules/tools.js")
 const { svdgod_guild_id } = require("../constantes/general.js")
 const { prepareDB } = require("../modules/DB/defines.js")
+const { twitchchat_load_events } = require("../modules/twitchchat/tools/GuildEvents.js");
+const { loadTwitchChatCommands, viewCommands } = require("../modules/twitchchat/tools/AvailableCommands.js")
 
 module.exports = {
     initAll: async (client) =>{
@@ -51,7 +53,7 @@ module.exports = {
             }
 
             if (settings.modules_stalker.twitchchat){   
-                initAvailableCommands();
+                loadTwitchChatCommands();
                 await twitchchat_init();
                 setInfinityTimerLoop(twitchchat_refresh_category, 300); 
             }

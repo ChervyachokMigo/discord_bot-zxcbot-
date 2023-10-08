@@ -1,19 +1,15 @@
 const { twitchchat_refresh_category } = require("../twitchchat.js");
-const { ModerationName } = require("../constants/general");
-
+const { SELF } = require("../constants/enumPermissions.js");
 
 module.exports = {
     command_name: `test`,
     command_description: ``,
     command_aliases: [`test`],
     command_help: `test`,
+    command_permission: SELF,
     action: async ({channelname, tags, comargs})=>{
-        if (channelname === ModerationName && tags.username === ModerationName) {
-            console.log('test ', channelname);
-            if (channelname === ModerationName){
-                await twitchchat_refresh_category()
-            }
-            return  {error: 'test'};
-        }
+        console.log('test ', channelname);
+        await twitchchat_refresh_category()
+        return  {error: 'test'};
     }
 }

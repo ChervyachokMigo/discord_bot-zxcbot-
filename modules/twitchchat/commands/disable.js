@@ -1,6 +1,8 @@
 
 const { log } = require("../../../tools/log.js");
-const { twitchchat_disable } = require("../twitchchat.js");
+const { twitchchat_disable } = require("../../DB.js");
+const { ALL } = require("../constants/enumPermissions.js");
+
 const { ModerationName } = require("../constants/general.js");
 
 module.exports = {
@@ -8,6 +10,7 @@ module.exports = {
     command_description: ``,
     command_aliases: [`disable`, `отключить`],
     command_help: `disable`,
+    command_permission: ALL,
     action: async ({channelname, tags, comargs})=>{
         var username = tags.username;
         if ( tags.username === ModerationName ){
