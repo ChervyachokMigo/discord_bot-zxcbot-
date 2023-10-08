@@ -17,7 +17,8 @@ const { saveMessageInBuffer, sendIfLongLength, initMessageForwarderTimer } = req
 const { initCommandsForwarderTimer, saveLastCommand } = require('./tools/CommandForwarder.js');
 
 const BannedChannels = require('./tools/BannedChannels.js');
-const Permissions = require('./constants/commandPermissions.js');
+
+const { getUserPermission } = require('./tools/Permissions.js');
 
 const moduleName = `Stalker Twitch Chat`;
 
@@ -55,18 +56,6 @@ const twitchchat_refresh_category = async () =>{
 const allowedCommandToIngoredChannels = ['enable', 'test'];
 
 const disallowedCommandsToEnabledChannels = ['enable'];
-
-const getUserPermission = (channelname, username) => {
-
-    if (channelname === ModerationName && username === ModerationName) {
-        return Permissions.SELF;
-    } else if (channelname === ModerationName) {
-        return Permissions.CHANNEL;
-    } else {
-        return Permissions.ALL;
-    }
-    
-}
 
 const manageMessage = async ({ escaped_message, channelname, tags, TwitchChatIgnoreChannels}) => {
     
