@@ -1,15 +1,15 @@
-const commandPermissions = require("../constants/enumPermissions");
+const Permissions = require("../constants/enumPermissions");
 const { ModerationName } = require("../constants/general");
 
 module.exports = {
     getUserPermission: (channelname, username) => {
 
         if (channelname === ModerationName && username === ModerationName) {
-            return commandPermissions.SELF;
+            return Permissions.SELF;
         } else if (channelname === ModerationName) {
-            return commandPermissions.CHANNEL;
+            return Permissions.CHANNEL;
         } else {
-            return commandPermissions.ALL;
+            return Permissions.ALL;
         }
         
     }

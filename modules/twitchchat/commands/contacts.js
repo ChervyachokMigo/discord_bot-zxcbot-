@@ -1,4 +1,4 @@
-const { CHANNEL } = require("../constants/commandPermissions");
+const { CHANNEL } = require("../constants/enumPermissions");
 
 module.exports = {
     command_name: `contacts`,
