@@ -1,4 +1,4 @@
-const { get_twitchchat_client, twitchchat_refresh_category } = require("../../stalker/twitchchat");
+const { twitchchat_refresh_category } = require("../twitchchat.js");
 const { ModerationName } = require("../constants/general");
 
 

@@ -9,7 +9,7 @@ const { SendAnswer } = require("../tools/embed.js")
 const { dailyesTimers_onStart } = require (`../modules/Daily.js`);
 
 const { StalkerStartListeners, StalkerStartLoop } = require(`../modules/stalker.js`);
-const { twitchchat_init, twitchchat_load_events, initAvailableCommands, twitchchat_refresh_category } = require(`../modules/stalker/twitchchat.js`);
+const { twitchchat_init, twitchchat_load_events, initAvailableCommands, twitchchat_refresh_category } = require(`../modules/twitchchat/twitchchat.js`);
 
 const { initLogServer } = require('../modules/logserver/index.js');
 

@@ -5,36 +5,26 @@ const fs = require('fs');
 const { getGuildidsOfTrackingUserService, MYSQL_GET_IGNORE_TWITCH_CHATS, MYSQL_GET_ENABLED_TWITCH_CHATS, 
     twitchchat_disable, twitchchat_enable, MYSQL_GET_TRACKING_TWITCH_CHATS } = require("../DB.js");
 
-const { onlyUnique } = require("../../modules/tools.js");
+const { onlyUnique } = require("../tools.js");
 const { log } = require("../../tools/log.js");
-const { setInfinityTimerLoop, SortObjectByValues } = require("../../modules/tools.js");
+const { setInfinityTimerLoop } = require("../tools.js");
 const { SendAnswer } = require("../../tools/embed.js");
 
 const { getGuildChannelDB } = require (`../GuildChannel.js`);
-
 
 const { stalkerChatRefreshRate } = require('../../settings.js');
 
 //const { getTwitchOauthToken } = require('./requests.js');
 const { twitch_chat_token } = require('../../config.js');
-const { getTwitchSteamsByCategory } = require('./requests.js');
-const { ModerationName } = require('../twitchchat/constants/general.js');
+const { getTwitchSteamsByCategory } = require('../stalker/requests.js');
+const { ModerationName, TalalaToBoldRegexp, notify_message, game_category } = require('./constants/general.js');
+const { addMessageAmount } = require('./tools/ChattersAmounts.js');
 
 var ev = new EventEmitter();
 
 const moduleName = `Stalker Twitch Chat`;
 
-const TalalaToBoldRegexp = /[тТ]ал((ыч|ый|ому)|[аы]л(а|уш)?)(.*|а|е|у)?|talal(a|usha|.*)?|[иИ]гнат(ий|ию|у|е|.*)?|[Аа]ртем(.*|у|е|ы|а)?|[Аа]н(д)?жел(.*|у|е|ы|а)?|[Aa]ngel(.*)?|[Tt]alov(.*)?|[Тт]алов(.*)?/gi;
-
-const notify_message = `Привет, если нужен бот для того, чтобы карты из чата отправлялись в игру и писались её параметры, то напиши !enable в чате (это автоматическое сообщние, и повторяться не будет)`;
-
-const game_category = {
-    osu: 21465
-};
-
 var MessagesBuffer = [];
-
-var Chatters = [];
 
 this.twitchchat_client = null;
 
@@ -45,59 +35,8 @@ var send_lastcommands_timer = null;
 
 let banned_channels = [];
 
-function ClearChatters(channel){
-    Chatters[channel] = {};
-    Chatters[channel].TotalMessages = 0;
-    Chatters[channel].Users = {};
-}
 
-function ChattersNewMessage(channel, username){
-    if (typeof Chatters[channel] ==='undefined'){
-        Chatters[channel] = {};
-    }
-    if (typeof Chatters[channel].TotalMessages ==='undefined'){
-        Chatters[channel].TotalMessages = 0;
-    }
-    if (typeof Chatters[channel].Users ==='undefined'){
-        Chatters[channel].Users = {};
-    }
-    if(typeof Chatters[channel].Users[username] === 'undefined'){
-        Chatters[channel].Users[username] = 0;
-    }
-    Chatters[channel].Users[username]++;
-    Chatters[channel].TotalMessages++;
-}
 
-function getChatters(channel){
-    if (typeof Chatters[channel] ==='undefined'){
-        Chatters[channel] = {};
-    }
-    if (typeof Chatters[channel].TotalMessages ==='undefined'){
-        Chatters[channel].TotalMessages = 0;
-    }
-    if (typeof Chatters[channel].Users ==='undefined'){
-        Chatters[channel].Users = {};
-    } else {
-        Chatters[channel].Users = SortObjectByValues(Chatters[channel].Users, false);
-    }
-    return Chatters[channel];
-}
-
-function getUserMessagesCount(channel, username){
-    if (typeof Chatters[channel] ==='undefined'){
-        Chatters[channel] = {};
-    }
-    if (typeof Chatters[channel].TotalMessages ==='undefined'){
-        Chatters[channel].TotalMessages = 0;
-    }
-    if (typeof Chatters[channel].Users ==='undefined'){
-        Chatters[channel].Users = {};
-    }
-    if(typeof Chatters[channel].Users[username] === 'undefined'){
-        Chatters[channel].Users[username] = 0;
-    }
-    return Chatters[channel][username];
-}
 
 const set_new_twitchchat_client = (client) => {
     this.twitchchat_client = client;
@@ -266,7 +205,7 @@ async function run_command({ escaped_message, channelname, tags, TwitchChatIgnor
             const url = message_beatmap_link.shift();
             const commandBody = escaped_message.replace(/ +/g, ' ');
             var comargs = commandBody.split(' ');
-            return await (require(`../twitchchat/commands/beatmap_info.js`))
+            return await (require(`./commands/beatmap_info.js`))
                 .action({ channelname, tags, url });
 
         } else {
@@ -276,7 +215,7 @@ async function run_command({ escaped_message, channelname, tags, TwitchChatIgnor
                 const url = message_score_link.shift();
                 const commandBody = escaped_message.replace(/ +/g, ' ');
                 var comargs = commandBody.split(' ');
-                return await (require(`../twitchchat/commands/score_info.js`))
+                return await (require(`./commands/score_info.js`))
                     .action({ channelname, tags, url });
 
             }
@@ -441,7 +380,7 @@ async function twitchchat_init (){
         add_message_to_buffer(channelname, messageFormatedText)
 
         if (channelname === ModerationName){
-            ChattersNewMessage(channelname, username);
+            addMessageAmount(channelname, username);
         }
 
         if (escaped_message.indexOf(ModerationName) > -1) {
@@ -481,9 +420,6 @@ module.exports = {
     twitchchat_load_events: twitchchat_load_events,
     twitchchat_init: twitchchat_init,
 
-    getChatters: getChatters,
-    getUserMessagesCount: getUserMessagesCount,
-    ClearChatters: ClearChatters,
     initAvailableCommands: initAvailableCommands,
     set_new_twitchchat_client: set_new_twitchchat_client,
     get_twitchchat_client: get_twitchchat_client,

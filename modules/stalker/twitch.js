@@ -8,7 +8,7 @@ const { GET_VALUES_FROM_OBJECT_BY_KEY } = require("../../modules/tools.js");
 
 const { getTwitchFolowers, getTwitchUserStatus, getLastTwitchClips, getTwitchUserID } = require (`../../modules/stalker/requests.js`);
 const { DownloadClip, VideoDirectoryCheck, StartRecording } = require (`../../modules/stalker/records.js`);
-const { getChatters, ClearChatters } = require (`../../modules/stalker/twitchchat.js`);
+const { getChatters, clearChatters } = require (`../twitchchat/tools/ChattersAmounts.js`);
 
 const { stalkerClipsCheckLastDays } = require('../../settings.js');
 const { modules_stalker } = require('../../settings.js');
@@ -144,7 +144,8 @@ module.exports = {
                                 stalkerEvents.emit('TwitchChattersOfEndStream', 
                                     {guildids: trackingsGuildsTwitchChat, 
                                     chatters: getChatters(userdataNew.username)});
-                                ClearChatters(userdataNew.username);
+
+                                clearChatters(userdataNew.username);
                             }
                         }
                         stalkerEvents.emit('ChangeTwitchStatus', changesdata);

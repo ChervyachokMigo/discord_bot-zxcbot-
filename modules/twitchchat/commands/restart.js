@@ -1,4 +1,4 @@
-const { twitchchat_reinit } = require("../../stalker/twitchchat");
+const { twitchchat_reinit } = require("../twitchchat.js");
 const { ModerationName } = require("../constants/general");
 
 module.exports = {

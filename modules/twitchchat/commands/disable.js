@@ -1,6 +1,6 @@
 
 const { log } = require("../../../tools/log.js");
-const { twitchchat_disable } = require("../../stalker/twitchchat.js");
+const { twitchchat_disable } = require("../twitchchat.js");
 const { ModerationName } = require("../constants/general.js");
 
 module.exports = {
