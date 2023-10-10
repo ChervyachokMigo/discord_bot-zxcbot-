@@ -201,6 +201,24 @@ const MYSQL_GET_IGNORE_TWITCH_CHATS = async () => {
 }
 
 module.exports = {
+
+    GET_TWITCH_OSU_BIND: async (twitch_id) => {
+        const mysql_result = await MYSQL_GET_ONE('twitch_osu_binds', { twitch_id } );
+        if (mysql_result === null){
+            return null;
+        }
+        return mysql_result.dataValues;
+
+    },
+
+    MYSQL_ADD_TWITCH_OSU_BIND: async ({twitch, osu}) => {
+        await MYSQL_SAVE('twitch_osu_binds', {twitch_id: twitch.id}, {
+            twitch_name: twitch.name,
+            osu_id: osu.id,
+            osu_name: osu.name
+        });
+    },
+
     MYSQL_GET_IGNORE_TWITCH_CHATS: MYSQL_GET_IGNORE_TWITCH_CHATS,
 
     MYSQL_GET_ENABLED_TWITCH_CHATS : async () => {

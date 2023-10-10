@@ -7953,6 +7953,13 @@ node-gyp@^9.0.0:
     tar "^6.1.2"
     which "^2.0.2"
 
+node-irc@^0.0.5:
+  version "0.0.5"
+  resolved "https://registry.npmjs.org/node-irc/-/node-irc-0.0.5.tgz"
+  integrity sha512-2K1tSLIz4zKn9s78AYRPuWRdAVqHH5ZebRHqzYSCaW8ZDcOemxUfWCrvf9RPAudQsiG3ZiHEQfNFSG5qVxkwrA==
+  optionalDependencies:
+    proxysocket "^1.2.0"
+
 node-osr@^1.2.1:
   version "1.2.1"
   resolved "https://registry.npmjs.org/node-osr/-/node-osr-1.2.1.tgz"

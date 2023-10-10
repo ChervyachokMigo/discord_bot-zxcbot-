@@ -33,6 +33,7 @@ const { svdgod_guild_id } = require("../constantes/general.js")
 const { prepareDB } = require("../modules/DB/defines.js")
 const { twitchchat_load_events } = require("../modules/twitchchat/tools/GuildEvents.js");
 const { loadTwitchChatCommands, viewCommands } = require("../modules/twitchchat/tools/AvailableCommands.js")
+const { init_osu_irc } = require("../modules/twitchchat/tools/ircManager.js")
 
 module.exports = {
     initAll: async (client) =>{
@@ -53,6 +54,7 @@ module.exports = {
             }
 
             if (settings.modules_stalker.twitchchat){   
+                init_osu_irc();
                 loadTwitchChatCommands();
                 await twitchchat_init();
                 setInfinityTimerLoop(twitchchat_refresh_category, 300); 

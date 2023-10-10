@@ -1,7 +1,8 @@
 const { formatAddZero } = require('../../../tools/time.js');
-const { MYSQL_GET_IGNORE_TWITCH_CHATS } = require('../../DB.js');
+const { MYSQL_GET_IGNORE_TWITCH_CHATS, GET_TWITCH_OSU_BIND } = require('../../DB.js');
 const { getBeatmapInfoByUrl } = require('../../stalker/osu.js');
 const { ALL } = require('../constants/enumPermissions.js');
+const { irc_say } = require('../tools/ircManager.js');
 
 module.exports = {
     command_name: `beatmap_info`,
@@ -33,11 +34,29 @@ module.exports = {
             return {error: `[${channelname}] ${tags.username} > ${beatmap_info.error} > `}
         }
 
-        return  {success: formatBeatmapInfo(beatmap_info.success)}
+        const osu_bind = await GET_TWITCH_OSU_BIND(tags['user-id']);
+
+        if (osu_bind) {
+            irc_say(osu_bind.osu_name, formatBeatmapInfoOsu(tags.username, beatmap_info.success) );
+        }
+
+        return  {success: formatBeatmapInfoTwitch(beatmap_info.success)}
     }
 }
 
-const formatBeatmapInfo = (info) => {
+const formatBeatmapInfoOsu = (username, info) => {
+    const url = `[${info.url} ${info.artist} - ${info.title} [${info.diff}] by ${info.creator}] >`;
+    const text = [
+        info.status,
+        `${info.stars} ★`,
+        `${info.bpm} BPM`,
+        `${info.max_combo}x`,
+        `${formatAddZero(Math.trunc(info.length / 60), 2)}:${formatAddZero(info.length % 60, 2)}`
+    ];
+    return `${username} > ${url} ${text.join(' | ')}`;
+}
+
+const formatBeatmapInfoTwitch = (info) => {
     return [
         `[${info.id}] ${info.artist} - ${info.title} [${info.diff}] by ${info.creator}`,
         `${info.mode}`,

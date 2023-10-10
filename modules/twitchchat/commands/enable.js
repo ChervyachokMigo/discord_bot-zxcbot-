@@ -13,9 +13,10 @@ module.exports = {
     command_permission: ALL,
     action: async ({channelname, tags, comargs})=>{
         var username = tags.username;
-        if ( tags.username === ModerationName ){
+        if ( tags.username === ModerationName || tags.mod === true){
             username = channelname;
         }
+        console.log(tags)
         log( `[${channelname}] ${username} > enable bot functions`, `twitch chat`);
         await twitchchat_enable(username);
         return  {success: `для ${username} возобновлены функции бота`};

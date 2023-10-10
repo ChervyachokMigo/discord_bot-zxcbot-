@@ -164,6 +164,8 @@ async function get_score_info_bancho (score_id, gamemode) {
 }
 
 module.exports = {
+    getOsuUserData: getOsuUserData,
+
     getBeatmapInfoByUrl: async (url) => {
 
         const url_parts = url.match(/https:\/\/osu\.ppy\.sh\/beatmapsets\/([0-9]+)(\#([A-Za-z]+)\/([0-9]+)?)*/i );
@@ -195,6 +197,7 @@ module.exports = {
         }
 
         return {success: {
+                url: url_parts[0],
                 id: beatmap.id,
                 artist: beatmapset_info.artist, 
                 title: beatmapset_info.title,

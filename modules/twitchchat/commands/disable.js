@@ -13,7 +13,7 @@ module.exports = {
     command_permission: ALL,
     action: async ({channelname, tags, comargs})=>{
         var username = tags.username;
-        if ( tags.username === ModerationName ){
+        if ( tags.username === ModerationName || tags.mod === true){
             username = channelname;
         }
         log( `[${channelname}] ${username} > disable bot functions`, `twitch chat`);

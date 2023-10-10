@@ -3,8 +3,8 @@ const { runCommand } = require('./AvailableCommands.js');
 const { saveLastCommand } = require('./CommandForwarder.js');
 const { getUserPermission } = require('./Permissions.js');
 
-const allowedCommandToIngoredChannels = ['enable'];
-const disallowedCommandsToEnabledChannels = ['enable'];
+const allowedCommandToDisabledChannels = ['enable'];
+const disallowedCommandsToEnabledChannels = []; //'enable'
 const prefix = '!';
 
 module.exports = async ({ escaped_message, channelname, tags, TwitchChatIgnoreChannels }) => {
@@ -13,7 +13,7 @@ module.exports = async ({ escaped_message, channelname, tags, TwitchChatIgnoreCh
 
     const is_message_starts_with_prefix = escaped_message.startsWith(prefix);
 
-    const is_allowed_command = is_message_starts_with_prefix && allowedCommandToIngoredChannels.includes(escaped_message.slice(1));
+    const is_allowed_command = is_message_starts_with_prefix && allowedCommandToDisabledChannels.includes(escaped_message.slice(1));
 
     const is_channel_ignores = TwitchChatIgnoreChannels.indexOf(channelname) > -1;
     const is_channel_enabled = TwitchChatEnabledChannels.indexOf(channelname) > -1;

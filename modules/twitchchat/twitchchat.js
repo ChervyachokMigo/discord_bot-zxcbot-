@@ -24,7 +24,7 @@ const moduleName = `Stalker Twitch Chat`;
 this.twitchchat_client = null;
 
 const twitchchat_refresh_category = async () =>{
-    log('Refreshing', moduleName);
+    //log('Refreshing', moduleName);
 
     const { TwitchChatNames } = await get_twitch_channels_names();
     const old_channels = [...this.twitchchat_client.getChannels().map( val => val.replace('#', '') )];
@@ -71,9 +71,11 @@ const twitchchat_init = async() => {
     this.twitchchat_client.on('join', async (channelname, username) => {
         const new_channelname = channelname.replace('#', '');
         if (new_channelname === ModerationName){
+            log(`[${new_channelname}] ${username} > подключен к чату`, moduleName);
             if (username !== ModerationName){
-                log(`[${new_channelname}] ${username} > подключен к чату`, moduleName);
-                await this.twitchchat_client.say(new_channelname, `@${username}, привет` );
+                //await this.twitchchat_client.say(new_channelname, `@${username}, привет` );
+            } else {
+               //await this.twitchchat_client.say(new_channelname, `@${username}, привет единственный зритель` );
             }
         }
     });
