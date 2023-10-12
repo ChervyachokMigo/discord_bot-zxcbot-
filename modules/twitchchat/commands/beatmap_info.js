@@ -1,3 +1,4 @@
+const { v2, tools } = require('osu-api-extended');
 const { formatAddZero } = require('../../../tools/time.js');
 const { MYSQL_GET_IGNORE_TWITCH_CHATS, GET_TWITCH_OSU_BIND } = require('../../DB.js');
 const { getBeatmapInfoByUrl } = require('../../stalker/osu.js');
@@ -33,6 +34,7 @@ module.exports = {
         if ( beatmap_info.error ) {
             return {error: `[${channelname}] ${tags.username} > ${beatmap_info.error} > `}
         }
+        //https://osu.ppy.sh/osu/1915983
 
         const osu_bind = await GET_TWITCH_OSU_BIND(tags['user-id']);
 
@@ -46,12 +48,14 @@ module.exports = {
 
 const formatBeatmapInfoOsu = (username, info) => {
     const url = `[${info.url} ${info.artist} - ${info.title} [${info.diff}] by ${info.creator}] >`;
+    const pp = info.pps.length > 0 ? info.pps.map( val => `${val.acc}% > ${val.pp}pp`).join(' | '): '';
     const text = [
         info.status,
         `${info.stars} ★`,
         `${info.bpm} BPM`,
         `${info.max_combo}x`,
-        `${formatAddZero(Math.trunc(info.length / 60), 2)}:${formatAddZero(info.length % 60, 2)}`
+        `${formatAddZero(Math.trunc(info.length / 60), 2)}:${formatAddZero(info.length % 60, 2)}`,
+        pp
     ];
     return `${username} > ${url} ${text.join(' | ')}`;
 }
@@ -68,6 +72,7 @@ const formatBeatmapInfoTwitch = (info) => {
         `AR: ${info.ar}`,
         `CS: ${info.cs}`,
         `OD: ${info.od}`,
-        `HP: ${info.hp}`
+        `HP: ${info.hp}`,
+        info.pps.length > 0 ? info.pps.map( val => `${val.acc}%=${val.pp}pp`).join(' ▸'): 'no calc pp'
     ].join(' ▸');
 }

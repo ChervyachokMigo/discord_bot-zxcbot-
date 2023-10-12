@@ -90,6 +90,7 @@ const smtp_options = {
           });
         }
       });
+      
       stream.pipe(parser);
       stream.on("end", callback);
 

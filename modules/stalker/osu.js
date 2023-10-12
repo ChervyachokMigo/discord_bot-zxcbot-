@@ -18,6 +18,8 @@ const { stalkerOsuScoresRefreshRate,
     stalkerActivitiesLimit, 
     stalkerScoresMinimumPlace} = require('../../settings.js');
 const { emoji_osu } = require("../../constantes/emojis.js");
+const fs = require('fs');
+const path = require('path');
 
 const moduleName = `Stalker Osu`;
 
@@ -163,6 +165,14 @@ async function get_score_info_bancho (score_id, gamemode) {
     return score_info;
 }
 
+const get_performance_points_beatmap = (md5) => {
+    const filepath = path.join('.\\data\\beatmaps_data', `${md5}.json`);
+    if (fs.existsSync(filepath)){
+        return JSON.parse(fs.readFileSync(filepath));
+    }
+    return null;
+}
+
 module.exports = {
     getOsuUserData: getOsuUserData,
 
@@ -196,9 +206,22 @@ module.exports = {
             return {error: `карта ${request.beatmap_id} не найдена в битмапсете ${request.beatmapset_id}`};
         }
 
+        const beatmap_pp = get_performance_points_beatmap(beatmap.checksum);
+
+        let  pps = [];
+
+        if (beatmap_pp) {
+            for (const calc_info of beatmap_pp){
+                const acc = Math.floor(calc_info.score.accuracy);
+                const pp = Math.floor(calc_info.performance_attributes.pp);
+                pps.push({acc, pp});
+            }
+        }
+
         return {success: {
                 url: url_parts[0],
                 id: beatmap.id,
+                md5: beatmap.checksum,
                 artist: beatmapset_info.artist, 
                 title: beatmapset_info.title,
                 diff: beatmap.version,
@@ -213,6 +236,7 @@ module.exports = {
                 cs: beatmap.cs,
                 od: beatmap.accuracy,
                 hp: beatmap.drain,
+                pps
             }
         }
     },
