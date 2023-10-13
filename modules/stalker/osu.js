@@ -236,6 +236,7 @@ module.exports = {
                 cs: beatmap.cs,
                 od: beatmap.accuracy,
                 hp: beatmap.drain,
+                beatmapset_mode: request.gamemode,
                 pps
             }
         }

@@ -2,6 +2,7 @@ const { spawn } = require("child_process")
 const path = require("path");
 const fs = require("fs");
 const { EventEmitter } = require("events");
+const { saveError } = require("./modules/logserver");
 
 const calc_exe = path.join(__dirname,'bin/pp_calculator/PerformanceCalculator.exe');
 const ev = new EventEmitter();
@@ -12,7 +13,8 @@ const md5_stock = 'D:\\osu_md5_stock';
 
 const output_path = '.\\data\\beatmaps_data\\';
 
-const maxExecuting = 5;
+const maxExecuting = 4;
+
 let ProcParams = [];
 let jsons = [];
 
@@ -64,19 +66,24 @@ ev.on('calc',  async ({md5_name, mode, acc}) => {
     proc.stdout.on('data', (data) => {
         result += data;
     })
+
     proc.stdout.on('close', () =>{
-        ev.emit('save_json', { md5_name, data: JSON.parse(result) })
+        if (result.length > 0){
+            ev.emit('save_json', { md5_name, data: JSON.parse(result) })
+        }
     });
 
     proc.stderr.on('data', (data) => {
         console.error(md5_name, mode, acc)
         console.log(data.toString())
-        throw 'stop'
+        saveError(['beatmaps_pp_calc.js','en.on(calc)',md5_name, mode, acc, data.toString()].join(' > '));
+        ev.emit('calcStart');
     });
 
     proc.on('error', (err)=>{
         console.error(err)
-        throw 'stop'
+        saveError(['beatmaps_pp_calc.js', 'proc.on(error', md5_name, mode, acc ,data.toString()].join(' > '));
+        ev.emit('calcStart');
     })
 });
 
@@ -115,7 +122,7 @@ const scan_osu = () => {
         }
 
         const data = fs.readFileSync( filepath, {encoding: 'utf8'} );
-        const match = data.match( /[mM]ode: ([0-9])/);
+        const match = data.match( /mode:[ ]*[0-3]/i);
         let mode = 'osu';
 
         if (match && match[1] >=0 && match[1] <=3){
@@ -127,6 +134,15 @@ const scan_osu = () => {
     
 
     fs.writeFileSync('scan_songs.json',JSON.stringify(ProcParams), {encoding: 'utf8'});
+}
+
+const get_Mode_from_file= async (filepath)=>{
+    fs.open(filepath, (err, fd) =>{
+
+        fs.read(fd, filebuf, 0, 2000, 0)
+        fs.close(fd);
+    })
+
 }
 
 const get_scanned = () => {
