@@ -208,7 +208,7 @@ function check_values(){
     settings.stalkerClipsFolder = `C:\\ClipsDownloads`;
     }
     if (typeof settings.osuPath === "undefined") {
-    settings.osuPath = `E:\\osu!`;
+    settings.osuPath = `D:\\osu!`;
     }
     if (typeof settings.osuBeatmapDownloadsDir === "undefined") {
     settings.osuBeatmapDownloadsDir = `data/osuBeatmapDownloads`;
@@ -267,6 +267,9 @@ module.exports = {
 
     restrict_words: [{type:`links` ,    values: settings.restricted_links},
                      {type:`words`,     values: settings.restricted_words} ],
+
+    osu_md5_stock: 'D:\\osu_md5_stock',
+    
 
     available_guildSettings: ()=>{
         var res = [`prefix`,

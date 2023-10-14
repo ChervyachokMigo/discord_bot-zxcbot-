@@ -16,10 +16,15 @@ const { stalkerOsuScoresRefreshRate,
     stalkerBestScoresLimit, 
     stalkerMinScorePP, 
     stalkerActivitiesLimit, 
-    stalkerScoresMinimumPlace} = require('../../settings.js');
+    stalkerScoresMinimumPlace, 
+    osu_md5_stock} = require('../../settings.js');
 const { emoji_osu } = require("../../constantes/emojis.js");
 const fs = require('fs');
 const path = require('path');
+const { default: axios } = require('axios');
+const crypto = require('crypto');
+const { spawnSync } = require('child_process');
+const { saveError } = require('../logserver/index.js');
 
 const moduleName = `Stalker Osu`;
 
@@ -173,6 +178,77 @@ const get_performance_points_beatmap = (md5) => {
     return null;
 }
 
+const get_not_existed_beatmap = async (info) => {
+    
+    return new Promise( async (res) => {
+        //const url = `https://osu.ppy.sh/${info.beatmapset_mode}/${info.id}`;
+        const url = `https://osu.ppy.sh/osu/${info.id}`;
+        await axios.get( url ).then( response => {
+            if (response && response.data) {
+                const md5_string = crypto.createHash('md5').update(response.data).digest("hex");
+                if (md5_string === info.md5){
+                    fs.writeFileSync(path.join(osu_md5_stock,`${md5_string}.osu`), response.data);
+                    res({ pps: calc_diffs({ md5_name: md5_string, mode: info.mode }) });
+                } else {
+                    res({ error: 'beatmap md5 not valid' });
+                }
+            } else {
+                res({ error: 'no response from bancho' });
+            }
+        }).catch( err => {
+            res({ error: err.toString() });
+        });
+    });
+
+}
+
+const actions = [
+    {acc: '100'}, 
+    {acc: '99'}, 
+    {acc: '98'}, 
+    {acc: '95'}
+]
+
+const output_path = '.\\data\\beatmaps_data\\';
+
+const calc_diffs = (args) => {
+    
+    const results = actions.map( val => calc_acc( {...args, ...val} ));
+
+    if (results.length === actions.length){
+        fs.writeFileSync(path.join(output_path, `${args.md5_name}.json`), JSON.stringify( results.map( val => val ) ), { encoding: 'utf8' });
+        return results;
+    };
+
+}
+
+const calc_exe = path.join(__dirname,'../../bin/pp_calculator/PerformanceCalculator.exe');
+
+const calc_acc = ({md5_name, mode, acc}) => {
+    let acc_args = `-a ${acc}`;
+
+    if (mode === 'mania'){
+        acc_args = `-s ${acc*10000}`
+    }
+
+    const { stdout, stderr } = spawnSync( calc_exe, [
+        'simulate', 
+        mode, 
+        '-j',
+        `${path.join(osu_md5_stock, `${md5_name}.osu`)}`,
+        acc_args,
+    ]);
+
+    if (stderr.length > 0) {
+        console.error(md5_name, mode, acc);
+        console.log(stderr.toString());
+        saveError(['beatmaps_info.js','calc_acc',md5_name, mode, acc, stderr.toString()].join(' > '));
+        throw 'error';
+    }
+
+    return JSON.parse(stdout);
+}
+
 module.exports = {
     getOsuUserData: getOsuUserData,
 
@@ -216,6 +292,22 @@ module.exports = {
                 const pp = Math.floor(calc_info.performance_attributes.pp);
                 pps.push({acc, pp});
             }
+        } else {
+            const result = await get_not_existed_beatmap({
+                id: beatmap.id, 
+                md5: beatmap.checksum, 
+                mode: beatmap.mode});
+            if (result.error) {
+                console.error(result.error);
+            } else {
+
+                pps = result.pps.map ( calc_info => { return {
+                    acc: Math.floor(calc_info.score.accuracy),
+                    pp: Math.floor(calc_info.performance_attributes.pp)
+                }});
+                
+            }
+            
         }
 
         return {success: {

@@ -33,11 +33,11 @@ ev.on ('calcStart', async ()=>{
 
     const args = ProcParams.shift();
 
-    if (this.jsons_scanned.indexOf(`${args.md5_name}.json`) > -1){
-        console.log('skip >', args.md5_name)
-        ev.emit('calcStart');
-        return;
-    }
+    //if (this.jsons_scanned.indexOf(`${args.md5_name}.json`) > -1){
+    //    console.log('skip >', args.md5_name)
+    //    ev.emit('calcStart');
+    //    return;
+    //}
     console.log('>', args.md5_name);
 
     actions.map( val => {
@@ -76,12 +76,14 @@ ev.on('calc',  async ({md5_name, mode, acc}) => {
     proc.stderr.on('data', (data) => {
         console.error(md5_name, mode, acc)
         console.log(data.toString())
+        fs.copyFileSync( path.join(md5_stock, `${md5_name}.osu`), 'F:\\node_js_stuff\\node_projects\\a_discord_bot\\calc_error\\' + `${md5_name}.osu` )
         saveError(['beatmaps_pp_calc.js','en.on(calc)',md5_name, mode, acc, data.toString()].join(' > '));
         ev.emit('calcStart');
     });
 
     proc.on('error', (err)=>{
         console.error(err)
+        fs.copyFileSync( path.join(md5_stock, `${md5_name}.osu`), 'F:\\node_js_stuff\\node_projects\\a_discord_bot\\calc_error\\' + `${md5_name}.osu` )
         saveError(['beatmaps_pp_calc.js', 'proc.on(error', md5_name, mode, acc ,data.toString()].join(' > '));
         ev.emit('calcStart');
     })
@@ -111,29 +113,38 @@ const scan_osu = () => {
     const files = fs.readdirSync( md5_stock );
     
     for ( let i = 0; i < files.length; i++){
+        
         if (i % 2000 == 0){
             console.log( (i / files.length * 100).toFixed(2), '%' );
         } 
+
         const filepath = path.join(md5_stock, files[i]);
         const md5_name = path.basename(files[i], '.osu');
         
-        if (this.jsons_scanned.indexOf(`${md5_name}.json`) > -1){
+        /*if (this.jsons_scanned.indexOf(`${md5_name}.json`) > -1){
             continue;
-        }
+        }*/
 
         const data = fs.readFileSync( filepath, {encoding: 'utf8'} );
-        const match = data.match( /mode:[ ]*[0-3]/i);
+        const match = data.match( /mode:[ ]*([0-3])/i);
+
         let mode = 'osu';
 
-        if (match && match[1] >=0 && match[1] <=3){
-            mode = modes[match[1]];
+        if (match && match[1]){
+            let mode_int = parseInt(match[1]);
+            mode = modes[mode_int];
         }
 
-        ProcParams.push({ md5_name, mode });
+        //ProcParams.push({ md5_name, mode });
+
+        if (mode !== 'osu'){
+            ProcParams.push({ md5_name, mode });
+        }
     }
     
 
     fs.writeFileSync('scan_songs.json',JSON.stringify(ProcParams), {encoding: 'utf8'});
+    console.log('[scanned]', files.length, 'files')
 }
 
 const get_Mode_from_file= async (filepath)=>{
