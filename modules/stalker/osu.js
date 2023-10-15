@@ -23,7 +23,7 @@ const fs = require('fs');
 const path = require('path');
 const { default: axios } = require('axios');
 const crypto = require('crypto');
-const { spawnSync } = require('child_process');
+const { spawnSync, spawn } = require('child_process');
 const { saveError } = require('../logserver/index.js');
 
 const moduleName = `Stalker Osu`;
@@ -185,10 +185,11 @@ const get_not_existed_beatmap = async (info) => {
         const url = `https://osu.ppy.sh/osu/${info.id}`;
         await axios.get( url ).then( response => {
             if (response && response.data) {
-                const md5_string = crypto.createHash('md5').update(response.data).digest("hex");
-                if (md5_string === info.md5){
-                    fs.writeFileSync(path.join(osu_md5_stock,`${md5_string}.osu`), response.data);
-                    res({ pps: calc_diffs({ md5_name: md5_string, mode: info.mode }) });
+                const md5 = crypto.createHash('md5').update(response.data).digest("hex");
+                if (md5 === info.md5){
+                    fs.writeFileSync(path.join(osu_md5_stock,`${md5}.osu`), response.data);
+                    const mode = info.mode === 'fruits'? 'catch': info.mode;
+                    res( calc_diffs({ md5, mode }) );
                 } else {
                     res({ error: 'beatmap md5 not valid' });
                 }
@@ -213,36 +214,36 @@ const output_path = '.\\data\\beatmaps_data\\';
 
 const calc_diffs = (args) => {
     
-    const results = actions.map( val => calc_acc( {...args, ...val} ));
+    const results = actions.map( (val) => calc_acc( {...args, ...val} ));
 
     if (results.length === actions.length){
-        fs.writeFileSync(path.join(output_path, `${args.md5_name}.json`), JSON.stringify( results.map( val => val ) ), { encoding: 'utf8' });
-        return results;
+        fs.writeFileSync(path.join(output_path, `${args.md5}.json`), JSON.stringify( results.map( val => val ) ), { encoding: 'utf8' });
+        return { pps: results };
     };
 
 }
 
 const calc_exe = path.join(__dirname,'../../bin/pp_calculator/PerformanceCalculator.exe');
 
-const calc_acc = ({md5_name, mode, acc}) => {
+const calc_acc = ({md5, mode, acc}) => {
     let acc_args = `-a ${acc}`;
 
     if (mode === 'mania'){
-        acc_args = `-s ${acc*10000}`
+        acc_args = `-s ${acc * 10000}`
     }
 
     const { stdout, stderr } = spawnSync( calc_exe, [
         'simulate', 
         mode, 
         '-j',
-        `${path.join(osu_md5_stock, `${md5_name}.osu`)}`,
+        `${path.join(osu_md5_stock, `${md5}.osu`)}`,
         acc_args,
-    ]);
+    ], {windowsHide: true});
 
-    if (stderr.length > 0) {
-        console.error(md5_name, mode, acc);
+    if (stderr && stderr.length > 0) {
+        console.error(md5, mode, acc);
         console.log(stderr.toString());
-        saveError(['beatmaps_info.js','calc_acc',md5_name, mode, acc, stderr.toString()].join(' > '));
+        saveError(['beatmaps_info.js','calc_acc',md5, mode, acc, stderr.toString()].join(' > '));
         throw 'error';
     }
 
@@ -297,10 +298,10 @@ module.exports = {
                 id: beatmap.id, 
                 md5: beatmap.checksum, 
                 mode: beatmap.mode});
+
             if (result.error) {
                 console.error(result.error);
             } else {
-
                 pps = result.pps.map ( calc_info => { return {
                     acc: Math.floor(calc_info.score.accuracy),
                     pp: Math.floor(calc_info.performance_attributes.pp)

@@ -59,7 +59,7 @@ ev.on('calc',  async ({md5, mode, acc}) => {
         '-j',
         `${path.join(md5_stock, `${md5}.osu`)}`,
         acc_args,
-    ]);
+    ], {windowsHide: true});
 
     let result = '';
 
