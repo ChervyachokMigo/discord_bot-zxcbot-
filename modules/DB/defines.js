@@ -297,6 +297,10 @@ const twitch_osu_binds = mysql.define ('twitch_osu_binds', {
     osu_name: {type: DataTypes.STRING, allowNull: false}
 });
 
+const twitch_banned = mysql.define ('twitch_banned', {
+    channelname: {type: DataTypes.STRING, allowNull: false}
+});
+
 
 const mysql_actions = [
     { names: ['daily', 'user'], 
@@ -337,8 +341,11 @@ const mysql_actions = [
     { names: 'twitchchat_ignores', model: twitchchat_ignores},
     { names: 'twitchchat_enabled', model: twitchchat_enabled},
     { names: 'twitchchat_sended_notify', model: twitchchat_sended_notify},
-    { names: 'twitch_osu_binds', model: twitch_osu_binds}
+    { names: 'twitch_osu_binds', model: twitch_osu_binds},
+    { names: 'twitch_banned', model: twitch_banned}
 ];
+
+
 
 module.exports = {
     prepareDB: async () => {

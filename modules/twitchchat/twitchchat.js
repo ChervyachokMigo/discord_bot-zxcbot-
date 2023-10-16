@@ -17,7 +17,8 @@ const { initCommandsForwarderTimer, } = require('./tools/CommandForwarder.js');
 const BannedChannels = require('./tools/BannedChannels.js');
 
 const onMessage = require('./events/onMessage.js');
-const { channel } = require('diagnostics_channel');
+
+const Recommends = require('./tools/Recommends.js');
 
 const moduleName = `Stalker Twitch Chat`;
 
@@ -49,6 +50,8 @@ const twitchchat_refresh_category = async () =>{
 const twitchchat_init = async() => {    
     log('Загрузка твич чатов', moduleName);
     
+    Recommends.init();
+
     const {TwitchChatNames, TwitchChatIgnoreChannels} = await get_twitch_channels_names();
 
     if (TwitchChatNames.length === 0){
@@ -83,12 +86,13 @@ const twitchchat_init = async() => {
     this.twitchchat_client.on('notice', async (channelname, msgid, message) => {
         log(`[notice] ${channelname} > ${msgid} > ${message}`, moduleName);
         if (msgid === 'msg_banned'){
-            BannedChannels.add(channelname);
+            await BannedChannels.add(channelname);
+            await this.twitchchat_client.ban('#'+ModerationName, channelname, 'beacon');
         }
     });
 
-    this.twitchchat_client.on('message', (channel, tags, message, self) => {
-        onMessage(this.twitchchat_client, channel, tags, message, self, TwitchChatIgnoreChannels)
+    this.twitchchat_client.on('message', async (channel, tags, message, self) => {
+        await onMessage(this.twitchchat_client, channel, tags, message, self, TwitchChatIgnoreChannels)
     });
 
     await this.twitchchat_client.connect();

@@ -170,6 +170,29 @@ async function get_score_info_bancho (score_id, gamemode) {
     return score_info;
 }
 
+const get_beatmap_info_by_md5 = (md5) => {
+    const filepath = path.join(osu_md5_stock, `${md5}.osu`);
+
+    if (fs.existsSync(filepath)){
+        const data = fs.readFileSync( filepath, {encoding: 'utf8'} );
+        const beatmapid_match = data.match( /beatmapid:[ ]*([0-9]*)/i);
+        const beatmapsetid_match = data.match( /beatmapsetid:[ ]*([0-9]*)/i);
+        const title_match = data.match( /title:(.*)/i);
+        const artist_match = data.match( /artist:(.*)/i);
+        if (beatmapsetid_match && beatmapid_match && artist_match && title_match){
+            if (beatmapsetid_match[1] && beatmapid_match[1] && artist_match[1] && title_match[1]){
+                return {
+                    beatmapid: parseInt(beatmapid_match[1]), 
+                    beatmapsetid: parseInt(beatmapsetid_match[1]),
+                    title: title_match[1].trim(),
+                    artist: artist_match[1].trim()
+                };
+            }
+        }
+    }
+    return null;
+}
+
 const get_performance_points_beatmap = (md5) => {
     const filepath = path.join('.\\data\\beatmaps_data', `${md5}.json`);
     if (fs.existsSync(filepath)){
@@ -252,6 +275,7 @@ const calc_acc = ({md5, mode, acc}) => {
 
 module.exports = {
     getOsuUserData: getOsuUserData,
+    get_beatmap_info_by_md5:get_beatmap_info_by_md5,
 
     getBeatmapInfoByUrl: async (url) => {
 
@@ -289,8 +313,8 @@ module.exports = {
 
         if (beatmap_pp) {
             for (const calc_info of beatmap_pp){
-                const acc = Math.floor(calc_info.score.accuracy);
-                const pp = Math.floor(calc_info.performance_attributes.pp);
+                const acc = Math.round(calc_info.score.accuracy);
+                const pp = Math.round(calc_info.performance_attributes.pp);
                 pps.push({acc, pp});
             }
         } else {
@@ -303,8 +327,8 @@ module.exports = {
                 console.error(result.error);
             } else {
                 pps = result.pps.map ( calc_info => { return {
-                    acc: Math.floor(calc_info.score.accuracy),
-                    pp: Math.floor(calc_info.performance_attributes.pp)
+                    acc: Math.round(calc_info.score.accuracy),
+                    pp: Math.round(calc_info.performance_attributes.pp)
                 }});
                 
             }
@@ -364,10 +388,10 @@ module.exports = {
                 rank: score_info.rank,
                 rank_global: score_info.rank_global,
                 mods:  score_info.mods.length === 0? 'No Mods': score_info.mods.join('+'),
-                accuracy: (Math.floor(Number(score_info.accuracy) * 10000) / 100).toFixed(2),
+                accuracy: (Math.round(Number(score_info.accuracy) * 10000) / 100).toFixed(2),
                 score_combo: score_info.max_combo,
                 beatmap_combo: score_info.beatmap.max_combo,
-                pp: Math.floor(Number(score_info.pp)),
+                pp: Math.round(Number(score_info.pp)),
                 count300: score_info.statistics.count_300,
                 count100: score_info.statistics.count_100,
                 count50: score_info.statistics.count_50,

@@ -35,6 +35,7 @@ const { twitchchat_load_events } = require("../modules/twitchchat/tools/GuildEve
 const { loadTwitchChatCommands, viewCommands } = require("../modules/twitchchat/tools/AvailableCommands.js")
 const { init_osu_irc } = require("../modules/twitchchat/tools/ircManager.js")
 const beatmaps_db = require("../modules/beatmaps_db.js")
+const twitchchat_server = require("../modules/webserver/twitchchat_server.js")
 
 module.exports = {
     initAll: async (client) =>{
@@ -56,6 +57,7 @@ module.exports = {
 
             if (settings.modules_stalker.twitchchat){
                 beatmaps_db.init();
+                twitchchat_server.init();
                 init_osu_irc();
                 loadTwitchChatCommands();
                 await twitchchat_init();

@@ -200,6 +200,15 @@ const MYSQL_GET_IGNORE_TWITCH_CHATS = async () => {
     return usernames;
 }
 
+const MYSQL_GET_BANNED_TWITCH_CHATS = async () => {
+    const mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('twitch_banned'));
+    let usernames = [];
+    if (mysql_data.length > 0){
+        usernames = GET_VALUES_FROM_OBJECT_BY_KEY(mysql_data, 'channelname');
+    }
+    return usernames;
+}
+
 module.exports = {
 
     GET_TWITCH_OSU_BIND: async (twitch_id) => {
@@ -332,11 +341,15 @@ module.exports = {
             game_id: game_category.osu,
             language: 'ru'
         });
-    
+
+        const TwitchBanned = await MYSQL_GET_BANNED_TWITCH_CHATS();
         const TwitchChatIgnoreChannels = await MYSQL_GET_IGNORE_TWITCH_CHATS();
         const TwitchChatNames = onlyUnique([...TwitchChatTrackingNames, ...TwitchChatLiveNames])
-            .filter( chan => BannedChannels.isNotExists(chan) )
+            .filter( chan => BannedChannels.isNotExists(chan) ).filter( x => TwitchBanned.indexOf(x) === -1)
             .sort();
+
+        
+        
     
         return { TwitchChatNames, TwitchChatIgnoreChannels };
     },

@@ -130,7 +130,7 @@ const md5_stock_calculate = () => {
     }
 
     const ProcParams = [...calced, ...parsed];
-    console.log(ProcParams)
+
     init_calc(ProcParams);
 
 }

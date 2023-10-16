@@ -1,4 +1,5 @@
 const { log } = require("../../../tools/log");
+const twitchchat_server = require("../../webserver/twitchchat_server");
 const { ModerationName } = require("../constants/general");
 const { addMessageAmount } = require("../tools/ChattersAmounts");
 const { emit } = require("../tools/GuildEvents");
@@ -17,6 +18,8 @@ module.exports = async (twitchchat_client, channel, tags, message, self, TwitchC
 
     const messageFormatedText = `**${username}**: ${message}`;
 
+    twitchchat_server.add_message({channelname, username, text: message});
+    
     sendIfLongLength(messageFormatedText);
 
     saveMessageInBuffer(channelname, messageFormatedText);
