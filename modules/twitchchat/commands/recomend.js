@@ -2,7 +2,9 @@
 const { SELF } = require("../constants/enumPermissions");
 const { find } = require("../tools/Recommends");
 const { get_beatmap_info_by_md5 } = require("../../stalker/osu");
-
+const minimist = require('minimist');
+const { GET_TWITCH_OSU_BIND } = require("../../DB");
+const { irc_say } = require("../tools/ircManager");
 module.exports = {
     command_name: `recomend`,
     command_description: `Дать карту`,
@@ -10,22 +12,79 @@ module.exports = {
     command_help: `recomend`,
     command_permission: SELF,
     action: async ({channelname, tags, comargs})=>{
+        const args = minimist(comargs);
 
-        const beatmap = find({acc: 100, pp_min: 332, pp_max: 343});
+        const acc_default = 100;
+        let acc = acc_default;
+        if (args.acc){
+            acc = parseInt(args.acc);
+            const acc_available = [95,97,98,99,100];
+            if (acc_available.indexOf(acc) == - 1) {
+                acc = acc_default;
+            }
+        }
+
+
+        const pp_default = 330;
+        let pp = pp_default;
+        if (args.pp){
+            pp = parseInt(args.pp);
+        }
+
+        const pp_diff_default = 10;
+        let pp_diff = pp_diff_default;
+        if (args.pp_diff){
+            pp_diff = parseInt(args.pp_diff);
+        }
+
+        
+        let pp_min = Math.floor(pp - pp_diff * 0.5);
+        if (args.pp_min){
+            pp_min = parseInt(args.pp_min);
+        }
+
+        let pp_max = Math.floor(pp + pp_diff * 0.5);
+        if (args.pp_max){
+            pp_max = parseInt(args.pp_max);
+        }
+
+        let aim = null
+        if (args.aim){
+            aim = Number(args.aim);
+        }
+
+        const beatmap = find({acc, pp_min, pp_max, aim});
+
+        if (!beatmap){
+            return {error: '[recomend] > error no founded beatmap'}
+        }
+
         const beatmap_info = get_beatmap_info_by_md5(beatmap.md5);
         if (beatmap_info){
-            return  {success: formatMap({...beatmap, ...beatmap_info})};
+            const osu_bind = await GET_TWITCH_OSU_BIND(tags['user-id']);
+
+            if (osu_bind) {
+                irc_say(osu_bind.osu_name, formatBeatmapInfoOsu(tags.username, {...beatmap, ...beatmap_info}) );
+            }
+
+            return  {success: formatMap({...beatmap, ...beatmap_info, acc})};
         }
 
         return {error: '[recomend] > error beatmap id'}
     }
 }
 
-const formatMap = ({pps, beatmapsetid, beatmapid, artist, title}) => {
-        const ss = pps.find( x => x.acc == 100);
+const formatBeatmapInfoOsu = (username, {pps, beatmapsetid, beatmapid, title, artist}) => {
+    const url = `[https://osu.ppy.sh/beatmapsets/${beatmapsetid}#osu/${beatmapid} ${artist} - ${title}] >`;
+    const pp = pps.length > 0 ? pps.map( val => `${val.acc}% > ${Math.round(val.pp.total)}pp`).join(' | '): '';
+    return `${username} > ${url} ${pp}`;
+}
+
+const formatMap = ({pps, beatmapsetid, beatmapid, artist, title, acc}) => {
+        const ss = pps.find( x => x.acc === acc);
 
         return [`${artist} - ${title}`,
-        `100%=${Math.round(ss.pp.total)}pp`, 
+        `${acc}%=${Math.round(ss.pp.total)}pp`, 
         `aim=${Math.round(ss.pp.aim)}pp`,
         `speed=${Math.round(ss.pp.speed)}pp`,
         `accuracy=${Math.round(ss.pp.accuracy)}pp`,
