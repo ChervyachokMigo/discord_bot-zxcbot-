@@ -14,6 +14,11 @@ module.exports = {
     action: async ({channelname, tags, comargs})=>{
         const args = minimist(comargs);
 
+        let n = 1;
+        if (args.n){
+            n = parseInt(args.n)
+        }
+
         const acc_default = 100;
         let acc = acc_default;
         if (args.acc){
@@ -53,30 +58,50 @@ module.exports = {
             aim = Number(args.aim);
         }
 
-        const beatmap = find({acc, pp_min, pp_max, aim});
-
-        if (!beatmap){
-            return {error: '[recomend] > error no founded beatmap'}
+        let notify_chat = true;
+        if(typeof args.notify_chat === 'string' && args.notify_chat === 'false' || typeof args.notify_chat === 'number' && args.notify_chat === 0){
+            notify_chat = false;
         }
 
-        const beatmap_info = get_beatmap_info_by_md5(beatmap.md5);
-        if (beatmap_info){
-            const osu_bind = await GET_TWITCH_OSU_BIND(tags['user-id']);
+        for (let i= 0; i<n ; i++){
+            const beatmap = find({username: tags.username, acc, pp_min, pp_max, aim});
 
-            if (osu_bind) {
-                irc_say(osu_bind.osu_name, formatBeatmapInfoOsu(tags.username, {...beatmap, ...beatmap_info}) );
+            if (!beatmap){
+                return {error: '[recomend] > error no founded beatmap'}
             }
 
-            return  {success: formatMap({...beatmap, ...beatmap_info, acc})};
+            const beatmap_info = get_beatmap_info_by_md5(beatmap.md5);
+            if (beatmap_info){
+                const osu_bind = await GET_TWITCH_OSU_BIND(tags['user-id']);
+
+                if (osu_bind) {
+                    irc_say(osu_bind.osu_name, formatBeatmapInfoOsu(tags.username, {...beatmap, ...beatmap_info, acc}) );
+                }
+
+                if (n === 1) {
+                    if (notify_chat){
+                        return  {success: formatMap({...beatmap, ...beatmap_info, acc})};
+                    } else {
+                        return {error: 'no notify chat'}
+                    }
+                }
+            }
+        }
+
+        if  (n > 1) {
+            return {error: 'sended '+n+' maps'}
         }
 
         return {error: '[recomend] > error beatmap id'}
     }
 }
 
-const formatBeatmapInfoOsu = (username, {pps, beatmapsetid, beatmapid, title, artist}) => {
+const formatBeatmapInfoOsu = (username, {pps, beatmapsetid, beatmapid, title, artist, acc}) => {
     const url = `[https://osu.ppy.sh/beatmapsets/${beatmapsetid}#osu/${beatmapid} ${artist} - ${title}] >`;
-    const pp = pps.length > 0 ? pps.map( val => `${val.acc}% > ${Math.round(val.pp.total)}pp`).join(' | '): '';
+    const pp = pps.length > 0 ? pps
+        .filter( x => x.acc === acc)
+        .map( val => `${val.acc}% > ${Math.round(val.pp.total)}pp | aim: ${Math.round(val.pp.aim)}pp | speed: ${Math.round(val.pp.speed)}pp`)
+        .join(' | '): '';
     return `${username} > ${url} ${pp}`;
 }
 

@@ -50,7 +50,7 @@ const twitchchat_refresh_category = async () =>{
 const twitchchat_init = async() => {    
     log('Загрузка твич чатов', moduleName);
     
-    Recommends.init();
+    await Recommends.init();
 
     const {TwitchChatNames, TwitchChatIgnoreChannels} = await get_twitch_channels_names();
 

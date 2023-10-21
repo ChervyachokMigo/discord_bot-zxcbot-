@@ -337,10 +337,11 @@ module.exports = {
 
     get_twitch_channels_names: async() => {
         const TwitchChatTrackingNames = await MYSQL_GET_TRACKING_TWITCH_CHATS();
-        const TwitchChatLiveNames = await getTwitchSteamsByCategory({
+        /*const TwitchChatLiveNames = await getTwitchSteamsByCategory({
             game_id: game_category.osu,
             language: 'ru'
-        });
+        });*/
+        const TwitchChatLiveNames = ['sed_god', 'Qutatos']
 
         const TwitchBanned = await MYSQL_GET_BANNED_TWITCH_CHATS();
         const TwitchChatIgnoreChannels = await MYSQL_GET_IGNORE_TWITCH_CHATS();

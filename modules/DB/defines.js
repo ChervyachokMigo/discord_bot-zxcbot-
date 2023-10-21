@@ -4,6 +4,29 @@ const { log } = require("../../tools/log.js");
 
 const { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME } = require("../../config.js");
 
+const osu_beatmaps_mysql = new Sequelize( 'osu_beatmaps', DB_USER, DB_PASSWORD, { 
+    dialect: `mysql`,
+    define: {
+        updatedAt: false,
+        createdAt: false,
+        deletedAt: false
+    },
+});
+
+const beatmap_data = osu_beatmaps_mysql.define ('beatmap_data', {
+    beatmap_id: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false},
+    beatmapset_id: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false},
+    star_taiko_local: {type: DataTypes.FLOAT,  defaultvalue: 0, allowNull: false},
+    star_taiko_lazer: {type: DataTypes.FLOAT,  defaultvalue: 0, allowNull: false},
+    artist: {type: DataTypes.STRING,  defaultvalue: '', allowNull: false},
+    title: {type: DataTypes.STRING,  defaultvalue: '', allowNull: false},
+    creator: {type: DataTypes.STRING,  defaultvalue: '', allowNull: false},
+    difficulty: {type: DataTypes.STRING,  defaultvalue: '', allowNull: false},
+    gamemode: {type: DataTypes.STRING,  defaultvalue: '', allowNull: false},
+    ranked: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false},
+    md5: {type: DataTypes.STRING,  defaultvalue: '', allowNull: false},
+});
+
 const mysql = new Sequelize( DB_NAME, DB_USER, DB_PASSWORD, { 
     dialect: `mysql`,
     define: {
@@ -342,7 +365,8 @@ const mysql_actions = [
     { names: 'twitchchat_enabled', model: twitchchat_enabled},
     { names: 'twitchchat_sended_notify', model: twitchchat_sended_notify},
     { names: 'twitch_osu_binds', model: twitch_osu_binds},
-    { names: 'twitch_banned', model: twitch_banned}
+    { names: 'twitch_banned', model: twitch_banned},
+    { names: 'beatmap_data', model: beatmap_data},
 ];
 
 
@@ -361,7 +385,9 @@ module.exports = {
                 throw new Error(`ошибка базы: ${e}`);
             }
         }
+        await osu_beatmaps_mysql.sync({ logging: ''})
         await mysql.sync({ logging: ''})
+        
         log(`Подготовка завершена`, 'База данных')
     },
 
