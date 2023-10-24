@@ -1,4 +1,4 @@
-
+const { createConnection } = require('mysql2/promise');
 const { Sequelize, DataTypes } = require('@sequelize/core');
 const { log } = require("../../tools/log.js");
 
@@ -24,8 +24,31 @@ const beatmap_data = osu_beatmaps_mysql.define ('beatmap_data', {
     difficulty: {type: DataTypes.STRING,  defaultvalue: '', allowNull: false},
     gamemode: {type: DataTypes.STRING,  defaultvalue: '', allowNull: false},
     ranked: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false},
-    md5: {type: DataTypes.STRING,  defaultvalue: '', allowNull: false},
+    md5: {type: DataTypes.STRING(32),  defaultvalue: '', allowNull: false, unique: true},
 });
+
+beatmap_data.removeAttribute('id');
+
+const osu_beatmap_pp = osu_beatmaps_mysql.define ('osu_beatmap_pp', {
+    md5: {type: DataTypes.STRING(32),  defaultvalue: '', allowNull: false, unique: 'action_key'},
+    mods: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false, unique: 'action_key'},
+    accuracy: {type: DataTypes.INTEGER,  defaultvalue: 100, allowNull: false, unique: 'action_key'},
+    beatmap_id: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false},
+    pp_total: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false},
+    pp_aim: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false},
+    pp_speed: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false},
+    pp_accuracy: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false},
+    stars: {type: DataTypes.FLOAT,  defaultvalue: 0, allowNull: false},
+    diff_aim: {type: DataTypes.FLOAT,  defaultvalue: 0, allowNull: false},
+    diff_speed: {type: DataTypes.FLOAT,  defaultvalue: 0, allowNull: false},
+    diff_sliders: {type: DataTypes.FLOAT,  defaultvalue: 0, allowNull: false},
+    speed_notes: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false},
+    AR: {type: DataTypes.FLOAT,  defaultvalue: 0, allowNull: false},
+    OD: {type: DataTypes.FLOAT,  defaultvalue: 0, allowNull: false},
+    
+});
+
+osu_beatmap_pp.removeAttribute('id');
 
 const mysql = new Sequelize( DB_NAME, DB_USER, DB_PASSWORD, { 
     dialect: `mysql`,
@@ -367,6 +390,7 @@ const mysql_actions = [
     { names: 'twitch_osu_binds', model: twitch_osu_binds},
     { names: 'twitch_banned', model: twitch_banned},
     { names: 'beatmap_data', model: beatmap_data},
+    { names: 'osu_beatmap_pp', model: osu_beatmap_pp}
 ];
 
 
@@ -375,8 +399,7 @@ module.exports = {
     prepareDB: async () => {
         log('Подготовка баз данных', 'База данных');
         try {
-            const mysql_checkdb = require('mysql2/promise');
-            const connection = await mysql_checkdb.createConnection(`mysql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}`);
+            const connection = await createConnection(`mysql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}`);
             await connection.query(`CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;`);
         } catch (e){
             if (e.code === 'ECONNREFUSED' || e.name === `SequelizeConnectionRefusedError`){
@@ -385,7 +408,7 @@ module.exports = {
                 throw new Error(`ошибка базы: ${e}`);
             }
         }
-        await osu_beatmaps_mysql.sync({ logging: ''})
+        await osu_beatmaps_mysql.sync({ logging: '', alter: true })
         await mysql.sync({ logging: ''})
         
         log(`Подготовка завершена`, 'База данных')

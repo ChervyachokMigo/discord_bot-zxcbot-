@@ -49,7 +49,7 @@ module.exports = {
     },
 
     
-    MYSQL_GET_ALL: async (action, params = {}) => {
+    MYSQL_GET_ALL: async (action, params = {}, attributes = undefined) => {
         const MysqlModel = select_mysql_model(action);
         var condition = {};
         switch (action){
@@ -100,8 +100,7 @@ module.exports = {
             break;
         }
         try{
-            return await MysqlModel.findAll ({ where: condition, logging: '', order: 
-                [['id', 'DESC']] });
+            return await MysqlModel.findAll ({ where: condition, logging: '', attributes });//order: [['id', 'DESC']]
         } catch (e){
             if (e.code === 'ECONNREFUSED' || e.name === `SequelizeConnectionRefusedError`){
                 throw new Error(`Нет доступа к базе данных.`);
@@ -189,8 +188,8 @@ module.exports = {
             values = await MYSQL_MERGE_KEYS_VALUES(keys, values)
         }
         try {
-            if (typeof values.length !== 'undefined' && values.length>0){
-                return await MysqlModel.bulkCreate(values, {logging: ''})
+            if (typeof values.length !== 'undefined' && values.length > 0){
+                return await MysqlModel.bulkCreate(values, {logging: '', ignoreDuplicates: true})
             } else {
                 return upsert(MysqlModel, values , keys);
             }

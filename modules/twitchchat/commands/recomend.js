@@ -64,7 +64,7 @@ module.exports = {
         }
 
         for (let i= 0; i<n ; i++){
-            const beatmap = find({username: tags.username, acc, pp_min, pp_max, aim});
+            const beatmap = await find({username: tags.username, acc, pp_min, pp_max, aim});
 
             if (!beatmap){
                 return {error: '[recomend] > error no founded beatmap'}

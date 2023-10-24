@@ -3,6 +3,7 @@ const { log } = require("../../../tools/log");
 const { MYSQL_GET_ALL } = require("../../DB/base");
 const { GET_VALUES_FROM_OBJECT_BY_KEY } = require("../../tools");
 const { MYSQL_GET_ALL_RESULTS_TO_ARRAY } = require("../../DB");
+const { Op } = require("@sequelize/core");
 
 this.data = null;
 
@@ -18,7 +19,7 @@ module.exports = {
         this.data = this.data.filter ( x => mysql_data.has(x.md5) === true );
     },
 
-    find: ({username, acc, pp_min, pp_max, aim}) => {
+    find: async ({username, acc, pp_min, pp_max, aim}) => {
         let i = this.founded_buffer.findIndex( x => 
             x.username === username && 
             x.acc === acc && 
@@ -33,12 +34,16 @@ module.exports = {
         } else {
             let maps = null;
 
-            if (aim) {
+            maps = MYSQL_GET_ALL_RESULTS_TO_ARRAY( 
+                await MYSQL_GET_ALL('osu_beatmap_pp', {mods: 0, accuracy: acc, pp_total: { [Op.gte]: pp_min, [Op.lte]: pp_max } }));
+
+            /*if (aim) {
+                
                 maps = this.data.filter(x => x.pps.find( y => y.acc === acc && y.pp.total >= pp_min && y.pp.total <= pp_max &&
                     y.diff.aim > y.diff.speed * aim) );
             } else {
                 maps = this.data.filter(x => x.pps.find( y => y.acc === acc && y.pp.total >= pp_min && y.pp.total <= pp_max) );
-            }
+            }*/
 
             if (!maps || maps.length === 0) {
                 return null;

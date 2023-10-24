@@ -56,7 +56,7 @@ module.exports = {
             }
 
             if (settings.modules_stalker.twitchchat){
-                beatmaps_db.init();
+                await beatmaps_db.init();
                 twitchchat_server.init();
                 init_osu_irc();
                 loadTwitchChatCommands();

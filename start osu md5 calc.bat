@@ -1,1 +1,0 @@
-node beatmaps_md5.js && del scan_songs.json && node beatmaps_pp_calc.js

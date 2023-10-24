@@ -1,4 +1,4 @@
-const { make_beatmaps_db, md5_stock_compare, md5_stock_calculate } = require("../beatmaps_md5_stock.js");
+const { make_beatmaps_db, md5_stock_compare, md5_stock_calculate } = require("../osu_pps/beatmaps_md5_stock.js");
 const { SendError } = require("../tools/embed.js");
 const { log } = require("../tools/log.js");
 
