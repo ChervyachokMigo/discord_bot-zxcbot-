@@ -60,7 +60,9 @@ const save_calculated_data = async () => {
     console.log( 'calc > save to mysql')
     const recorded_calculations = calculated_chunck_data.slice();
     calculated_chunck_data = [];
-    await MYSQL_SAVE('osu_beatmap_pp', 0, recorded_calculations);
+    if (recorded_calculations.length > 0){
+        await MYSQL_SAVE('osu_beatmap_pp', 0, recorded_calculations);
+    }
 }
 
 const ActionsController =  async () => {
@@ -79,10 +81,6 @@ const ActionsController =  async () => {
     if (calculated_chunck_data.length > 500 && next_actions.length > 0){
         await save_calculated_data();
     }
-
-    /*if (this.current_actions < 0){
-        this.current_actions = 0
-    }*/
 
     while (this.current_actions < maxExecuting){
         let args = next_actions.shift();
@@ -138,7 +136,7 @@ const calcAction = ({md5, gamemode = 'osu', acc = '100', mods = []}) => {
             try{
                 fs.copyFileSync( path.join(osu_md5_stock, `${md5}.osu`), path.join( __dirname, '..\\data\\osu_pps\\calc_error\\', `${md5}.osu`) )
             } catch (e){
-                console.error(e)
+                console.error(`calc > error > can not copy ${md5}.osu`)
             }
             saveError(['beatmaps_pp_calc.js','en.on(calc)',md5, gamemode, acc, error].join(' > '));
             
@@ -174,14 +172,14 @@ const calc_result_add = ({md5, data, mods})=> {
     calculated_chunck_data.push(record)
 }
 
-const calc_from_mysql = async (gamemode = 'osu', ranked = ranked_status.ranked) => {
+const calc_from_mysql = async (gamemode = 'osu', ranked = ranked_status.ranked, is_key_events = false) => {
     await prepareDB();
     
     const beatmaps_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(
         await MYSQL_GET_ALL('beatmap_data', { gamemode, ranked }, ['md5', 'gamemode', 'ranked'] ))
         .sort ( (a, b) => a.md5.localeCompare(b.md5) );
     
-    await init_calc(beatmaps_data);
+    await init_calc(beatmaps_data, is_key_events);
 
 }
 
@@ -209,7 +207,7 @@ const init_key_events = () => {
     process.stdin.resume();
 }
 
-const init_calc = async ( beatmaps = [] ) => {
+const init_calc = async ( beatmaps = [], is_key_events = false ) => {
     console.log('calc > loading')
 
     calculated_osu_beatmaps = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('osu_beatmap_pp' ));
@@ -243,7 +241,9 @@ const init_calc = async ( beatmaps = [] ) => {
 
     console.log('start calcing..');
 
-    init_key_events();
+    if (is_key_events){
+        init_key_events();
+    }
 
     if (this.current_actions < maxExecuting){
         await ActionsController();

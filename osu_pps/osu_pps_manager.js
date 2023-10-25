@@ -8,7 +8,7 @@ const { make_beatmaps_db, md5_stock_compare } = require('./beatmaps_md5_stock.js
 const { calc_from_mysql } = require("./beatmaps_pp_calc.js");
 
 const main = async () => {
-    await calc_from_mysql('osu', 4)
+    await calc_from_mysql('osu', 4, true)
 }
 
 main();
