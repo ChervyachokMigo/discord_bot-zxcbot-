@@ -1,5 +1,5 @@
 
-const { SELF } = require("../constants/enumPermissions");
+const { SELF, ALL } = require("../constants/enumPermissions");
 const { find } = require("../tools/Recommends");
 const { get_beatmap_info_by_md5 } = require("../../stalker/osu");
 const minimist = require('minimist');
@@ -10,7 +10,7 @@ module.exports = {
     command_description: `Дать карту`,
     command_aliases: [`recomend`, `r`, `rec`],
     command_help: `recomend`,
-    command_permission: SELF,
+    command_permission: ALL,
     action: async ({channelname, tags, comargs})=>{
         
         const args = minimist(comargs);
@@ -29,7 +29,6 @@ module.exports = {
                 acc = acc_default;
             }
         }
-
 
         const pp_default = 330;
         let pp = pp_default;

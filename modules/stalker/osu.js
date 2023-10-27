@@ -25,6 +25,7 @@ const { default: axios } = require('axios');
 const crypto = require('crypto');
 const { spawnSync, spawn } = require('child_process');
 const { saveError } = require('../logserver/index.js');
+const { get_beatmap_info_localy } = require('../twitchchat/tools/Recommends.js');
 
 const moduleName = `Stalker Osu`;
 
@@ -193,12 +194,23 @@ const get_beatmap_info_by_md5 = (md5) => {
     return null;
 }
 
-const get_performance_points_beatmap = (md5) => {
+const get_performance_points_beatmap = ( md5 ) => {
     const filepath = path.join('.\\data\\beatmaps_data', `${md5}.json`);
     if (fs.existsSync(filepath)){
         return JSON.parse(fs.readFileSync(filepath));
     }
     return null;
+}
+
+const get_performance_points_beatmap_mysql = async ( md5 ) => {
+    const maps = MYSQL_GET_ALL_RESULTS_TO_ARRAY( 
+        await MYSQL_GET_ALL('osu_beatmap_pp', { md5 }));
+
+    if (!maps || maps.length === 0) {
+        return null;
+    }
+
+    return maps;
 }
 
 const get_not_existed_beatmap = async (info) => {
@@ -295,33 +307,42 @@ module.exports = {
             return {error: `ссылка не полная`};
         }
 
-        const beatmapset_info = await get_beatmap_info_bancho( request.beatmapset_id );
+        let beatmap = await get_beatmap_info_localy({ 
+            beatmapset_id: Number(request.beatmapset_id), 
+            beatmap_id: Number(request.beatmap_id) 
+        });
 
-        if ( ! beatmapset_info){
-            return {error: `невозможно получить информацию о карте с банчо ${request.beatmapset_id}`};
+        if (!beatmap){
+            const beatmapset_info = await get_beatmap_info_bancho( request.beatmapset_id );
+
+            if ( !beatmap){
+                return {error: `невозможно получить информацию о карте с банчо ${request.beatmapset_id}`};
+            }
+
+            beatmap = beatmapset_info.beatmaps.find( b => Number(b.id) === Number(request.beatmap_id));
+
+            if ( !beatmap ) {
+                return {error: `карта ${request.beatmap_id} не найдена в битмапсете ${request.beatmapset_id}`};
+            }
+
         }
         
-        const beatmap = beatmapset_info.beatmaps.find( b => Number(b.id) === Number(request.beatmap_id));
-
-        if ( ! beatmap ) {
-            return {error: `карта ${request.beatmap_id} не найдена в битмапсете ${request.beatmapset_id}`};
-        }
-
-        const beatmap_pp = get_performance_points_beatmap(beatmap.checksum);
+        const beatmap_pps = get_performance_points_beatmap_mysql( beatmap.md5 || beatmap.checksum );
 
         let  pps = [];
 
-        if (beatmap_pp) {
-            for (const calc_info of beatmap_pp){
-                const acc = Math.round(calc_info.score.accuracy);
-                const pp = Math.round(calc_info.performance_attributes.pp);
+        if (beatmap_pps) {
+            for (const info of beatmap_pps){
+                const acc = info.accuracy;
+                const pp = info.pp_total;
                 pps.push({acc, pp});
             }
+            pps.sort( (a, b) => a.acc - b-acc );
         } else {
-            const result = await get_not_existed_beatmap({
-                id: beatmap.id, 
-                md5: beatmap.checksum, 
-                mode: beatmap.mode});
+            /*const result = await get_not_existed_beatmap({
+                id: Number(request.beatmap_id) , 
+                md5: md5, 
+                mode: request.gamemode });
 
             if (result.error) {
                 console.error(result.error);
@@ -331,8 +352,8 @@ module.exports = {
                     pp: Math.round(calc_info.performance_attributes.pp)
                 }});
                 
-            }
-            
+            }*/
+            return {error: `карта ${request.beatmap_id} не найдена`};
         }
 
         return {success: {

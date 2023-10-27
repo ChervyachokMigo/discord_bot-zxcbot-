@@ -38,26 +38,26 @@ let actions_max = null;
 let started_date = null;
 
 const actions = [
-    {acc: '100', mods: []}, 
+    /*{acc: '100', mods: []}, 
     {acc: '99', mods: []}, 
     {acc: '98', mods: []}, 
-    {acc: '95', mods: []},
+    {acc: '95', mods: []},*/
 
-    {acc: '100', mods: ['HD']},
+    /*{acc: '100', mods: ['HD']},
     {acc: '99', mods: ['HD']},
-    {acc: '98', mods: ['HD']},
+    {acc: '98', mods: ['HD']},*/
 
     {acc: '100', mods: ['DT']},
     {acc: '99', mods: ['DT']},
     {acc: '98', mods: ['DT']},
 
-    {acc: '100', mods: ['HR']},
+    /*{acc: '100', mods: ['HR']},
     {acc: '99', mods: ['HR']},
     {acc: '98', mods: ['HR']},
 
     {acc: '100', mods: ['HR', 'HD']},
     {acc: '99', mods: ['HR', 'HD']},
-    {acc: '98', mods: ['HR', 'HD']},
+    {acc: '98', mods: ['HR', 'HD']},*/
 
     /*
     {acc: '100', mods: ['DT', 'HD']},
@@ -330,7 +330,8 @@ const init_key_events = () => {
 const init_calc = async ( beatmaps = [], is_key_events = false ) => {
     console.log('calc > loading')
 
-    calculated_osu_beatmaps = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('osu_beatmap_pp' ));
+    calculated_osu_beatmaps = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('osu_beatmap_pp', { mods: ModsToInt( ['DT']) }));
+
     const calculated_set = new Set( calculated_osu_beatmaps.map( (x) => `${x.md5}:${x.accuracy}:${x.mods}` ));
 
     console.log('loaded calculated records:', calculated_osu_beatmaps.length)

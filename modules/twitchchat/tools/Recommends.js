@@ -10,8 +10,8 @@ this.data = null;
 
 this.founded_buffer = [];
 
-const get_beatmap_info_localy = async (md5) => {
-    const result = await MYSQL_GET_ONE( 'beatmap_data', {md5} );
+const get_beatmap_info_localy = async (args) => {
+    const result = await MYSQL_GET_ONE( 'beatmap_data', args );
     if (result) {
         return result.dataValues;
     }
@@ -76,7 +76,7 @@ module.exports = {
         shuffle(i);
 
         const founded_map = this.founded_buffer[i].maps.shift();
-        const beatmap_info = await get_beatmap_info_localy( founded_map.md5 );
+        const beatmap_info = await get_beatmap_info_localy({ md5: founded_map.md5 });
 
         if (!beatmap_info) {
             return null;
