@@ -22,6 +22,8 @@ module.exports = {
     OSU_LOGIN: '',
 	OSU_PASSWORD: '',
 
+    OSU_API_KEY: '',
+
     OSU_CLIENT_ID: '',//unused
     OSU_CLIENT_SECRET: '',//unused
 

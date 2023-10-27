@@ -1,13 +1,30 @@
 const { readFileSync } = require("fs");
 const { log } = require("../../../tools/log");
-const { MYSQL_GET_ALL } = require("../../DB/base");
+const { MYSQL_GET_ALL, MYSQL_GET_ONE } = require("../../DB/base");
 const { GET_VALUES_FROM_OBJECT_BY_KEY } = require("../../tools");
 const { MYSQL_GET_ALL_RESULTS_TO_ARRAY } = require("../../DB");
 const { Op } = require("@sequelize/core");
+const { ModsToInt } = require("../../../osu_pps/osu_mods");
 
 this.data = null;
 
 this.founded_buffer = [];
+
+const get_beatmap_info_localy = async (md5) => {
+    const result = await MYSQL_GET_ONE( 'beatmap_data', {md5} );
+    if (result) {
+        return result.dataValues;
+    }
+    return null;
+}
+
+const shuffle = (i) => {
+    //this.founded_buffer[i].maps.sort( () => (Math.random() > .5));
+    for (let k = 0; k < this.founded_buffer[i].maps.length; k++) {
+        let j = Math.floor(Math.random() * (k + 1));
+        [this.founded_buffer[i].maps[k], this.founded_buffer[i].maps[j]] = [this.founded_buffer[i].maps[j], this.founded_buffer[i].maps[k]];
+    }
+}
 
 module.exports = {
     init: async () => {
@@ -19,31 +36,28 @@ module.exports = {
         this.data = this.data.filter ( x => mysql_data.has(x.md5) === true );
     },
 
-    find: async ({username, acc, pp_min, pp_max, aim}) => {
+    find: async ({username, acc = 100, pp_min, pp_max, aim}) => {
         let i = this.founded_buffer.findIndex( x => 
             x.username === username && 
             x.acc === acc && 
             x.pp_min === pp_min && 
             x.pp_max === pp_max && 
             x.aim === aim );
-
         
-        if ( i > -1 ) {
-            
-            shuffle(i);
-        } else {
-            let maps = null;
+        if ( i === -1 ) {
 
-            maps = MYSQL_GET_ALL_RESULTS_TO_ARRAY( 
-                await MYSQL_GET_ALL('osu_beatmap_pp', {mods: 0, accuracy: acc, pp_total: { [Op.gte]: pp_min, [Op.lte]: pp_max } }));
+            const find_condition = { 
+                mods: ModsToInt([]), 
+                accuracy: acc, 
+                pp_total: { 
+                    [Op.gte]: pp_min, 
+                    [Op.lte]: pp_max 
+            }};
 
-            /*if (aim) {
-                
-                maps = this.data.filter(x => x.pps.find( y => y.acc === acc && y.pp.total >= pp_min && y.pp.total <= pp_max &&
-                    y.diff.aim > y.diff.speed * aim) );
-            } else {
-                maps = this.data.filter(x => x.pps.find( y => y.acc === acc && y.pp.total >= pp_min && y.pp.total <= pp_max) );
-            }*/
+            let maps = MYSQL_GET_ALL_RESULTS_TO_ARRAY( 
+                await MYSQL_GET_ALL('osu_beatmap_pp', find_condition ));
+
+            //поиск по аиму y.diff.aim > y.diff.speed * aim
 
             if (!maps || maps.length === 0) {
                 return null;
@@ -59,17 +73,17 @@ module.exports = {
             }) - 1;
         }
 
+        shuffle(i);
 
         const founded_map = this.founded_buffer[i].maps.shift();
+        const beatmap_info = await get_beatmap_info_localy( founded_map.md5 );
 
-        return founded_map;
-    }
-}
+        if (!beatmap_info) {
+            return null;
+        }
 
-const shuffle = (i) => {
-    //this.founded_buffer[i].maps.sort( () => (Math.random() > .5));
-    for (let k = 0; k < this.founded_buffer[i].maps.length; k++) {
-        let j = Math.floor(Math.random() * (k + 1));
-        [this.founded_buffer[i].maps[k], this.founded_buffer[i].maps[j]] = [this.founded_buffer[i].maps[j], this.founded_buffer[i].maps[k]];
-    }
+        return {...founded_map, ...beatmap_info};
+    },
+
+    get_beatmap_info_localy: get_beatmap_info_localy,
 }

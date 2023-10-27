@@ -38,7 +38,7 @@ module.exports = {
     MYSQL_GET_ONE: async (action, condition) => {
         const MysqlModel = select_mysql_model(action);
         try {
-            return  await MysqlModel.findOne({ where: condition , logging: ''})
+            return await MysqlModel.findOne({ where: condition , logging: ''})
         } catch (e){
             if (e.code === 'ECONNREFUSED' || e.name === `SequelizeConnectionRefusedError`){
                 throw new Error(`Нет доступа к базе данных.`);

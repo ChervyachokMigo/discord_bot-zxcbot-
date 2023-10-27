@@ -8,8 +8,8 @@ module.exports = {
     init: async () => {
         log('comparing stock', moduleName)
         md5_stock_compare();
-        log('calculate pp', moduleName)
-        await calc_from_mysql('osu', 4);
+        //log('calculate pp', moduleName)
+        //await calc_from_mysql('osu', 4);
     }
 
 

@@ -12,6 +12,7 @@ module.exports = {
     command_help: `recomend`,
     command_permission: SELF,
     action: async ({channelname, tags, comargs})=>{
+        
         const args = minimist(comargs);
 
         let n = 1;
@@ -23,7 +24,7 @@ module.exports = {
         let acc = acc_default;
         if (args.acc){
             acc = parseInt(args.acc);
-            const acc_available = [95,97,98,99,100];
+            const acc_available = [98,99,100];
             if (acc_available.indexOf(acc) == - 1) {
                 acc = acc_default;
             }
@@ -63,29 +64,27 @@ module.exports = {
             notify_chat = false;
         }
 
-        for (let i= 0; i<n ; i++){
+        for (let i= 0; i < n ; i++){
             const beatmap = await find({username: tags.username, acc, pp_min, pp_max, aim});
 
             if (!beatmap){
                 return {error: '[recomend] > error no founded beatmap'}
             }
 
-            const beatmap_info = get_beatmap_info_by_md5(beatmap.md5);
-            if (beatmap_info){
-                const osu_bind = await GET_TWITCH_OSU_BIND(tags['user-id']);
+            const osu_bind = await GET_TWITCH_OSU_BIND(tags['user-id']);
 
-                if (osu_bind) {
-                    irc_say(osu_bind.osu_name, formatBeatmapInfoOsu(tags.username, {...beatmap, ...beatmap_info, acc}) );
-                }
+            if (osu_bind) {
+                irc_say(osu_bind.osu_name, formatBeatmapInfoOsu(tags.username, beatmap) );
+            }
 
-                if (n === 1) {
-                    if (notify_chat){
-                        return  {success: formatMap({...beatmap, ...beatmap_info, acc})};
-                    } else {
-                        return {error: 'no notify chat'}
-                    }
+            if (n === 1) {
+                if (notify_chat){
+                    return {success: formatMap(beatmap)};
+                } else {
+                    return {error: 'no notify chat'};
                 }
             }
+            
         }
 
         if  (n > 1) {
@@ -96,26 +95,30 @@ module.exports = {
     }
 }
 
-const formatBeatmapInfoOsu = (username, {pps, beatmapsetid, beatmapid, title, artist, acc}) => {
-    const url = `[https://osu.ppy.sh/beatmapsets/${beatmapsetid}#osu/${beatmapid} ${artist} - ${title}] >`;
-    const pp = pps.length > 0 ? pps
-        .filter( x => x.acc === acc)
-        .map( val => `${val.acc}% > ${Math.round(val.pp.total)}pp | aim: ${Math.round(val.pp.aim)}pp | speed: ${Math.round(val.pp.speed)}pp`)
-        .join(' | '): '';
+const formatBeatmapInfoOsu = (username, { beatmap_id, beatmapset_id, artist, title, pp_total, pp_aim, pp_speed, pp_accuracy, accuracy, mods }) => {
+    
+    const url = `[https://osu.ppy.sh/beatmapsets/${beatmapset_id}#osu/${beatmap_id} ${artist} - ${title}] >`;
+    const pp = `${accuracy}% > ${pp_total}pp | aim: ${pp_aim}pp | speed: ${pp_speed}pp | accuracy: ${pp_accuracy}pp`;
+
     return `${username} > ${url} ${pp}`;
 }
 
-const formatMap = ({pps, beatmapsetid, beatmapid, artist, title, acc}) => {
-        const ss = pps.find( x => x.acc === acc);
+const formatMap = ({ beatmap_id, beatmapset_id, artist, title, 
+    pp_total, pp_aim, pp_speed, pp_accuracy, accuracy, stars, diff_aim, diff_speed, speed_notes, AR, OD, mods }) => {
 
-        return [`${artist} - ${title}`,
-        `${acc}%=${Math.round(ss.pp.total)}pp`, 
-        `aim=${Math.round(ss.pp.aim)}pp`,
-        `speed=${Math.round(ss.pp.speed)}pp`,
-        `accuracy=${Math.round(ss.pp.accuracy)}pp`,
-        `diff=${ss.diff.star.toFixed(2)} ★`,
-        `aim=${ss.diff.aim.toFixed(2)} ★`,
-        `speed=${ss.diff.speed.toFixed(2)} ★`,
-        `https://osu.ppy.sh/beatmapsets/${beatmapsetid}#osu/${beatmapid}`].join(' | ');
-    
+    return [
+        `${artist} - ${title}`,
+        `AR: ${AR}`,
+        `OD: ${OD}`,
+        `${accuracy}%=${pp_total}pp`, 
+        `aim=${pp_aim}pp`,
+        `speed=${pp_speed}pp`,
+        `accuracy=${pp_accuracy}pp`,
+        `diff=${stars.toFixed(1)} ★`,
+        `aim=${diff_aim.toFixed(1)} ★`,
+        `speed=${diff_speed.toFixed(1)} ★`,
+        `speednotes=${speed_notes}`,
+        `https://osu.ppy.sh/beatmapsets/${beatmapset_id}#osu/${beatmap_id}`,
+    ].join(' | ');
+
 }

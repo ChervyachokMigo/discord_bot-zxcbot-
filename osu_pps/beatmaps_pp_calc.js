@@ -1,7 +1,8 @@
-const { spawn } = require("child_process")
+const { spawn, execSync, exec } = require("child_process")
 const path = require("path");
 const fs = require("fs");
 const keypress = require('keypress');
+const { cpuUsage } = require('os-utils');
 
 const { saveError } = require("../modules/logserver");
 const { prepareDB } = require("../modules/DB/defines.js");
@@ -17,50 +18,113 @@ const ranked_status = {
     ranked: 4
 }
 
-const maxExecuting = 9;
+const setting_MaxExecuting = 10;
+const setting_StartExecuting = 6;
+
+let maxExecuting = setting_StartExecuting;
+const mysql_chunk_size = 500;
 
 let calculated_chunck_data = [];
 
 let next_actions = [];
 this.current_actions = 0;
 
+this.toggle_explorer = true;
 
 let calculated_osu_beatmaps = null;
 
-let started_date = new Date();
 let actions_max = null;
 
+let started_date = null;
+
 const actions = [
-    /*{acc: '100', mods: []}, 
+    {acc: '100', mods: []}, 
     {acc: '99', mods: []}, 
     {acc: '98', mods: []}, 
-    {acc: '95', mods: []}*/
+    {acc: '95', mods: []},
+
     {acc: '100', mods: ['HD']},
     {acc: '99', mods: ['HD']},
     {acc: '98', mods: ['HD']},
-   // {acc: '100', mods: ['DT']},
-    //{acc: '100', mods: ['HR']},
-    /*{acc: '100', mods: ['DT', 'HD']},
-    {acc: '100', mods: ['DT', 'HD', 'HR']},
-    {acc: '100', mods: ['DT', 'EZ']},
-    {acc: '100', mods: ['DT', 'EZ', 'HD']},
+
+    {acc: '100', mods: ['DT']},
+    {acc: '99', mods: ['DT']},
+    {acc: '98', mods: ['DT']},
+
+    {acc: '100', mods: ['HR']},
+    {acc: '99', mods: ['HR']},
+    {acc: '98', mods: ['HR']},
+
     {acc: '100', mods: ['HR', 'HD']},
+    {acc: '99', mods: ['HR', 'HD']},
+    {acc: '98', mods: ['HR', 'HD']},
+
+    /*
+    {acc: '100', mods: ['DT', 'HD']},
+    {acc: '99', mods: ['DT', 'HD']},
+    {acc: '98', mods: ['DT', 'HD']},
+
+    {acc: '100', mods: ['DT', 'HD', 'HR']},
+    {acc: '99', mods: ['DT', 'HD', 'HR']},
+    {acc: '98', mods: ['DT', 'HD', 'HR']},
+
+    {acc: '100', mods: ['DT', 'EZ']},
+    {acc: '99', mods: ['DT', 'EZ']},
+    {acc: '98', mods: ['DT', 'EZ']},
+
+    {acc: '100', mods: ['DT', 'EZ', 'HD']},
+    {acc: '99', mods: ['DT', 'EZ', 'HD']},
+    {acc: '98', mods: ['DT', 'EZ', 'HD']},
+
     {acc: '100', mods: ['HT']},
+    {acc: '98', mods: ['HT']},
+    {acc: '99', mods: ['HT']},
+
     {acc: '100', mods: ['HT', 'HD']},
+    {acc: '99', mods: ['HT', 'HD']},
+    {acc: '98', mods: ['HT', 'HD']},
+
     {acc: '100', mods: ['HT', 'HR']},
+    {acc: '99', mods: ['HT', 'HR']},
+    {acc: '98', mods: ['HT', 'HR']},
+
     {acc: '100', mods: ['HT', 'HD', 'HR']},
+    {acc: '99', mods: ['HT', 'HD', 'HR']},
+    {acc: '98', mods: ['HT', 'HD', 'HR']},
+
     {acc: '100', mods: ['EZ']},
+    {acc: '99', mods: ['EZ']},
+    {acc: '98', mods: ['EZ']},
+
     {acc: '100', mods: ['HT', 'EZ']},
+    {acc: '99', mods: ['HT', 'EZ']},
+    {acc: '98', mods: ['HT', 'EZ']},
+
     {acc: '100', mods: ['HT', 'EZ', 'HD']},
-    {acc: '100', mods: ['HT', 'EZ', 'HR']},
-    {acc: '100', mods: ['HT', 'EZ', 'HR', 'HD']},*/
+    {acc: '99', mods: ['HT', 'EZ', 'HD']},
+    {acc: '98', mods: ['HT', 'EZ', 'HD']},
+    
+    */
 ];
 
+const cpu_usage = async () => {
+    return new Promise ( res => {
+        cpuUsage( (v) => {
+            res (v * 100);
+        });
+    });
+}
+
+
+const kill_process = (appName) => {
+    execSync(`taskkill /im ${appName} /F`);
+}
+
 const save_calculated_data = async () => {
-    console.log( 'calc > save to mysql')
     const recorded_calculations = calculated_chunck_data.slice();
     calculated_chunck_data = [];
     if (recorded_calculations.length > 0){
+        console.log( 'calc > save to mysql >',recorded_calculations.length ,'records')
         await MYSQL_SAVE('osu_beatmap_pp', 0, recorded_calculations);
     }
 }
@@ -68,7 +132,6 @@ const save_calculated_data = async () => {
 const ActionsController =  async () => {
 
     if (this.current_actions >= maxExecuting){
-        console.log('ActionsController > exit')
         return;
     }
 
@@ -78,7 +141,7 @@ const ActionsController =  async () => {
         return;
     }
 
-    if (calculated_chunck_data.length > 500 && next_actions.length > 0){
+    if (calculated_chunck_data.length > mysql_chunk_size && next_actions.length > 0){
         await save_calculated_data();
     }
 
@@ -102,7 +165,7 @@ const calcAction = ({md5, gamemode = 'osu', acc = '100', mods = []}) => {
     const proc = spawn( calc_exe, [
         'simulate', 
         gamemode,
-        mods.length > 0? mods.map( x => `-m ${x}`).join(' '): '',
+        ...mods.length > 0? mods.map( x => `-m ${x}`): '-m CL',
         '-j',
         `${path.join(osu_md5_stock, `${md5}.osu`)}`,
         acc_args,
@@ -121,7 +184,14 @@ const calcAction = ({md5, gamemode = 'osu', acc = '100', mods = []}) => {
 
     proc.stdout.on('close', async () =>{
         if (result.length > 0){
-            calc_result_add ({ md5, data: JSON.parse(result), mods });
+            try{
+                let data = JSON.parse(result);
+                calc_result_add ({ md5, data, mods });
+            } catch (e){
+                saveError(['beatmaps_pp_calc.js','std out (close)', md5, gamemode, acc, proc.spawnargs.join(' '), error].join(' > '));
+                console.error(`calc > error > something wrong with beatmap ${md5}.osu`);
+            }
+
         }
     });
 
@@ -138,7 +208,8 @@ const calcAction = ({md5, gamemode = 'osu', acc = '100', mods = []}) => {
             } catch (e){
                 console.error(`calc > error > can not copy ${md5}.osu`)
             }
-            saveError(['beatmaps_pp_calc.js','en.on(calc)',md5, gamemode, acc, error].join(' > '));
+            saveError(['beatmaps_pp_calc.js','std err (close)', md5, gamemode, acc, error].join(' > '));
+
             
         }
     });
@@ -186,18 +257,67 @@ const calc_from_mysql = async (gamemode = 'osu', ranked = ranked_status.ranked, 
 const init_key_events = () => {
     keypress(process.stdin);
 
-    process.stdin.on('keypress', (ch, key) => {
+    console.log('<----------------------------------------------------------------->');
+    console.log('*** CONTROL KEYS ***');
+    console.log('Q\tPROCESS INFO');
+    console.log('A\tDECREASE PROCESSES');
+    console.log('S\tINCREASE PROCESSES');
+    console.log('P\tPAUSE/RESUME');
+    console.log('CTRL + C\tEXIT');
+    console.log('<----------------------------------------------------------------->');
+
+    process.stdin.on('keypress', async (ch, key) => {
         if (key && key.name == 'q' && next_actions.length > 0 && this.current_actions > 0) {
             let completed = actions_max - next_actions.length;
             let last_action_date = new Date();
             let processed_ms = last_action_date - started_date;
-            let action_speed = completed / (processed_ms * 0.001);
+            let processed_sec = (processed_ms * 0.001);
+            let action_speed = completed / processed_sec;
             console.log('<----------------------------------------------------------------->');
+            console.log('Использование ЦП:\t', (await cpu_usage()).toFixed(0),'%');
+            console.log('Выполняется процессов:\t', maxExecuting);
             console.log('Выполнено:\t\t', completed, '/', actions_max);
             console.log('Осталось:\t\t', next_actions.length, '/', actions_max);
-            console.log('Скорость:\t\t', action_speed.toFixed(1), 'act/sec');
+            console.log('Скорость:\t\t', Number(action_speed.toFixed(1)), 'act/sec');
+            console.log('Работет:\t\t', Math.round(processed_sec/60), 'мин');
             console.log('Заверешние через:\t', Math.round(next_actions.length/action_speed/60), 'мин');
         }
+        if (key && key.name == 'p' ) {
+            console.log('<----------------------------------------------------------------->');
+            if (maxExecuting > 0){
+                maxExecuting = 0;
+                console.log('Пауза');
+            } else {
+                maxExecuting = setting_StartExecuting;
+                console.log('Возобновление');
+                await ActionsController();
+            }
+            console.log('Количество прроцессов уменьшено до', maxExecuting);
+        }
+
+        if (key && key.name == 'a' && maxExecuting > 1 ) {
+            maxExecuting = maxExecuting - 1;
+            console.log('<----------------------------------------------------------------->');
+            console.log('Количество прроцессов уменьшено на', 1);
+            console.log('Сейчас выполняется:\t', maxExecuting);
+        }
+        if (key && key.name == 's' && maxExecuting < setting_MaxExecuting ) {
+            maxExecuting = maxExecuting + 1;
+            console.log('<----------------------------------------------------------------->');
+            console.log('Количество прроцессов увеличено на', 1);
+            console.log('Сейчас выполняется:\t', maxExecuting);
+        }
+        if (key && key.name == 'e' ) {
+            this.toggle_explorer = !this.toggle_explorer;
+            console.log('<----------------------------------------------------------------->');
+            console.log('Explorer изменен на', this.toggle_explorer);
+            if (this.toggle_explorer) {
+                exec(`explorer.exe`);
+            } else {
+                kill_process('explorer.exe');
+            }
+        }
+        
         if (key && key.ctrl && key.name == 'c') {
             process.exit(0)
         }
@@ -214,7 +334,6 @@ const init_calc = async ( beatmaps = [], is_key_events = false ) => {
     const calculated_set = new Set( calculated_osu_beatmaps.map( (x) => `${x.md5}:${x.accuracy}:${x.mods}` ));
 
     console.log('loaded calculated records:', calculated_osu_beatmaps.length)
-    console.log('loaded calculated set:', calculated_set.size)
 
     const actions_with_mods = actions.map( val => { return {...val, mods_int: ModsToInt(val.mods)} });
 
@@ -240,6 +359,8 @@ const init_calc = async ( beatmaps = [], is_key_events = false ) => {
     actions_max = next_actions.length;
 
     console.log('start calcing..');
+
+    started_date = new Date();
 
     if (is_key_events){
         init_key_events();
