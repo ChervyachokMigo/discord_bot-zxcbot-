@@ -32,18 +32,17 @@ this.current_actions = 0;
 this.toggle_explorer = true;
 
 let calculated_osu_beatmaps = null;
-
 let actions_max = null;
-
 let started_date = null;
+let ended_count = null;
 
 const actions = [
-    /*{acc: '100', mods: []}, 
+    /*{acc: 100, mods: []}, 
     {acc: '99', mods: []}, 
     {acc: '98', mods: []}, 
-    {acc: '95', mods: []},*/
+    {acc: '95', mods: []},
 
-    /*{acc: '100', mods: ['HD']},
+    {acc: '100', mods: ['HD']},
     {acc: '99', mods: ['HD']},
     {acc: '98', mods: ['HD']},*/
 
@@ -51,13 +50,13 @@ const actions = [
     {acc: '99', mods: ['DT']},
     {acc: '98', mods: ['DT']},
 
-    /*{acc: '100', mods: ['HR']},
+    {acc: '100', mods: ['HR']},
     {acc: '99', mods: ['HR']},
     {acc: '98', mods: ['HR']},
 
     {acc: '100', mods: ['HR', 'HD']},
     {acc: '99', mods: ['HR', 'HD']},
-    {acc: '98', mods: ['HR', 'HD']},*/
+    {acc: '98', mods: ['HR', 'HD']},
 
     /*
     {acc: '100', mods: ['DT', 'HD']},
@@ -136,8 +135,15 @@ const ActionsController =  async () => {
     }
 
     if (next_actions.length === 0) {
+        if (!ended_count){
+            ended_count = this.current_actions;
+        }
+        if (ended_count){
+            ended_count = ended_count - 1;
+        }
         await save_calculated_data();
         console.log('ended');
+        console.log('ended_count', ended_count);
         return;
     }
 
@@ -147,8 +153,12 @@ const ActionsController =  async () => {
 
     while (this.current_actions < maxExecuting){
         let args = next_actions.shift();
-        this.current_actions++;
-        calcAction (args);
+        if (args){
+            this.current_actions++;
+            calcAction (args);
+        } else {
+            break;
+        }
     }
 
 
@@ -249,12 +259,20 @@ const calc_from_mysql = async (gamemode = 'osu', ranked = ranked_status.ranked, 
     const beatmaps_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(
         await MYSQL_GET_ALL('beatmap_data', { gamemode, ranked }, ['md5', 'gamemode', 'ranked'] ))
         .sort ( (a, b) => a.md5.localeCompare(b.md5) );
-    
-    await init_calc(beatmaps_data, is_key_events);
+
+    if (is_key_events){
+        init_key_events();
+    }
+
+    for (let action_args of actions){
+        const is_done = await init_calc_action(beatmaps_data, action_args);
+        console.log(`calc complete > ${action_args.acc}% ${action_args.mods.join('+')}`);
+    }
 
 }
 
 const init_key_events = () => {
+
     keypress(process.stdin);
 
     console.log('<----------------------------------------------------------------->');
@@ -265,6 +283,7 @@ const init_key_events = () => {
     console.log('P\tPAUSE/RESUME');
     console.log('CTRL + C\tEXIT');
     console.log('<----------------------------------------------------------------->');
+
 
     process.stdin.on('keypress', async (ch, key) => {
         if (key && key.name == 'q' && next_actions.length > 0 && this.current_actions > 0) {
@@ -327,16 +346,19 @@ const init_key_events = () => {
     process.stdin.resume();
 }
 
-const init_calc = async ( beatmaps = [], is_key_events = false ) => {
-    console.log('calc > loading')
+const init_calc_action = async ( beatmaps = [], { acc = 100, mods } ) => {
+    console.log(`calc > loading > ${acc}% ${mods.join('+')}`);
 
-    calculated_osu_beatmaps = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('osu_beatmap_pp', { mods: ModsToInt( ['DT']) }));
+    const mods_int = ModsToInt(mods);
+
+    calculated_osu_beatmaps = MYSQL_GET_ALL_RESULTS_TO_ARRAY(
+        await MYSQL_GET_ALL( 'osu_beatmap_pp', { mods: mods_int, accuracy: acc } ));
 
     const calculated_set = new Set( calculated_osu_beatmaps.map( (x) => `${x.md5}:${x.accuracy}:${x.mods}` ));
 
     console.log('loaded calculated records:', calculated_osu_beatmaps.length)
 
-    const actions_with_mods = actions.map( val => { return {...val, mods_int: ModsToInt(val.mods)} });
+    //const actions_with_mods = actions.map( val => { return {...val, mods_int } });
 
     console.log('checking beatmaps', beatmaps.length);
 
@@ -346,13 +368,12 @@ const init_calc = async ( beatmaps = [], is_key_events = false ) => {
             continue;
         }
 
-        for (let action of actions_with_mods){
-            let args = {...beatmap, ...action};
+        let args = {...beatmap, acc, mods_int, mods };
 
-            if (calculated_set.has( `${args.md5}:${args.acc}:${args.mods_int}`) === false) {
-                next_actions.push( args );
-            }
+        if (calculated_set.has( `${args.md5}:${args.acc}:${args.mods_int}`) === false) {
+            next_actions.push( args );
         }
+        
     }
 
     console.log('added actions:', next_actions.length);
@@ -363,17 +384,17 @@ const init_calc = async ( beatmaps = [], is_key_events = false ) => {
 
     started_date = new Date();
 
-    if (is_key_events){
-        init_key_events();
-    }
+    ended_count = null;
 
     if (this.current_actions < maxExecuting){
         await ActionsController();
     }
+
+    return await new Promise (res => setInterval( () => { if(ended_count === 0 || ended_count < 0) { res(true)} }, 1000 ));
 }
 
 module.exports = {
-    init_calc: init_calc,
+    init_calc_action: init_calc_action,
     calc_from_mysql: calc_from_mysql
 }
 
