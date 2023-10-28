@@ -8,25 +8,26 @@ const path = require('path');
 const { osu_md5_stock } = require('../settings');
 const { MYSQL_DELETE } = require('../modules/DB/base');
 
-const get_not_existed_beatmap = async (info, output_path) => {
+const get_not_existed_beatmap = async (info, output_path, is_md5_check = true) => {
     if (!output_path){
         throw 'set beatmap output path'
     }
     return new Promise( async (res) => {
         const url = `https://osu.ppy.sh/osu/${info.id}`;
         await axios.get( url ).then( async (response) => {
-            if (response && response.data) {
+            if (response && response.data && response.data.length > 0) {
                 const md5 = crypto.createHash('md5').update(response.data).digest("hex");
                 
                 fs.writeFileSync( path.join( output_path, `${md5}.osu` ), response.data);
 
-                if (md5 === info.md5){
+                if (is_md5_check && md5 === info.md5 || !is_md5_check){
                     res({ data: response.data });
                 } else {
                     await MYSQL_DELETE('beatmap_data', { md5: info.md5});
                     res({ error: `[${info.md5}] > beatmap md5 not valid` });
                 }
             } else {
+                await MYSQL_DELETE('beatmap_data', { md5: info.md5});
                 res({ error: `[${info.md5}] > no response from bancho` });
             }
         }).catch( err => {

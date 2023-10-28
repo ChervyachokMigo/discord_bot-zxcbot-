@@ -11,6 +11,7 @@ const { MYSQL_SAVE, MYSQL_GET_ALL } = require("../modules/DB/base");
 const { MYSQL_GET_ALL_RESULTS_TO_ARRAY } = require("../modules/DB");
 
 const { osu_md5_stock } = require("../settings");
+const { download_by_md5_list } = require("./download_beatmaps_diffs");
 
 const calc_exe = path.join(__dirname,'../bin/pp_calculator/PerformanceCalculator.exe');
 
@@ -31,6 +32,8 @@ this.current_actions = 0;
 
 this.toggle_explorer = true;
 
+let beatmaps_failed = [];
+
 let calculated_osu_beatmaps = null;
 let actions_max = null;
 let started_date = null;
@@ -44,10 +47,10 @@ const actions = [
 
     {acc: '100', mods: ['HD']},
     {acc: '99', mods: ['HD']},
-    {acc: '98', mods: ['HD']},*/
+    {acc: '98', mods: ['HD']},
 
     {acc: '100', mods: ['DT']},
-    {acc: '99', mods: ['DT']},
+    {acc: '99', mods: ['DT']},*/
     {acc: '98', mods: ['DT']},
 
     {acc: '100', mods: ['HR']},
@@ -213,11 +216,13 @@ const calcAction = ({md5, gamemode = 'osu', acc = '100', mods = []}) => {
 
     proc.stderr.on('close', async () => {
         if (error.length > 0){
-            try{
+            /*try{
                 fs.copyFileSync( path.join(osu_md5_stock, `${md5}.osu`), path.join( __dirname, '..\\data\\osu_pps\\calc_error\\', `${md5}.osu`) )
             } catch (e){
                 console.error(`calc > error > can not copy ${md5}.osu`)
-            }
+            }*/
+            beatmaps_failed.push(md5);
+
             saveError(['beatmaps_pp_calc.js','std err (close)', md5, gamemode, acc, error].join(' > '));
 
             
@@ -267,6 +272,19 @@ const calc_from_mysql = async (gamemode = 'osu', ranked = ranked_status.ranked, 
     for (let action_args of actions){
         const is_done = await init_calc_action(beatmaps_data, action_args);
         console.log(`calc complete > ${action_args.acc}% ${action_args.mods.join('+')}`);
+
+        let beatmaps_results = await download_by_md5_list(beatmaps_failed);
+        for (let {error, data, md5} of beatmaps_results){
+            if (error){
+                console.log(error);
+                continue;
+            }
+            if (data){
+                fs.writeFileSync(path.join(osu_md5_stock, `${md5}.osu`), data, {encoding: 'utf8'});
+                console.log(`saved ${md5}.osu > ${data.length} bytes`);
+            }
+        }
+        beatmaps_failed = [];
     }
 
 }
