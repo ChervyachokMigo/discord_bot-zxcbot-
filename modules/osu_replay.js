@@ -251,13 +251,13 @@ module.exports = {
                 }
 
                 if (interaction.customId === 'KillNibbers'){
-                    let nibbers = await MYSQL_GET_ONE('nibbers', {userid: interaction.user.id});
-                    if (nibbers == null){
-                        nibbers = 1;
-                    } else {
-                        nibbers = nibbers.dataValues.nibbers;
-                        nibbers++;
+                    const mysql_data = await MYSQL_GET_ONE('nibbers', {userid: interaction.user.id});
+
+                    let nibbers = 1;
+                    if (mysql_data){
+                        nibbers = mysql_data.nibbers + 1;
                     }
+
                     await MYSQL_SAVE ('nibbers', {userid: interaction.user.id}, {nibbers});
                     let nibbermessage = await interaction.message.reply('Убит один негр. '+`${interaction.user} всего убил ${nibbers} негров`);
                     

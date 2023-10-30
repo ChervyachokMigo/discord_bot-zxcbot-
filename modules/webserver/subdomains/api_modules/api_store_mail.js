@@ -1,6 +1,5 @@
 const { key_timeout, token_length } = require('../api_consts/api_settings.js');
 
-const { MYSQL_GET_ALL_RESULTS_TO_ARRAY } = require("../../../DB.js");
 const { MYSQL_SAVE, MYSQL_GET_ONE, MYSQL_DELETE, MYSQL_GET_ALL } = require("../../../DB/base.js");
 
 const { GET_VALUES_FROM_OBJECT_BY_KEY, onlyUnique } = require('../../../tools.js');
@@ -54,9 +53,9 @@ module.exports = {
         if (is_authed){
             token = authed_ips[i].token;
         } else {
-            let mysql_ip_token = await MYSQL_GET_ONE ( 'authorizedMailUsers', {ip} );
-            if (mysql_ip_token !== null){
-                token = mysql_ip_token.dataValues.token;
+            let mysql_data = await MYSQL_GET_ONE ( 'authorizedMailUsers', {ip} );
+            if (mysql_data !== null){
+                token = mysql_data.token;
                 authed_ips.push({ip, token});
                 return {is_authed: true, token};
             }
@@ -81,17 +80,14 @@ module.exports = {
     load_mail_addressees: async (args) => {
         const result = onlyUnique(
             GET_VALUES_FROM_OBJECT_BY_KEY(
-                MYSQL_GET_ALL_RESULTS_TO_ARRAY(
-                    await MYSQL_GET_ALL( 'mail_contents', {})
-                ), 
+                await MYSQL_GET_ALL( 'mail_contents' ), 
             'addressee')
         );
         return result;
     },
 
     load_mail_posts: async (args) => {
-        const result = MYSQL_GET_ALL_RESULTS_TO_ARRAY(
-            await MYSQL_GET_ALL( 'mail_contents', {addressee: args.addressee}));
+        const result = await MYSQL_GET_ALL( 'mail_contents', {addressee: args.addressee});
 
         return result.map( (val) => { return { 
             unique_key: val.unique_key,
@@ -103,8 +99,7 @@ module.exports = {
     },
 
     load_mail_post_content: async (args) => {
-        const result = await MYSQL_GET_ONE( 'mail_contents', {unique_key: args.unique_key});
-        return result.dataValues || undefined
+        return await MYSQL_GET_ONE( 'mail_contents', {unique_key: args.unique_key});
     },
 
     delete_post: async (args) => {
@@ -114,9 +109,8 @@ module.exports = {
 
     load_ignore_emails: async () => {
         emails_ignore_list = GET_VALUES_FROM_OBJECT_BY_KEY(
-            MYSQL_GET_ALL_RESULTS_TO_ARRAY(
-            await MYSQL_GET_ALL( 'mail_ignores', {})
-        ), 'email_name');
+            await MYSQL_GET_ALL( 'mail_ignores' ),
+        'email_name');
         return emails_ignore_list;
     },
 

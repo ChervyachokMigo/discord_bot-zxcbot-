@@ -8,10 +8,10 @@ const { saveError } = require("../modules/logserver");
 const { prepareDB } = require("../modules/DB/defines.js");
 const { ModsToInt } = require('./osu_mods');
 const { MYSQL_SAVE, MYSQL_GET_ALL } = require("../modules/DB/base");
-const { MYSQL_GET_ALL_RESULTS_TO_ARRAY } = require("../modules/DB");
 
 const { osu_md5_stock } = require("../settings");
 const { download_by_md5_list } = require("./download_beatmaps_diffs");
+const actions = require("./consts/actions");
 
 const calc_exe = path.join(__dirname,'../bin/pp_calculator/PerformanceCalculator.exe');
 
@@ -38,76 +38,6 @@ let calculated_osu_beatmaps = null;
 let actions_max = null;
 let started_date = null;
 let ended_count = null;
-
-const actions = [
-    /*{acc: 100, mods: []}, 
-    {acc: '99', mods: []}, 
-    {acc: '98', mods: []}, 
-    {acc: '95', mods: []},
-
-    {acc: '100', mods: ['HD']},
-    {acc: '99', mods: ['HD']},
-    {acc: '98', mods: ['HD']},
-
-    {acc: '100', mods: ['DT']},
-    {acc: '99', mods: ['DT']},*/
-    {acc: '98', mods: ['DT']},
-
-    {acc: '100', mods: ['HR']},
-    {acc: '99', mods: ['HR']},
-    {acc: '98', mods: ['HR']},
-
-    {acc: '100', mods: ['HR', 'HD']},
-    {acc: '99', mods: ['HR', 'HD']},
-    {acc: '98', mods: ['HR', 'HD']},
-
-    /*
-    {acc: '100', mods: ['DT', 'HD']},
-    {acc: '99', mods: ['DT', 'HD']},
-    {acc: '98', mods: ['DT', 'HD']},
-
-    {acc: '100', mods: ['DT', 'HD', 'HR']},
-    {acc: '99', mods: ['DT', 'HD', 'HR']},
-    {acc: '98', mods: ['DT', 'HD', 'HR']},
-
-    {acc: '100', mods: ['DT', 'EZ']},
-    {acc: '99', mods: ['DT', 'EZ']},
-    {acc: '98', mods: ['DT', 'EZ']},
-
-    {acc: '100', mods: ['DT', 'EZ', 'HD']},
-    {acc: '99', mods: ['DT', 'EZ', 'HD']},
-    {acc: '98', mods: ['DT', 'EZ', 'HD']},
-
-    {acc: '100', mods: ['HT']},
-    {acc: '98', mods: ['HT']},
-    {acc: '99', mods: ['HT']},
-
-    {acc: '100', mods: ['HT', 'HD']},
-    {acc: '99', mods: ['HT', 'HD']},
-    {acc: '98', mods: ['HT', 'HD']},
-
-    {acc: '100', mods: ['HT', 'HR']},
-    {acc: '99', mods: ['HT', 'HR']},
-    {acc: '98', mods: ['HT', 'HR']},
-
-    {acc: '100', mods: ['HT', 'HD', 'HR']},
-    {acc: '99', mods: ['HT', 'HD', 'HR']},
-    {acc: '98', mods: ['HT', 'HD', 'HR']},
-
-    {acc: '100', mods: ['EZ']},
-    {acc: '99', mods: ['EZ']},
-    {acc: '98', mods: ['EZ']},
-
-    {acc: '100', mods: ['HT', 'EZ']},
-    {acc: '99', mods: ['HT', 'EZ']},
-    {acc: '98', mods: ['HT', 'EZ']},
-
-    {acc: '100', mods: ['HT', 'EZ', 'HD']},
-    {acc: '99', mods: ['HT', 'EZ', 'HD']},
-    {acc: '98', mods: ['HT', 'EZ', 'HD']},
-    
-    */
-];
 
 const cpu_usage = async () => {
     return new Promise ( res => {
@@ -145,8 +75,6 @@ const ActionsController =  async () => {
             ended_count = ended_count - 1;
         }
         await save_calculated_data();
-        console.log('ended');
-        console.log('ended_count', ended_count);
         return;
     }
 
@@ -261,8 +189,7 @@ const calc_result_add = ({md5, data, mods})=> {
 const calc_from_mysql = async (gamemode = 'osu', ranked = ranked_status.ranked, is_key_events = false) => {
     await prepareDB();
     
-    const beatmaps_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(
-        await MYSQL_GET_ALL('beatmap_data', { gamemode, ranked }, ['md5', 'gamemode', 'ranked'] ))
+    const beatmaps_data = (await MYSQL_GET_ALL('beatmap_data', { gamemode, ranked }, ['md5', 'gamemode', 'ranked'] ))
         .sort ( (a, b) => a.md5.localeCompare(b.md5) );
 
     if (is_key_events){
@@ -365,12 +292,12 @@ const init_key_events = () => {
 }
 
 const init_calc_action = async ( beatmaps = [], { acc = 100, mods } ) => {
+    console.time('loading');
     console.log(`calc > loading > ${acc}% ${mods.join('+')}`);
 
     const mods_int = ModsToInt(mods);
 
-    calculated_osu_beatmaps = MYSQL_GET_ALL_RESULTS_TO_ARRAY(
-        await MYSQL_GET_ALL( 'osu_beatmap_pp', { mods: mods_int, accuracy: acc } ));
+    calculated_osu_beatmaps = await MYSQL_GET_ALL( 'osu_beatmap_pp', { mods: mods_int, accuracy: Number(acc) } );
 
     const calculated_set = new Set( calculated_osu_beatmaps.map( (x) => `${x.md5}:${x.accuracy}:${x.mods}` ));
 
@@ -397,6 +324,8 @@ const init_calc_action = async ( beatmaps = [], { acc = 100, mods } ) => {
     console.log('added actions:', next_actions.length);
 
     actions_max = next_actions.length;
+
+    console.timeEnd('loading');
 
     console.log('start calcing..');
 

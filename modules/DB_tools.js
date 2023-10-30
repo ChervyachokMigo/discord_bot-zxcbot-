@@ -8,12 +8,13 @@ const { SendAnswer, SendError } = require("../tools/embed.js")
 module.exports = {
     CheckUser: async function ( channel, userid ){
         
-        var balancedb = await MYSQL_GET_ONE(`user`,{guildid:channel.guild.id, userid:userid })
+        const balancedb = await MYSQL_GET_ONE(`user`,{guildid:channel.guild.id, userid:userid });
+
         if (balancedb === null){
-            var res = await MYSQL_SAVE( `user`, 
+            const result = await MYSQL_SAVE( `user`, 
                 {guildid: channel.guild.id, userid: userid}, 
                 {coins: 0})
-            if (!res) {
+            if (result === null) {
                 var channel = await getGuildChannelDB( message.guild, `system` )
                 await SendAnswer( {channel: channel,
                     guildname: channel.guild.name,
@@ -21,9 +22,9 @@ module.exports = {
                     title: 'База данных',
                     text:  `Нет доступа к базе данных` } );
             }
-            return res.dataValues
+            return result;
         } else {
-            return balancedb
+            return balancedb;
         }
     },
 
@@ -40,14 +41,15 @@ module.exports = {
         let role = await checkArgsOfRole(argString, com_text, message)
         if (!role) return false
     
-        var roledb = await MYSQL_GET_ONE(`role`, { guildid: message.channel.guild.id, roleid:role.id })
+        const role_key = { guildid: message.channel.guild.id, roleid: role.id };
+
+        const roledb = await MYSQL_GET_ONE(`role`, role_key);
+
         if (roledb === null){
-            var res = await MYSQL_SAVE( `role`, 
-                {guildid: message.channel.guild.id, roleid: role.id}, 
-                {price: -1})
-            return res.dataValues
+            const result = await MYSQL_SAVE( `role`, role_key, {price: -1});
+            return result;
         } else {
-            return roledb
+            return roledb;
         }
     },
 

@@ -1,38 +1,37 @@
-const { daily_WaitTime, coins_daily_reward, coins_name, coins_max } = require("../settings.js")
-const { getGuildChannelDB } = require (`./GuildChannel.js`)
+const { daily_WaitTime, coins_daily_reward, coins_name, coins_max } = require("../settings.js");
+const { getGuildChannelDB } = require (`./GuildChannel.js`);
 
-const { formatSecondsToTime, getCurrentTimeMs } = require("../tools/time.js")
+const { formatSecondsToTime, getCurrentTimeMs } = require("../tools/time.js");
 
-const { CheckUser } = require("./DB_tools.js")
+const { CheckUser } = require("./DB_tools.js");
 
 const { MYSQL_SAVE,  MYSQL_GET_ALL } = require("./DB/base.js");
 
-const { LogString } = require("../tools/log.js")
-const { SendAnswer } = require("../tools/embed.js")
+const { LogString } = require("../tools/log.js");
+const { SendAnswer } = require("../tools/embed.js");
 
 var DailyTimers = [];
 
-const daily_waittime_ms = daily_WaitTime*1000
+const daily_waittime_ms = daily_WaitTime*1000;
 
 module.exports = {
     getDailyTimeLeftMs: function(lastdaily){
-        var currentTime = getCurrentTimeMs()
-        var diff = currentTime - lastdaily
-        return daily_waittime_ms - diff
+        var currentTime = getCurrentTimeMs();
+        var diff = currentTime - lastdaily;
+        return daily_waittime_ms - diff;
     },
 
     dailyesTimers_onStart: async function ( guild ){
-        var usersdaily = await MYSQL_GET_ALL ( `daily`, { guildid: guild.id } )
-        if (usersdaily.length > 0){
-            for (var i= 0; i < usersdaily.length; i++){
-                if (usersdaily[i].dataValues.dailynotified == false){
-                    await module.exports.dailyCreateTimer(
-                        guild, usersdaily[i].dataValues.userid, usersdaily[i].dataValues.lastdaily)
-                    
-                }
+        
+        const results = await MYSQL_GET_ALL ( `daily`, { guildid: guild.id } );
+
+        for (let userdaily of results){
+            if (userdaily.dailynotified === false){
+                await module.exports.dailyCreateTimer( guild, userdaily.userid, userdaily.lastdaily );
             }
         }
-        LogString(guild.name, `info`, `Balance Daily`, `Загружены и запущены все дейлики`)
+        
+        LogString(guild.name, `info`, `Balance Daily`, `Загружены и запущены все дейлики`);
     },
 
     dailyCommandAction: async function( message, com_text ){
@@ -60,24 +59,24 @@ module.exports = {
         }
         
         //если таймер откатился
-        var newuuserdb = {}
-        newuuserdb.lastdaily = getCurrentTimeMs()
+        let user_values = {
+            lastdaily: getCurrentTimeMs(),
+            dailynotified: false
+        }
+
         var coins_daily_reward_text = coins_daily_reward
         if (userdb.coins + coins_daily_reward >= coins_max){
             coins_daily_reward_text = coins_max - userdb.coins
-            newuuserdb.coins = coins_max
+            user_values.coins = coins_max
         } else {
-            newuuserdb.coins = userdb.coins + coins_daily_reward
+            user_values.coins = userdb.coins + coins_daily_reward
         }
         
-        newuuserdb.dailynotified = false
-        
-        await module.exports.dailyCreateTimer(
-            message.guild, message.author.id, newuuserdb.lastdaily)
+        await module.exports.dailyCreateTimer( message.guild, message.author.id, user_values.lastdaily);
             
-        if (await MYSQL_SAVE( `user`, 
-            {guildid: message.guild.id, userid:message.author.id },
-            {coins: newuuserdb.coins, lastdaily: newuuserdb.lastdaily, dailynotified: newuuserdb.dailynotified })){
+        const user_key = { guildid: message.guild.id, userid: message.author.id };
+
+        if (await MYSQL_SAVE( `user`, user_key, user_values )){
                 await SendAnswer( {channel: message.channel,
                     guildname: message.guild.name,
                     messagetype: `info`,

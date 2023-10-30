@@ -22,16 +22,12 @@ module.exports = {
 
     MYSQL_TWITCH_USER_TRACKING_CHANGE: async function(message, username, option){
         //проверка юзера и создаание нового юзера
-        var userdata = await MYSQL_GET_ONE('twitchdata', {username: username});
-        if (userdata === null ) {
-            let success = await MYSQL_TRACK_NEW_TWITCH_USER(username);
-            if (!success) {
+        let userdata = await MYSQL_GET_ONE('twitchdata', {username: username});
+        if ( userdata === null ) {
+            userdata = await MYSQL_TRACK_NEW_TWITCH_USER(username);
+            if (!userdata) {
                 return {success: false, text: `Twitch user **${username}** not exists`}
-            } else {
-                userdata = success.dataValues;
             }
-        } else {
-            userdata = userdata.dataValues;
         }
 
         option.value = Boolean(option.value);

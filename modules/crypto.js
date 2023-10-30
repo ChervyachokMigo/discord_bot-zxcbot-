@@ -73,8 +73,8 @@ async function get_guild_coinpairs(guild_id = 0){
 async function get_pair_with_value_change(pair){
 
     async function get_value_change( pair ){
-        let old_pair = await MYSQL_GET_ONE('cryptopairs', {first: pair.first, second: pair.second});
-        return old_pair === null? 0: (pair.value - old_pair.dataValues.value);
+        const old_pair = await MYSQL_GET_ONE('cryptopairs', {first: pair.first, second: pair.second});
+        return old_pair === null? 0: (pair.value - old_pair.value);
     }
 
     pair.value = pair.is_online == true? await getPriceCoinPair( pair ): pair.value;

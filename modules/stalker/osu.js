@@ -3,7 +3,7 @@ const { v2 } = require ('osu-api-extended');
 const {  MYSQL_GET_TRACKING_DATA_BY_ACTION, manageGuildServiceTracking, 
     getTrackingInfo, getGuildidsOfTrackingUserService } = require("../DB.js");
 
-const { MYSQL_SAVE, MYSQL_GET_ONE } = require("../DB/base.js");
+const { MYSQL_SAVE, MYSQL_GET_ONE, MYSQL_GET_ALL } = require("../DB/base.js");
 
 const { getTimeMSKToStringFormat, timeAgo, getDiscordRelativeTime } = require('../../tools/time.js');
 const { getNumberWithSign, getFixedFloat } = require("../../modules/tools.js");
@@ -202,9 +202,8 @@ const get_performance_points_beatmap = ( md5 ) => {
     return null;
 }
 
-const get_performance_points_beatmap_mysql = async ( md5 ) => {
-    const maps = MYSQL_GET_ALL_RESULTS_TO_ARRAY( 
-        await MYSQL_GET_ALL('osu_beatmap_pp', { md5 }));
+const get_performance_points_beatmap_mysql = async ({ md5, mods = 0 }) => {
+    const maps = await MYSQL_GET_ALL('osu_beatmap_pp', { md5, mods });
 
     if (!maps || maps.length === 0) {
         return null;
@@ -315,7 +314,7 @@ module.exports = {
         if (!beatmap){
             const beatmapset_info = await get_beatmap_info_bancho( request.beatmapset_id );
 
-            if ( !beatmap){
+            if (!beatmapset_info){
                 return {error: `невозможно получить информацию о карте с банчо ${request.beatmapset_id}`};
             }
 
@@ -325,9 +324,17 @@ module.exports = {
                 return {error: `карта ${request.beatmap_id} не найдена в битмапсете ${request.beatmapset_id}`};
             }
 
+            beatmap.beatmap_id = beatmap.id;
+            beatmap.title = beatmapset_info.title;
+            beatmap.artist = beatmapset_info.artist;
+            beatmap.difficulty = beatmap.version;
+            beatmap.creator = beatmapset_info.creator;
+            beatmap.gamemode = beatmap.mode;
+            beatmap.ranked = beatmap.status;
+            beatmap.md5 = beatmap.checksum;
         }
         
-        const beatmap_pps = get_performance_points_beatmap_mysql( beatmap.md5 || beatmap.checksum );
+        const beatmap_pps = await get_performance_points_beatmap_mysql({ md5: beatmap.md5 });
 
         let  pps = [];
 
@@ -337,7 +344,7 @@ module.exports = {
                 const pp = info.pp_total;
                 pps.push({acc, pp});
             }
-            pps.sort( (a, b) => a.acc - b-acc );
+            pps.sort( (a, b) => b.acc - a.acc );
         } else {
             /*const result = await get_not_existed_beatmap({
                 id: Number(request.beatmap_id) , 
@@ -358,23 +365,23 @@ module.exports = {
 
         return {success: {
                 url: url_parts[0],
-                id: beatmap.id,
-                md5: beatmap.checksum,
-                artist: beatmapset_info.artist, 
-                title: beatmapset_info.title,
-                diff: beatmap.version,
-                creator: beatmapset_info.creator,
-                mode: beatmap.mode,
-                status: beatmap.status,
-                length: beatmap.hit_length,
-                max_combo: beatmap.max_combo,
-                bpm: beatmap.bpm,
-                stars: beatmap.difficulty_rating,
-                ar: beatmap.ar,
-                cs: beatmap.cs,
-                od: beatmap.accuracy,
-                hp: beatmap.drain,
-                beatmapset_mode: request.gamemode,
+                id: beatmap.beatmap_id,
+                md5: beatmap.md5,
+                artist: beatmap.artist, 
+                title: beatmap.title,
+                diff: beatmap.difficulty,
+                creator: beatmap.creator,
+                mode: beatmap.gamemode,
+                status: beatmap.ranked,
+                //length: beatmap.hit_length,
+                //max_combo: beatmap.max_combo,
+                //bpm: beatmap.bpm,
+                //stars: beatmap.difficulty_rating,
+                //ar: beatmap.ar,
+                //cs: beatmap.cs,
+                //od: beatmap.accuracy,
+                //hp: beatmap.drain,
+                //beatmapset_mode: request.gamemode,
                 pps
             }
         }
@@ -478,7 +485,8 @@ module.exports = {
 
     MYSQL_OSU_USER_TRACKING_CHANGE: async function(message, userid, option){
         var user = isNaN( Number(userid))?{username:userid.toString()}:{userid:Number(userid)};
-        //проверка юзера и создаание нового юзера
+        
+        //проверка юзера и создание нового юзера
         var userdata = await MYSQL_GET_ONE('osuprofile', user);
         if (userdata === null ) {
             var osuserdata = await getOsuUserData(user.username || user.userid,'osu');
@@ -489,8 +497,6 @@ module.exports = {
             await MYSQL_SAVE('osuprofile', { userid: osuserdata.userid }, osuserdata);
             userdata = osuserdata;
             
-        } else {
-            userdata = userdata.dataValues;
         }
 
         option.value = Boolean(option.value);

@@ -59,11 +59,9 @@ const moduleName = `Stalker VK`;
 module.exports = {
     MYSQL_VK_USER_TRACKING_CHANGE: async function(message, userid, option){
         //проверка юзера и создаание нового юзера
-        var userdata = await MYSQL_GET_ONE('vkuser', {userid: userid});
+        let userdata = await MYSQL_GET_ONE('vkuser', {userid: userid});
         if (userdata === null ) {
             userdata = await MYSQL_TRACK_NEW_VK_USER(userid);
-        } else {
-            userdata = userdata.dataValues;
         }
 
         option.value = Boolean(option.value);
@@ -252,36 +250,41 @@ module.exports = {
 }
 
 async function MYSQL_TRACK_NEW_VK_USER (userid){
+    const userdata = await getVKUsersData([userid]).shift();
 
-    var VKUserNewRecordData = CONVERT_TO_VKUSER_OBJECT((await getVKUsersData([userid]))[0]);
-    
-    var VKFriendsNewRecordData = await getVKUserFriendsCount(userid);
-    await MYSQL_SAVE('vkuser', {userid: userid}, VKUserNewRecordData);
-    await REWRITE_VK_FRIENDS(VKUserNewRecordData, VKFriendsNewRecordData);
+    if (typeof userdata === 'undefined'){
+        throw new Error('> vk user not exists >'+userid);
+    }
 
-    return VKUserNewRecordData;
+    const new_record = CONVERT_TO_VKUSER_OBJECT(userdata);
+    const friends_data = await getVKUserFriendsCount(userid);
+
+    await MYSQL_SAVE('vkuser', {userid: userid}, new_record);
+    await REWRITE_VK_FRIENDS(new_record, friends_data);
+
+    return new_record;
 }
 
 function CONVERT_TO_VKUSER_OBJECT(VK_values){
-    var lastactive = 0;
-    if (typeof VK_values.last_seen === 'undefined' || typeof VK_values.last_seen.time === 'undefined'){
-        lastactive = 0
-    } else {
+    
+    let lastactive = 0;
+
+    if (typeof VK_values.last_seen !== 'undefined' && typeof VK_values.last_seen.time !== 'undefined'){
         lastactive = Number(VK_values.last_seen.time);
     }
-    var newobj = {
+
+    return {
         tracking: true,
         userid: VK_values.id,
         name1: VK_values.first_name,
         name2: VK_values.last_name,
         online: Boolean(VK_values.online),
-        lastactive: lastactive,
+        lastactive,
         followers: typeof VK_values.followers_count!=='undefined'?Number(VK_values.followers_count):0,
         statustext: typeof VK_values.status!=='undefined'?VK_values.status:'',
         friends: 0,
         friendsTracking: false,
     };
-    return newobj
 }
 
 function getVKUserDataFromVKUsersRequestData(requestdata, userid){

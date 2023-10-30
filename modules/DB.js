@@ -16,17 +16,6 @@ const BannedChannels = require("./twitchchat/tools/BannedChannels.js");
 const { game_category } = require("./twitchchat/constants/general.js");
 const { onlyUnique } = require("./tools.js");
 
-function MYSQL_GET_ALL_RESULTS_TO_ARRAY(mysqldata){
-    var res = [];
-    if (mysqldata.length > 0){
-        for (let data of mysqldata){
-            res.push(data.dataValues);
-        }
-    }
-    return res;
-}
-
-
 function GET_VALUES_FROM_OBJECT_BY_KEY (arrayobject, valuekey){
     var res = [];
     for (let data of arrayobject){
@@ -139,7 +128,7 @@ async function MYSQL_GET_TRACKING_DATA_BY_ACTION( action, custom_query_params = 
         default:
             throw new Error('undefined action');
     }
-    return MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL(query_action, query_params));
+    return await MYSQL_GET_ALL(query_action, query_params);
 }
 
 async function manageGuildServiceTracking (guildid, platform, action, value, trackingdata, mysql_tablename){
@@ -192,7 +181,7 @@ const MYSQL_GET_TRACKING_TWITCH_CHATS = async () => {
 }
 
 const MYSQL_GET_IGNORE_TWITCH_CHATS = async () => {
-    const mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('twitchchat_ignores'));
+    const mysql_data = await MYSQL_GET_ALL('twitchchat_ignores');
     let usernames = [];
     if (mysql_data.length > 0){
         usernames = GET_VALUES_FROM_OBJECT_BY_KEY(mysql_data, 'channelname');
@@ -201,7 +190,7 @@ const MYSQL_GET_IGNORE_TWITCH_CHATS = async () => {
 }
 
 const MYSQL_GET_BANNED_TWITCH_CHATS = async () => {
-    const mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('twitch_banned'));
+    const mysql_data = await MYSQL_GET_ALL('twitch_banned');
     let usernames = [];
     if (mysql_data.length > 0){
         usernames = GET_VALUES_FROM_OBJECT_BY_KEY(mysql_data, 'channelname');
@@ -216,7 +205,7 @@ module.exports = {
         if (mysql_result === null){
             return null;
         }
-        return mysql_result.dataValues;
+        return mysql_result;
 
     },
 
@@ -231,7 +220,7 @@ module.exports = {
     MYSQL_GET_IGNORE_TWITCH_CHATS: MYSQL_GET_IGNORE_TWITCH_CHATS,
 
     MYSQL_GET_ENABLED_TWITCH_CHATS : async () => {
-        const mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL('twitchchat_enabled'));
+        const mysql_data = await MYSQL_GET_ALL('twitchchat_enabled');
         let usernames = [];
         if (mysql_data.length > 0){
             usernames = GET_VALUES_FROM_OBJECT_BY_KEY(mysql_data, 'channelname');
@@ -244,13 +233,12 @@ module.exports = {
     MYSQL_TWITCH_CHAT_TRACKING_CHANGE: async (message, username, option) => {
         //проверка юзера и создаание нового юзера
         let userdata = await MYSQL_GET_ONE('twitchchat', {username: username});
+        
         if (userdata === null ) {
             userdata = {
                 username: username,
                 tracking: true
             }
-        } else {
-            userdata = userdata.dataValues;
         }
     
         option.value = Boolean(option.value);
@@ -365,20 +353,18 @@ module.exports = {
         const query = guildid === 0? 
             { platformaction: platformaction }: 
             { platformaction: platformaction, guildid: guildid.toString() };
-        const mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY( await MYSQL_GET_ALL('guildServicesTracking', query));
+        const mysql_data = await MYSQL_GET_ALL('guildServicesTracking', query);
         return GET_VALUES_FROM_OBJECT_BY_KEY(mysql_data, 'key');
     },
 
     getGuildidsOfTrackingUserService: async function (platformaction, key){
-        const mysql_data = MYSQL_GET_ALL_RESULTS_TO_ARRAY( await MYSQL_GET_ALL('guildServicesTracking', {
+        const mysql_data = await MYSQL_GET_ALL('guildServicesTracking', {
             platformaction: platformaction,
             key: key.toString()
-        }));
+        });
         const guildids = GET_VALUES_FROM_OBJECT_BY_KEY( mysql_data, 'guildid' );
         return guildids.filter( (value, index, self) => self.indexOf(value) === index );
     },
-
-    MYSQL_GET_ALL_RESULTS_TO_ARRAY: MYSQL_GET_ALL_RESULTS_TO_ARRAY,
 
     manageGuildCryptoTracking: async function (guildid, platform, action, pair, is_tracking ){
         const key = `${pair.first}-${pair.second}`;

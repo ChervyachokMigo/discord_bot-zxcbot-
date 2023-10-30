@@ -28,7 +28,7 @@ module.exports = {
 
         if (!await checkReply(message, com_text)) return
 
-        var referenceUrl = getMessageDiscordURL(message, message.reference.messageId)
+        const referenceUrl = getMessageDiscordURL(message, message.reference.messageId)
 
         if (comargs[0] === 'clear'){
             await MYSQL_DELETE (`reactionrole`, {guildid: message.guild.id, messageid: message.reference.messageId})
@@ -41,37 +41,38 @@ module.exports = {
             return
         }
 
-        var reactionrole_emoji = await checkArgsOfEmoji(comargs[0], com_text, message)
+        const reactionrole_emoji = await checkArgsOfEmoji(comargs[0], com_text, message)
         if (!reactionrole_emoji) return
 
-        var reactionrole_role = await checkArgsOfRole(comargs[1], com_text, message)
+        const reactionrole_role = await checkArgsOfRole(comargs[1], com_text, message)
         if (!reactionrole_role) return
 
-        var newraw = NewReactionRoleValues(
-            message.guild.id,
-            message.reference.messageId,
-            reactionrole_emoji,
-            reactionrole_role.id)
+        const new_record_key = {
+            guildid: message.guild.id,
+            messageid: message.reference.messageId,
+            emoji: reactionrole_emoji.id
+        }
+        const new_record_value = {
+            emojitype: reactionrole_emoji.emojitype,
+            roleid: reactionrole_role.id
+        }
         
         //должна быть проверка на права роли
 
-        if (
-            await MYSQL_SAVE(`reactionrole`, 
-                { guildid: newraw.dataValues.guildid, messageid:  newraw.dataValues.messageid, emoji: newraw.dataValues.emoji }, 
-                { emojitype: newraw.dataValues.emojitype, roleid: newraw.dataValues.roleid })
-
-        ){
-            await SendAnswer( {channel: message.channel,
+        if ( await MYSQL_SAVE(`reactionrole`, new_record_key, new_record_value) ){
+            await SendAnswer({
+                channel: message.channel,
                 guildname: message.guild.name,
                 messagetype: `info`,
                 title: com_text.name,
                 text:   `${message.author.username}, к реакции ${comargs[0]} на [сообщение](${referenceUrl}) привязана роль ${comargs[1]}`,
-                mentionuser:  `${message.author}` } );
+                mentionuser:  `${message.author}` 
+            });
         }
     },
 
     ReactionRoleAction: async function(actionname, reaction, user){
-        var RoleToAction = await module.exports.CheckReactionRoleDB ( reaction )
+        const RoleToAction = await module.exports.CheckReactionRoleDB ( reaction )
         if (RoleToAction){
             if (await RoleToUser(actionname, await reaction.message.guild.members.fetch(user.id), RoleToAction.id, `Reaction Roles`)){
                 let channel = await getGuildChannelDB( reaction.message.guild, 'system' );
@@ -85,36 +86,35 @@ module.exports = {
     },
 
     CheckReactionRoleDB: async function ( reaction ){
-        var emojiid
+
+        let emoji = reaction.emoji.name;
+
         if (reaction.emoji.id !== null){
-            emojiid = reaction.emoji.id
-        } else {
-            emojiid = reaction.emoji.name
+            emoji = reaction.emoji.id
         }
 
-        var ReactionRoleData = {
+        const ReactionRoleRequest = {
             guildid: reaction.message.guildId,
             messageid: reaction.message.id,
-            emoji: emojiid
+            emoji
         }
 
-        var reactionroledb = await MYSQL_GET_ONE(`reactionrole`, ReactionRoleData )
-               
-        if (!reactionroledb) return false
-    
-        reactionroledb = reactionroledb.dataValues
+        const mysql_data = await MYSQL_GET_ONE(`reactionrole`, ReactionRoleRequest )
 
-        if (reactionroledb.id){            
-            var ActionRole = await fetchRole(reaction.message.guild, reactionroledb.roleid)
+        if (mysql_data === null) return false;
+
+        if (mysql_data.id){
+            const ActionRole = await fetchRole(reaction.message.guild, mysql_data.roleid);
             if ( typeof ActionRole === 'undefined'){
-                await MYSQL_DELETE(`reactionrole`, ReactionRoleData)
+                await MYSQL_DELETE(`reactionrole`, ReactionRoleRequest)
                 let channel = await getGuildChannelDB( reaction.message.guild, 'system' );
-                await SendAnswer( {channel: channel,
+                await SendAnswer({
+                    channel,
                     guildname: reaction.message.guild.name,
                     messagetype: `info`,
                     title: 'Reaction Role',
-                    text:    `Реакция на роль удалена, потому что роль не найдена в гильдии.`} , 
-               );
+                    text:    `Реакция на роль удалена, потому что роль не найдена в гильдии.`
+                });
                 return false
             }
             return ActionRole
@@ -122,14 +122,4 @@ module.exports = {
         return false
     },
 
-}
-
-function NewReactionRoleValues (gid, mid, emoji, rid){
-    var newraw = {dataValues: {} }
-    newraw.dataValues.guildid = gid
-    newraw.dataValues.messageid = mid
-    newraw.dataValues.emojitype = emoji.emojitype
-    newraw.dataValues.emoji = emoji.id
-    newraw.dataValues.roleid = rid
-    return newraw
 }

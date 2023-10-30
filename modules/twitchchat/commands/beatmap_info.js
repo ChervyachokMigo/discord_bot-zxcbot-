@@ -57,10 +57,10 @@ const formatBeatmapInfoOsu = (username, info) => {
     const pp = info.pps.length > 0 ? info.pps.map( val => `${val.acc}% > ${val.pp}pp`).join(' | '): '';
     const text = [
         info.status,
-        `${info.stars} ★`,
+        /*`${info.stars} ★`,
         `${info.bpm} BPM`,
         `${info.max_combo}x`,
-        `${formatAddZero(Math.trunc(info.length / 60), 2)}:${formatAddZero(info.length % 60, 2)}`,
+        `${formatAddZero(Math.trunc(info.length / 60), 2)}:${formatAddZero(info.length % 60, 2)}`,*/
         pp
     ];
     return `${username} > ${url} ${text.join(' | ')}`;
@@ -71,14 +71,14 @@ const formatBeatmapInfoTwitch = (info) => {
         `[${info.id}] ${info.artist} - ${info.title} [${info.diff}] by ${info.creator}`,
         `${info.mode}`,
         `${info.status}`,
-        `${info.stars} ★`,
+        /*`${info.stars} ★`,
         `${info.bpm} BPM`,
         `Length: ${formatAddZero(Math.trunc(info.length / 60), 2)}:${formatAddZero(info.length % 60, 2)}`,
         `${info.max_combo}x`,
         `AR: ${info.ar}`,
         `CS: ${info.cs}`,
         `OD: ${info.od}`,
-        `HP: ${info.hp}`,
+        `HP: ${info.hp}`,*/
         info.pps.length > 0 ? info.pps.map( val => `${val.acc}%=${val.pp}pp`).join(' ▸'): 'no calc pp'
     ].join(' ▸');
 }

@@ -2,7 +2,6 @@ const { readFileSync } = require("fs");
 const { log } = require("../../../tools/log");
 const { MYSQL_GET_ALL, MYSQL_GET_ONE } = require("../../DB/base");
 const { GET_VALUES_FROM_OBJECT_BY_KEY } = require("../../tools");
-const { MYSQL_GET_ALL_RESULTS_TO_ARRAY } = require("../../DB");
 const { Op } = require("@sequelize/core");
 const { ModsToInt } = require("../../../osu_pps/osu_mods");
 
@@ -11,11 +10,7 @@ this.data = null;
 this.founded_buffer = [];
 
 const get_beatmap_info_localy = async (args) => {
-    const result = await MYSQL_GET_ONE( 'beatmap_data', args );
-    if (result) {
-        return result.dataValues;
-    }
-    return null;
+    return await MYSQL_GET_ONE( 'beatmap_data', args );
 }
 
 const shuffle = (i) => {
@@ -30,8 +25,10 @@ module.exports = {
     init: async () => {
         log('load recommends maps', 'osu recomends');
         this.data = JSON.parse(readFileSync('md5_pps_osu.json', { encoding: 'utf8'}));
-        const mysql_data = new Set( GET_VALUES_FROM_OBJECT_BY_KEY( MYSQL_GET_ALL_RESULTS_TO_ARRAY( 
-            await MYSQL_GET_ALL('beatmap_data', {gamemode: 'osu', ranked: 4 })), 'md5'));
+        const mysql_data = new Set( 
+            GET_VALUES_FROM_OBJECT_BY_KEY( 
+                await MYSQL_GET_ALL('beatmap_data', {gamemode: 'osu', ranked: 4 }),
+            'md5'));
         
         this.data = this.data.filter ( x => mysql_data.has(x.md5) === true );
     },
@@ -54,8 +51,7 @@ module.exports = {
                     [Op.lte]: pp_max 
             }};
 
-            let maps = MYSQL_GET_ALL_RESULTS_TO_ARRAY( 
-                await MYSQL_GET_ALL('osu_beatmap_pp', find_condition ));
+            let maps = await MYSQL_GET_ALL('osu_beatmap_pp', find_condition );
 
             //поиск по аиму y.diff.aim > y.diff.speed * aim
 
@@ -85,5 +81,5 @@ module.exports = {
         return {...founded_map, ...beatmap_info};
     },
 
-    get_beatmap_info_localy: get_beatmap_info_localy,
+    get_beatmap_info_localy,
 }

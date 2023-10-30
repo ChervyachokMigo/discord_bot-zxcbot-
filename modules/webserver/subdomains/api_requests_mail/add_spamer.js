@@ -17,7 +17,7 @@ module.exports = {
             }
 
             const result = await load_mail_post_content({unique_key});
-            if (!result) {
+            if (result === null) {
                 return {error: 'post not found'}
             }
             const email_name = result.from;

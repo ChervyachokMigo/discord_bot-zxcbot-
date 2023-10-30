@@ -33,14 +33,12 @@ async function checkTokenExpires(platform){
     switch(platform){
         case 'twitch':
             if (typeof tokens.twitch.value === 'undefined'){
-                var tokendata = await MYSQL_GET_ONE('token', {platform: platform});
-                if (tokendata === null){
+                tokens.twitch = await MYSQL_GET_ONE('token', {platform: platform});
+                if (tokens.twitch === null){
                     if(!(await initTwitch())){
                         log('twitch token failed', 'twitch token')
                         return false;
                     }
-                } else {
-                    tokens.twitch = tokendata.dataValues;
                 }
             }
             endtime = tokens.twitch.getdate + tokens.twitch.expires;
@@ -83,11 +81,9 @@ async function checkTokenExpires(platform){
 }
 
 async function initOsu(){     
-    var mysql_token = await MYSQL_GET_ONE('token', {platform: 'osu'});
+    const mysql_token = await MYSQL_GET_ONE('token', {platform: 'osu'});
+
     if (mysql_token !== null){
-
-        mysql_token = mysql_token.dataValues;
-
         var nowdate = Math.trunc(new Date().valueOf()/1000);
 
         if (nowdate - mysql_token.getdate > mysql_token.expires){
@@ -597,7 +593,7 @@ async function getVKClubWall(club_id, count=3){
 
 
 module.exports = {
-    //getActualTwitchToken: async () => (await MYSQL_GET_ONE('token', {platform: 'twitch'} )).dataValues.value,
+    //getActualTwitchToken: async () => (await MYSQL_GET_ONE('token', {platform: 'twitch'} )).value,
     //getTwitchOauthToken: getTwitchOauthToken,
 
     getTwitchFolowers: getTwitchFolowers,

@@ -57,11 +57,11 @@ async function hunter_init(playername){
         }, hunterTime);
     } else {
         var osuhunter_trackinguser = await MYSQL_GET_ONE('osuHunterTrackingUser', {userid: user.id});
-        console.log()
+
         if (osuhunter_trackinguser === null){
             await hunter(user);
         } else {//
-            var osuHunterNeedUpdate = new Date(`${osuhunter_trackinguser.dataValues.lastUpdated} ${OsuHunter_updateTime}`) <
+            var osuHunterNeedUpdate = new Date(`${osuhunter_trackinguser.lastUpdated} ${OsuHunter_updateTime}`) <
             new Date(`${getYMD()} ${OsuHunter_updateTime}`);
             
             if (osuHunterNeedUpdate){

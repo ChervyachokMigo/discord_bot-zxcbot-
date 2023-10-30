@@ -8,7 +8,7 @@ const express = require('express');
 
 const path = require('path');
 
-const { MYSQL_GET_TRACKING_DATA_BY_ACTION, MYSQL_GET_ALL_RESULTS_TO_ARRAY } = require("../DB.js");
+const { MYSQL_GET_TRACKING_DATA_BY_ACTION } = require("../DB.js");
 const { MYSQL_SAVE, MYSQL_GET_ALL, MYSQL_DELETE } = require("../DB/base.js");
 const { log } = require("../../tools/log.js");
 const { isJSON, groupBy, listenWebFile } = require('../tools.js');
@@ -240,6 +240,6 @@ function get_tracking_multiply(obj, props){
 }
 
 async function send_db_data(conn, tablename, action, tracking_props) {
-    let data = MYSQL_GET_ALL_RESULTS_TO_ARRAY (await MYSQL_GET_ALL(tablename, get_tracking_multiply(conn.tracking_filter, tracking_props)));
+    let data = await MYSQL_GET_ALL(tablename, get_tracking_multiply(conn.tracking_filter, tracking_props));
     conn.send(JSON.stringify({action, data}));
 }

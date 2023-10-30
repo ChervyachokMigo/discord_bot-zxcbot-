@@ -20,75 +20,77 @@ module.exports = {
             return false
     },
 
-    getAllChannelsDB: async function( guildid ) {
-        var BotChannelsDB = await MYSQL_GET_ALL(`botchannel`, { guildid: guildid } )
-        if (BotChannelsDB.length>0) {
-            return BotChannelsDB
-        } else {
-            return false
-        }
-    },
-
     getGuildChannelDB: async function ( guild , channeltype ){
         if (!channeltype) throw new Error ('wrong channel type: ' + channeltype)
 
-        var BotChannelsDB = await module.exports.getAllChannelsDB(guild.id)
-        var botchannel = false
-        var channelSet = false
-        var channelSystem = false
+        const BotChannelsDB = await MYSQL_GET_ALL(`botchannel`, { guildid: guild.id } );
+
+        var botchannel = false;
+        var channelSet = false;
+        var channelSystem = false;
         
-        if (BotChannelsDB.length>0){
+        if (BotChannelsDB.length > 0){
+
             for (var BotChannelDB of BotChannelsDB){
-                if (BotChannelDB.dataValues.channeltype === channeltype){
-                    botchannel = await module.exports.fetchGuildChannel(guild, BotChannelDB.dataValues.channelid)
-                    channelSet = true
-                    break
-                }          
+                if (BotChannelDB.channeltype === channeltype){
+                    botchannel = await module.exports.fetchGuildChannel( guild, BotChannelDB.channelid );
+                    channelSet = true;
+                    break;
+                }
             }
             
-            if(botchannel){
-                return botchannel
+            if( botchannel ){
+
+                return botchannel;
+
             } else {
+
                 if (channeltype !== `system`){
+
                     for (var BotChannelDB of BotChannelsDB){
-                        if (BotChannelDB.dataValues.channeltype === `system`){
-                            botchannel = await module.exports.fetchGuildChannel(guild, BotChannelDB.dataValues.channelid)
-                            channelSystem = true
-                            break
+                        if (BotChannelDB.channeltype === `system`){
+                            botchannel = await module.exports.fetchGuildChannel( guild, BotChannelDB.channelid );
+                            channelSystem = true;
+                            break;
                         }
                     }
+
                 }
+
             }
 
             if (!botchannel && channelSet){
                 await MYSQL_DELETE('botchannel',{guildid: guild.id, channeltype: channeltype})
             }
+
             if (!botchannel && channelSystem && channeltype !== `system`){
                 await MYSQL_DELETE('botchannel',{guildid: guild.id, channeltype: `system`})
             }
+
         }
 
         if (botchannel) {
+
             if (!channelSet && channelSystem){
                 await module.exports.setGuildChannelDB(guild, channeltype, botchannel.id)
             }
+
         }
 
         if (!botchannel) {
-            if(guild.systemChannelId === null) {
-                LogString(guild.name, `Error`, `Guild Channel`, `Системный канал гильдии отсутствует.`)
-                return false
+            if( guild.systemChannelId === null ) {
+                LogString( guild.name, `Error`, `Guild Channel`, `Системный канал гильдии отсутствует.` );
+                return false;
             }
-            var BotSystemChannelID = guild.systemChannelId
-            botchannel = await module.exports.setGuildChannelDB(guild, channeltype, BotSystemChannelID)
 
+            botchannel = await module.exports.setGuildChannelDB( guild, channeltype, guild.systemChannelId );
         }
         
-        return botchannel
+        return botchannel;
     },
 
-    clearBindGuildChannels: async function (guild){
-        await MYSQL_DELETE(`botchannel`,{guildid: guild.id})            
+    clearBindGuildChannels: async function ( guild ){
+        await MYSQL_DELETE(`botchannel`, {guildid: guild.id});
     },
 
     setGuildChannelDB: async function ( guild, channeltype, BotChannelID ){
@@ -131,22 +133,23 @@ module.exports = {
     guildChannelShowSet: async function (comargs, message, com_text){
         if (!await message.guild.members.cache.find(u=>u.id === message.author.id).permissions.has('MANAGE_CHANNELS')){
             await SendError(message, com_text, `${message.author.username}, у Вас нет прав управлять каналами.`);
-            return
+            return;
         }
 
         //показать текущий или установить стандартный
         if (typeof comargs === 'undefined' || comargs.length == 0) {
 
-            var BotChannelsDB = await module.exports.getAllChannelsDB(message.guild.id)
+            const BotChannelsDB = await MYSQL_GET_ALL(`botchannel`, { guildid: message.guild.id } );
 
-            if (!BotChannelsDB){
-                await module.exports.setGuildChannelDB(message.guild, 'system', message.channel.id)
+            if ( BotChannelsDB.length === 0 ){
+                await module.exports.setGuildChannelDB( message.guild, 'system', message.channel.id );
             } else {
-                var channels_text = ``
+                let channels_text = ``;
                 
-                for (var BotChannelDB of BotChannelsDB){
-                    channels_text += `${BotChannelDB.dataValues.channeltype} <#${BotChannelDB.dataValues.channelid}>\n`
+                for (let BotChannelDB of BotChannelsDB){
+                    channels_text += `${BotChannelDB.channeltype} <#${BotChannelDB.channelid}>\n`
                 }
+
                 await SendAnswer( {channel: message.channel,
                     guildname: message.guild.name,
                     messagetype: `info`,
@@ -154,7 +157,7 @@ module.exports = {
                     text:    `Для сообщений бота установлены каналы:\n${channels_text}`,
                     mentionuser:  `${message.author}` } );
             }
-            return
+            return;
         }
 
         //проверить тип канала
@@ -167,7 +170,7 @@ module.exports = {
         
         if (checkAllowedChannel(channeltype) == false){
             await SendError(message, com_text, `Нет такого типа канала`);
-            return
+            return;
         }
 
         if (channeltype === `clear`){
@@ -178,7 +181,7 @@ module.exports = {
                 title: com_text.name,
                 text:   `Каналы бота были сброшены. Чтобы назначить выполните команду ${com_text.help}`,
                 mentionuser:  `${message.author}` } );
-            return
+            return;
         }
 
         var channel = await module.exports.checkArgsOfChannel(comargs, com_text, message)

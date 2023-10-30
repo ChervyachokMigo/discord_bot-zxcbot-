@@ -1,5 +1,4 @@
 const { key_timeout, token_length } = require('../api_consts/api_settings.js');
-const { MYSQL_GET_ALL_RESULTS_TO_ARRAY } = require("../../../DB.js");
 const { MYSQL_SAVE, MYSQL_GET_ONE, MYSQL_DELETE, MYSQL_GET_ALL } = require("../../../DB/base.js");
 
 const { generate_auth_key, generate_token } = require('./api_store_general.js');
@@ -47,9 +46,9 @@ module.exports = {
         if (is_authed){
             token = control_authed_ips[i].token;
         } else {
-            let mysql_ip_token = await MYSQL_GET_ONE ( 'authorizedControls', {ip} );
-            if (mysql_ip_token !== null){
-                token = mysql_ip_token.dataValues.token;
+            let mysql_data = await MYSQL_GET_ONE ( 'authorizedControls', {ip} );
+            if (mysql_data !== null){
+                token = mysql_data.token;
                 control_authed_ips.push({ip, token});
                 return {is_authed: true, token};
             }
@@ -72,7 +71,7 @@ module.exports = {
     },
 
     load_commands: async () => {
-        return MYSQL_GET_ALL_RESULTS_TO_ARRAY(await MYSQL_GET_ALL( 'savedControlCommands'));
+        return await MYSQL_GET_ALL( 'savedControlCommands');
     },
 
 }

@@ -1,4 +1,4 @@
-const path = require("path");
+/*const path = require("path");
 
 const fs = require("fs");
 
@@ -14,12 +14,8 @@ const main = async () => {
     .map( x => x.replace(/["\r﻿]/gi,'').split(',') )
 
     const header = data.shift();
-    /*Object.fromEntries(Object.entries({...}).map(
-        ([key, value]) => [value, null]
-    ));*/
 
     const content = data.map ( x => x.map ( (y, i) => i > 0? Number(y): y) );
-   
 
     const content_objects = content.map( x => Object.fromEntries( x.map( (y, i) => [header[i], y] ) ));
 
@@ -44,4 +40,4 @@ function splitArray (arr, len) {
     }
   
     return chunks;
-  }
+  }*/

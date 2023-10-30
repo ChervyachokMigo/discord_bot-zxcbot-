@@ -5,29 +5,29 @@ const { select_mysql_model } = require("./defines.js");
 
 const { coins_max } = require("../../settings.js");
 
-
 function updateAll(Model, condition, values ){
     return Model.update(values, {where : condition, logging: ''})
 }
 
 function upsert(Model, values, condition) {
-    return Model
-        .findOne({ where: condition, logging: '' })
-        .then(function(obj) {
-            try{
-                // update
-                if(obj)
-                    return obj.update(values, {logging: ''});
-                // insert
-                return Model.create(values, {logging: ''});
-            } catch (e){
-                if (e.code === 'ECONNREFUSED' || e.name === `SequelizeConnectionRefusedError`){
-                    throw new Error('Нет доступа к базе');
-                } else {
-                    throw new Error(`ошибка базы: ${e}`);
-                }
-            }
-        })
+    const record = Model.findOne({ where: condition, logging: '', raw: true });
+
+    try{
+
+        if (record === null) {
+            return Model.create(values, {logging: '', raw: true } );
+        } else {
+            return Model.update(values, {where : condition, logging: '', raw: true } );
+        }
+
+    } catch (e){
+        if (e.code === 'ECONNREFUSED' || e.name === `SequelizeConnectionRefusedError`){
+            throw new Error('Нет доступа к базе');
+        } else {
+            throw new Error(`ошибка базы: ${e}`);
+        }
+    }
+        
 }
 
 async function MYSQL_MERGE_KEYS_VALUES ( keys, values ){
@@ -38,7 +38,7 @@ module.exports = {
     MYSQL_GET_ONE: async (action, condition) => {
         const MysqlModel = select_mysql_model(action);
         try {
-            return await MysqlModel.findOne({ where: condition , logging: ''})
+            return await MysqlModel.findOne({ where: condition , logging: '', raw: true});
         } catch (e){
             if (e.code === 'ECONNREFUSED' || e.name === `SequelizeConnectionRefusedError`){
                 throw new Error(`Нет доступа к базе данных.`);
@@ -100,7 +100,7 @@ module.exports = {
             break;
         }
         try{
-            return await MysqlModel.findAll ({ where: condition, logging: '', attributes });//order: [['id', 'DESC']]
+            return await MysqlModel.findAll ({ where: condition, logging: '', raw: true, attributes });//order: [['id', 'DESC']] 
         } catch (e){
             if (e.code === 'ECONNREFUSED' || e.name === `SequelizeConnectionRefusedError`){
                 throw new Error(`Нет доступа к базе данных.`);

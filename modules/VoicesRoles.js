@@ -69,11 +69,12 @@ module.exports = {
         if (!voicerole_role) return
 
         //формирование новой записи о войсроли
-        var voicerole_completenum = 0
-        var NewVoicesRoles = []
+        let voicerole_completenum = 0;
+        let NewVoicesRoles = [];
+        
         await voicerole_channels.each(function (chan){
             if (chan.type === 'GUILD_VOICE'){
-                NewVoicesRoles.push({dataValues:{'chanid':chan.id,'roleid':voicerole_role.id}});
+                NewVoicesRoles.push({ chanid: chan.id, roleid: voicerole_role.id });
                 voicerole_completenum++;
             }
         })
@@ -83,7 +84,7 @@ module.exports = {
         if (voicerole_completenum == 0){    
             await SendError(message, com_text, `Это не голосовой канал: ${voicerole_channelname}`);    
         } else {
-            await MYSQL_SAVE(`role`, {guildid: guildid, roleid: voicerole_role.id}, {chanid: NewVoicesRoles[0].dataValues.chanid})
+            await MYSQL_SAVE(`role`, {guildid: guildid, roleid: voicerole_role.id}, {chanid: NewVoicesRoles[0].chanid})
             await module.exports.VoiceRolesClearFromUsers ( message.guild )
             await module.exports.AllVoiceRolesSet( message.guild.channels , message.guild)
             await SendAnswer( {channel: message.channel,
@@ -102,12 +103,12 @@ module.exports = {
                 description: `Команда: ${com_text.help}`,
                 fields: []
             }
-           
+
             for (var vr of VoicesRoles){
 
-                let chans = await fetchVoiceChannel(message.guild.channels.cache, '', vr.dataValues.chanid)
+                let chans = await fetchVoiceChannel(message.guild.channels.cache, '', vr.chanid)
                 await chans.each(async function (chan){
-                    msg.fields.push({name: chan.name, value: getLinkFromRoleID(vr.dataValues.roleid) , inline: false})
+                    msg.fields.push({name: chan.name, value: getLinkFromRoleID(vr.roleid) , inline: false})
                 })
 
             }
@@ -133,8 +134,8 @@ module.exports = {
             let isVoicesRolesEqualsNew = false
             if ( VoicesRoles.length > 0 ){
                 for (var i = 0; i < VoicesRoles.length; i++){
-                    if (VoicesRoles[i].dataValues.chanid === vr_new.dataValues.chanid){
-                        VoicesRoles[i].dataValues.roleid = vr_new.dataValues.roleid
+                    if (VoicesRoles[i].chanid === vr_new.chanid){
+                        VoicesRoles[i].roleid = vr_new.roleid
                         isVoicesRolesEqualsNew = true
                         break
                     }
@@ -152,12 +153,9 @@ module.exports = {
     },
     
     VoiceRolesClearFromUsers: async function ( guild ){
-        if (!VoicesRoles || VoicesRoles.length == 0){
-            VoicesRoles = []
-        }
-        if (VoicesRoles.length>0){
+        if ( VoicesRoles.length > 0 ){
             //удалить несуществующие войсроли
-            await module.exports.removeUndefinedVoicesRoles( guild ) 
+            await module.exports.removeUndefinedVoicesRoles( guild );
             //удалить войсроли со юзеров
             var members = await guild.members.fetch(member => typeof member !== 'undefined')    //все мемберы
             await members.forEach(async function (member){
@@ -165,8 +163,8 @@ module.exports = {
                     if (member.user.bot) return
                     for (var vr of VoicesRoles){
                         if ( !await isRoleBot(role)) {
-                            if (role.id === vr.dataValues.roleid){
-                                await RoleToUser('remove', member, vr.dataValues.roleid, `Voices Roles`)
+                            if (role.id === vr.roleid){
+                                await RoleToUser('remove', member, vr.roleid, `Voices Roles`)
                             }
                         }
                     }
@@ -178,16 +176,16 @@ module.exports = {
     removeUndefinedVoicesRoles: async function ( guild ){
         for (var vr of VoicesRoles){
             if (vr.guildid === guild.id){
-                var role = await guild.roles.cache.find(roleFind => roleFind.id === vr.dataValues.roleid)
-                var chan = await guild.channels.cache.find(channelFind => channelFind.id == vr.dataValues.chanid)
+                var role = await guild.roles.cache.find(roleFind => roleFind.id === vr.roleid)
+                var chan = await guild.channels.cache.find(channelFind => channelFind.id == vr.chanid)
                 if (typeof role === 'undefined'){
-                    await module.exports.removeVoicesRolesByRole( vr.dataValues.roleid )
-                    await MYSQL_DELETE(`role`, {guildid: guild.id, roleid: vr.dataValues.roleid})
+                    await module.exports.removeVoicesRolesByRole( vr.roleid )
+                    await MYSQL_DELETE(`role`, {guildid: guild.id, roleid: vr.roleid})
                     continue
                 }
                 if (typeof chan === 'undefined'){
-                    await module.exports.removeVoicesRolesByChanID( vr.dataValues.chanid )
-                    await MYSQL_SAVE( `role`, {guildid: guild.id, roleid: vr.dataValues.roleid}, {chanid: 0})
+                    await module.exports.removeVoicesRolesByChanID( vr.chanid )
+                    await MYSQL_SAVE( `role`, {guildid: guild.id, roleid: vr.roleid}, {chanid: 0})
                 }
             }
         }
@@ -196,7 +194,7 @@ module.exports = {
     removeVoicesRolesByRole: async function (roleid){
         var indexDel = -1
         for (var i = 0; i < VoicesRoles.length; i++){
-            if (VoicesRoles[i].dataValues.roleid === roleid){
+            if (VoicesRoles[i].roleid === roleid){
                 indexDel = i
                 break
             }
@@ -209,7 +207,7 @@ module.exports = {
     removeVoicesRolesByChanID: async function (chanid){
         var indexDel = -1
         for (var i = 0; i < VoicesRoles.length; i++){
-            if (VoicesRoles[i].dataValues.chanid === chanid){
+            if (VoicesRoles[i].chanid === chanid){
                 indexDel = i
                 break
             }
@@ -221,9 +219,9 @@ module.exports = {
 
     AllVoiceRolesSet: async function ( channels, guild ){
         for (var vr of VoicesRoles){
-            var chan = await channels.fetch(vr.dataValues.chanid)
+            var chan = await channels.fetch(vr.chanid)
             await chan.members.forEach(async function (member){
-                await module.exports.UpdateVoiceRoles('connected', vr.dataValues.chanid, member)
+                await module.exports.UpdateVoiceRoles('connected', vr.chanid, member)
             })
         }
         
@@ -232,16 +230,16 @@ module.exports = {
 
     UpdateVoiceRoles: async function (state, chanid, member){
         for (var vr of VoicesRoles){
-            if (vr.dataValues.chanid === chanid){
+            if (vr.chanid === chanid){
                 if (state == 'connected'){
-                    await RoleToUser('add', member, vr.dataValues.roleid, `Voices Roles`)
+                    await RoleToUser('add', member, vr.roleid, `Voices Roles`)
                     LogString(member.guild.name, `info`, `Voices Roles`, 
-                    `${member.user.username} назначена роль ${(await fetchRole(member.guild , vr.dataValues.roleid)).name}`);
+                    `${member.user.username} назначена роль ${(await fetchRole(member.guild , vr.roleid)).name}`);
                 }
                 if (state == 'disconnected'){
-                    await RoleToUser('remove', member, vr.dataValues.roleid, `Voices Roles`)
+                    await RoleToUser('remove', member, vr.roleid, `Voices Roles`)
                     LogString(member.guild.name, `info`, `Voices Roles`, 
-                    `${member.user.username} убрана роль ${(await fetchRole(member.guild , vr.dataValues.roleid)).name}`);
+                    `${member.user.username} убрана роль ${(await fetchRole(member.guild , vr.roleid)).name}`);
                 }
             }
         }

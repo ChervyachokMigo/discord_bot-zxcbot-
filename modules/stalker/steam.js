@@ -20,18 +20,12 @@ module.exports = {
         //проверка юзера и создаание нового юзера
         var userdata = await MYSQL_GET_ONE('steamuser', user);
         if (userdata === null ) {
-            var steamuserdata = await getSteamUserData(user);
-            if (steamuserdata.length > 0){
-                steamuserdata = steamuserdata[0];
-            } else {
+            userdata = await getSteamUserData(user).shift();
+            if (typeof userdata === 'undefined'){
                 return {success: false, text: `Steam user **${userid}** not exists`}
             }
-            steamuserdata.tracking = Boolean(option.value);
-            await MYSQL_SAVE('steamuser', { steamid: steamuserdata.steamid }, steamuserdata);
-            userdata = steamuserdata;
-            
-        } else {
-            userdata = userdata.dataValues;
+            userdata.tracking = Boolean(option.value);
+            await MYSQL_SAVE('steamuser', { steamid: userdata.steamid }, userdata);
         }
 
         option.value = Boolean(option.value);

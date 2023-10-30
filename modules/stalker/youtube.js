@@ -281,16 +281,13 @@ module.exports = {
         } catch (e){
             return {success: false, text: `API Error: ${e.code}`}
         }
-        var userdata = await MYSQL_GET_ONE('youtubechannel', {channelname: channeldata.title});
+
+        let userdata = await MYSQL_GET_ONE('youtubechannel', {channelname: channeldata.title});
         if (userdata === null ) {
-            let success = await MYSQL_TRACK_NEW_YOUTUBE_USER(channeldata);
-            if (!success) {
+            userdata = await MYSQL_TRACK_NEW_YOUTUBE_USER(channeldata);
+            if (!userdata) {
                 return {success: false, text: `(Youtube) Не удалось сохранить канал в базу`}
-            } else {
-                userdata = success.dataValues;
             }
-        } else {
-            userdata = userdata.dataValues;
         }
 
         option.value = Boolean(option.value);

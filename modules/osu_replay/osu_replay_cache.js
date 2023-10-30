@@ -22,10 +22,10 @@ async function loadReplayCache(replay_md5){
     if (foundedReplay.length>0){
         return foundedReplay[0]
     } else {
-        let mysql_replay = await MYSQL_GET_ONE('replaycache',{replay_md5: replay_md5})
+        const mysql_replay = await MYSQL_GET_ONE( 'replaycache', {replay_md5} )
         if (mysql_replay !== null){
             //реплей есть в базе
-            var osu_replay = JSON.parse(mysql_replay.dataValues.replayJSONdata);
+            const osu_replay = JSON.parse(mysql_replay.replayJSONdata);
             ReplaysCache.push(osu_replay);
             return osu_replay;
         } else {
@@ -55,13 +55,14 @@ async function saveAttachmentCache(dataObj){
 async function loadAttachmentCache(imageid, userid){
 
     let attachment = UserAttachmentsCache.filter(val=>val.imageid === imageid).shift();
+
     if (typeof attachment !== 'undefined')
         return attachment;
 
-    attachment = await MYSQL_GET_ONE('replayattachment', {imageid: imageid});
+    attachment = await MYSQL_GET_ONE( 'replayattachment', {imageid} );
     if (attachment !== null){
-        attachment = attachment.dataValues;
         attachment = {
+            ...attachment,
             imageid, 
             userid, 
             beatmapid: attachment.beatmap_md5, 
@@ -71,7 +72,7 @@ async function loadAttachmentCache(imageid, userid){
         UserAttachmentsCache.push(attachment);
         return attachment;
     }
-    return undefined
+    return undefined;
 }
 
 module.exports = {

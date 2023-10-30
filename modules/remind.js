@@ -16,12 +16,13 @@ module.exports = {
 
         if (!firstArg){
             //показать все
-            var reminddb = await MYSQL_GET_ALL(`remind`, { guildid: message.guild.id, messageid: message.author.id } )
-            var reminds_out = [];            
+            const mysql_data = await MYSQL_GET_ALL(`remind`, { guildid: message.guild.id, messageid: message.author.id } );
             
-            if (reminddb.length > 0){
-                for (var r of reminddb){
-                    reminds_out.push(module.exports.formatRemind (r.dataValues) )
+            let reminds_out = [];            
+            
+            if (mysql_data.length > 0){
+                for (let val of mysql_data){
+                    reminds_out.push(module.exports.formatRemind (val) );
                 }
                 await SendAnswer( {channel: message.channel,
                     guildname: message.guild.name,
@@ -83,40 +84,48 @@ module.exports = {
             remindText = remindText.substring(0,255)
         }
         
-        var newremind = module.exports.CreateRemind(  message.guild.id , message.author.id, remindType==='infinity'?true:false, 
+        let new_remind = module.exports.CreateRemind(  message.guild.id , message.author.id, remindType==='infinity'?true:false, 
             getCurrentTimeMs()+remindTimeMin*60000, remindTimeMin, remindText)
 
-            var mysql_newremind = await MYSQL_SAVE(`remind`,
-            {guildid: newremind.guildid, 
-                userid: newremind.userid, 
-                text: newremind.text}, 
-            {time: newremind.time,
-            timeMin: newremind.timeMin,
-            infinity: newremind.infinity})
+        const new_remind_key = {
+            guildid: new_remind.guildid,
+            userid: new_remind.userid, 
+            text: new_remind.text
+        };
+
+        const new_remind_value = {time: new_remind.time,
+            timeMin: new_remind.timeMin,
+            infinity: new_remind.infinity
+        };
+
+        let mysql_newremind = await MYSQL_SAVE( `remind`, new_remind_key, new_remind_value );
+
         if (mysql_newremind){
-            mysql_newremind = mysql_newremind.dataValues
-            newremind.id = mysql_newremind.id
-            await module.exports.RemindTimerStart (message.guild, newremind)
-            await SendAnswer( {channel: message.channel,
+            new_remind.id = mysql_newremind.id;
+            await module.exports.RemindTimerStart (message.guild, new_remind);
+            
+            await SendAnswer({
+                channel: message.channel,
                 guildname: message.guild.name,
                 messagetype: `info`,
                 title: com_text.name,
                 text:   `Создано новое напоминание:`,
                 mentionuser:  `${message.author}`,
-                fields: [module.exports.formatRemind(newremind)]} );
+                fields: [module.exports.formatRemind(new_remind)] 
+            });
 
         }
     },
 
     StartAllRemindes: async function( guild ) {
-        var reminddb = await MYSQL_GET_ALL(`remind`, { guildid: guild.id } )
-        if (!reminddb) return
-        if (reminddb.length == 0) return
+        const mysql_data = await MYSQL_GET_ALL(`remind`, { guildid: guild.id } );
 
-        reminddb = reminddb
-        for (var remind_db_item of reminddb){
-            await module.exports.RemindTimerStart ( guild, remind_db_item.dataValues )
+        if (mysql_data.length === 0) return;
+
+        for (var remind_item of mysql_data){
+            await module.exports.RemindTimerStart ( guild, remind_item )
         }
+
         LogString(guild.name, `info`, `Remind`, `Загружены и запущены все напоминания`)
     },
 

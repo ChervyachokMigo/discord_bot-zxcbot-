@@ -21,16 +21,12 @@ const moduleName = `Stalker Trovo`;
 module.exports = {
     MYSQL_TROVO_USER_TRACKING_CHANGE: async function(message, username, option){
         //проверка юзера и создаание нового юзера
-        var userdata = await MYSQL_GET_ONE('trovodata', {username: username});
+        let userdata = await MYSQL_GET_ONE('trovodata', {username: username});
         if (userdata === null ) {
-            let success = await MYSQL_TRACK_NEW_TROVO_USER(username);
-            if (!success) {
+            userdata = await MYSQL_TRACK_NEW_TROVO_USER(username);
+            if (!userdata) {
                 return {success: false, text: `Trovo user **${username}** not exists`}
-            } else {
-                userdata = success.dataValues;
             }
-        } else {
-            userdata = userdata.dataValues;
         }
 
         option.value = Boolean(option.value);
