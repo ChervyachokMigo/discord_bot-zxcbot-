@@ -342,6 +342,6 @@ const init_calc_action = async ( beatmaps = [], { acc = 100, mods } ) => {
 
 module.exports = {
     init_calc_action: init_calc_action,
-    calc_from_mysql: calc_from_mysql
+    //calc_from_mysql: calc_from_mysql
 }
 

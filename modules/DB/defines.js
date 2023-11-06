@@ -2,9 +2,9 @@ const { createConnection } = require('mysql2/promise');
 const { Sequelize, DataTypes } = require('@sequelize/core');
 const { log } = require("../../tools/log.js");
 
-const { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME } = require("../../config.js");
+const { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, DB_NAME_BEATMAPS } = require("../../config.js");
 
-const osu_beatmaps_mysql = new Sequelize( 'osu_beatmaps', DB_USER, DB_PASSWORD, { 
+const osu_beatmaps_mysql = new Sequelize( DB_NAME_BEATMAPS, DB_USER, DB_PASSWORD, { 
     dialect: `mysql`,
     define: {
         updatedAt: false,
@@ -13,27 +13,14 @@ const osu_beatmaps_mysql = new Sequelize( 'osu_beatmaps', DB_USER, DB_PASSWORD, 
     },
 });
 
-const beatmap_data = osu_beatmaps_mysql.define ('beatmap_data', {
-    beatmap_id: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false},
-    beatmapset_id: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false},
-    star_taiko_local: {type: DataTypes.FLOAT,  defaultvalue: 0, allowNull: false},
-    star_taiko_lazer: {type: DataTypes.FLOAT,  defaultvalue: 0, allowNull: false},
-    artist: {type: DataTypes.STRING,  defaultvalue: '', allowNull: false},
-    title: {type: DataTypes.STRING,  defaultvalue: '', allowNull: false},
-    creator: {type: DataTypes.STRING,  defaultvalue: '', allowNull: false},
-    difficulty: {type: DataTypes.STRING,  defaultvalue: '', allowNull: false},
-    gamemode: {type: DataTypes.STRING,  defaultvalue: '', allowNull: false},
-    ranked: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false},
-    md5: {type: DataTypes.STRING(32),  defaultvalue: '', allowNull: false, unique: true},
+const beatmaps_md5 = osu_beatmaps_mysql.define ('beatmaps_md5', {
+    hash: {type: DataTypes.STRING(32),  defaultvalue: '', allowNull: false, unique: true, index: true},
 });
 
-beatmap_data.removeAttribute('id');
-
 const osu_beatmap_pp = osu_beatmaps_mysql.define ('osu_beatmap_pp', {
-    md5: {type: DataTypes.STRING(32),  defaultvalue: '', allowNull: false, unique: 'action_key'},
+    md5: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false, unique: 'action_key'},
     mods: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false, unique: 'action_key'},
     accuracy: {type: DataTypes.INTEGER,  defaultvalue: 100, allowNull: false, unique: 'action_key'},
-    beatmap_id: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false},
     pp_total: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false},
     pp_aim: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false},
     pp_speed: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false},
@@ -45,10 +32,37 @@ const osu_beatmap_pp = osu_beatmaps_mysql.define ('osu_beatmap_pp', {
     speed_notes: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false},
     AR: {type: DataTypes.FLOAT,  defaultvalue: 0, allowNull: false},
     OD: {type: DataTypes.FLOAT,  defaultvalue: 0, allowNull: false},
-    
 });
 
-osu_beatmap_pp.removeAttribute('id');
+const beatmap_id = osu_beatmaps_mysql.define ('beatmap_id', {
+    md5: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false, unique: true, primaryKey: true},
+    beatmap_id: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false},
+    beatmapset_id: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false},
+    gamemode: {type: DataTypes.TINYINT.UNSIGNED,  defaultvalue: '', allowNull: false},
+    ranked: {type: DataTypes.TINYINT,  defaultvalue: 0, allowNull: false},
+}, {noPrimaryKey: false});
+
+const beatmap_info = osu_beatmaps_mysql.define ('beatmap_info', {
+    md5: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false, unique: true, primaryKey: true},
+    artist: {type: DataTypes.STRING,  defaultvalue: '', allowNull: false},
+    title: {type: DataTypes.STRING,  defaultvalue: '', allowNull: false},
+    creator: {type: DataTypes.STRING,  defaultvalue: '', allowNull: false},
+    difficulty: {type: DataTypes.STRING,  defaultvalue: '', allowNull: false},
+}, {noPrimaryKey: false});
+
+const beatmap_star = osu_beatmaps_mysql.define ('beatmap_star', {
+    md5: {type: DataTypes.INTEGER,  defaultvalue: 0, allowNull: false, unique: true, primaryKey: true},
+    local: {type: DataTypes.FLOAT,  defaultvalue: 0, allowNull: false},
+    lazer: {type: DataTypes.FLOAT,  defaultvalue: 0, allowNull: false},
+}, {noPrimaryKey: false});
+
+beatmaps_md5.hasMany(osu_beatmap_pp, {foreignKey: 'md5',  foreignKeyConstraints: false});
+beatmap_id.hasMany(osu_beatmap_pp, {foreignKey: 'md5',  foreignKeyConstraints: false});
+beatmap_info.hasMany(osu_beatmap_pp, {foreignKey: 'md5',  foreignKeyConstraints: false});
+
+beatmaps_md5.hasOne(beatmap_id, {foreignKey: 'md5',  foreignKeyConstraints: false});
+beatmaps_md5.hasOne(beatmap_info, {foreignKey: 'md5',  foreignKeyConstraints: false});
+beatmaps_md5.hasOne(beatmap_star, {foreignKey: 'md5',  foreignKeyConstraints: false});
 
 const mysql = new Sequelize( DB_NAME, DB_USER, DB_PASSWORD, { 
     dialect: `mysql`,
@@ -357,40 +371,43 @@ const mysql_actions = [
         model: ReactionRole}, 
     { names: 'remind', 
         model: Remind}, 
-    { names: ['channels_clear','botchannel'], model: BotChannel},
-    { names: ['streamersTwitch', 'twitchdata'], model: TwitchData},
-    { names: ['streamersTrovo', 'trovodata'], model: TrovoData},
-    { names: 'twitchclips', model: TwitchClips},
-    { names: 'trovoclips', model: TrovoClips},
-    { names: 'steamuser', model: SteamUserData},
-    { names: 'vkuser', model: VKUserData},
-    { names: 'vkfriend', model: VKUserFriendData},
-    { names: 'twitchchat', model: TwitchChatData},
-    { names: 'osuprofile', model: OsuProfileData},
-    { names: 'osuscore', model: OsuScoreData},
-    { names: 'token', model: Token},
-    { names: 'osuactivity', model: OsuActivity},
-    { names: 'youtubechannel', model: YoutubeChannelsData},
-    { names: 'youtubevideos', model: YoutubeVideosData},
-    { names: 'guildServicesTracking', model: guildServicesTracking},
-    { names: 'replaycache', model: replayCache},
-    { names: 'replayattachment', model: replayAttachment},
-    { names: 'nibbers', model: nibbers},
-    { names: 'guildSettings', model: guildSettings},
-    { names: 'osuHunterTrackingUser', model: osuHunterTrackingUser},
-    { names: 'cryptopairs', model: cryptopairs},
-    { names: 'authorizedMailUsers', model: authorizedMailUsers},
-    { names: 'mail_contents', model: mail_contents},
-    { names: 'mail_ignores', model: mail_ignores},
-    { names: 'authorizedControls', model: authorizedControls},
-    { names: 'savedControlCommands', model: savedControlCommands},
-    { names: 'twitchchat_ignores', model: twitchchat_ignores},
-    { names: 'twitchchat_enabled', model: twitchchat_enabled},
-    { names: 'twitchchat_sended_notify', model: twitchchat_sended_notify},
-    { names: 'twitch_osu_binds', model: twitch_osu_binds},
-    { names: 'twitch_banned', model: twitch_banned},
-    { names: 'beatmap_data', model: beatmap_data},
-    { names: 'osu_beatmap_pp', model: osu_beatmap_pp}
+    { names: ['channels_clear','botchannel'], model: BotChannel },
+    { names: ['streamersTwitch', 'twitchdata'], model: TwitchData },
+    { names: ['streamersTrovo', 'trovodata'], model: TrovoData },
+    { names: 'twitchclips', model: TwitchClips },
+    { names: 'trovoclips', model: TrovoClips },
+    { names: 'steamuser', model: SteamUserData },
+    { names: 'vkuser', model: VKUserData },
+    { names: 'vkfriend', model: VKUserFriendData },
+    { names: 'twitchchat', model: TwitchChatData },
+    { names: 'osuprofile', model: OsuProfileData },
+    { names: 'osuscore', model: OsuScoreData },
+    { names: 'token', model: Token },
+    { names: 'osuactivity', model: OsuActivity },
+    { names: 'youtubechannel', model: YoutubeChannelsData },
+    { names: 'youtubevideos', model: YoutubeVideosData },
+    { names: 'guildServicesTracking', model: guildServicesTracking },
+    { names: 'replaycache', model: replayCache },
+    { names: 'replayattachment', model: replayAttachment },
+    { names: 'nibbers', model: nibbers },
+    { names: 'guildSettings', model: guildSettings },
+    { names: 'osuHunterTrackingUser', model: osuHunterTrackingUser },
+    { names: 'cryptopairs', model: cryptopairs },
+    { names: 'authorizedMailUsers', model: authorizedMailUsers },
+    { names: 'mail_contents', model: mail_contents },
+    { names: 'mail_ignores', model: mail_ignores },
+    { names: 'authorizedControls', model: authorizedControls },
+    { names: 'savedControlCommands', model: savedControlCommands },
+    { names: 'twitchchat_ignores', model: twitchchat_ignores },
+    { names: 'twitchchat_enabled', model: twitchchat_enabled },
+    { names: 'twitchchat_sended_notify', model: twitchchat_sended_notify },
+    { names: 'twitch_osu_binds', model: twitch_osu_binds },
+    { names: 'twitch_banned', model: twitch_banned },
+    { names: 'beatmaps_md5', model: beatmaps_md5 },
+    { names: 'osu_beatmap_pp', model: osu_beatmap_pp },
+    { names: 'beatmap_id', model: beatmap_id },
+    { names: 'beatmap_info', model: beatmap_info },
+    { names: 'beatmap_star', model: beatmap_star }
 ];
 
 
@@ -401,6 +418,7 @@ module.exports = {
         try {
             const connection = await createConnection(`mysql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}`);
             await connection.query(`CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;`);
+            await connection.query(`CREATE DATABASE IF NOT EXISTS \`${DB_NAME_BEATMAPS}\`;`);
         } catch (e){
             if (e.code === 'ECONNREFUSED' || e.name === `SequelizeConnectionRefusedError`){
                 throw new Error('Нет доступа к базе');
@@ -408,8 +426,8 @@ module.exports = {
                 throw new Error(`ошибка базы: ${e}`);
             }
         }
-        await osu_beatmaps_mysql.sync({ logging: '', alter: true })
-        await mysql.sync({ logging: ''})
+        await osu_beatmaps_mysql.sync({ logging: false })
+        await mysql.sync({ logging: false })
         
         log(`Подготовка завершена`, 'База данных')
     },

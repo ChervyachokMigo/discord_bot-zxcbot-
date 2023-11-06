@@ -52,26 +52,32 @@ module.exports = {
     }
 }
 
-const formatBeatmapInfoOsu = (username, info) => {
-    const url = `[${info.url} ${info.artist} - ${info.title} [${info.diff}] by ${info.creator}] >`;
-    const pp = info.pps.length > 0 ? info.pps.map( val => `${val.acc}% > ${val.pp}pp`).join(' | '): '';
+const formatBeatmapInfoOsu = (username, {url, pps}) => {
+
+    const url_text = `[${url} ${pps[0].artist} - ${pps[0].title} [${pps[0].difficulty}] by ${pps[0].creator}] >`;
+
     const text = [
-        info.status,
-        /*`${info.stars} ★`,
+        pps[0].ranked,
+        `${pps[0].stars} ★`,
+
+        /*`
         `${info.bpm} BPM`,
         `${info.max_combo}x`,
         `${formatAddZero(Math.trunc(info.length / 60), 2)}:${formatAddZero(info.length % 60, 2)}`,*/
-        pp
-    ];
-    return `${username} > ${url} ${text.join(' | ')}`;
+        pps.length > 0 ? pps.map( val => `${val.accuracy}% > ${val.pp_total}pp`).join(' | '): ''
+    ].join(' | ');
+
+    return `${username} > ${url_text} ${text}`;
 }
 
-const formatBeatmapInfoTwitch = (info) => {
+const formatBeatmapInfoTwitch = ({ pps }) => {
+
     return [
-        `[${info.id}] ${info.artist} - ${info.title} [${info.diff}] by ${info.creator}`,
-        `${info.mode}`,
-        `${info.status}`,
-        /*`${info.stars} ★`,
+        `${pps[0].artist} - ${pps[0].title} [${pps[0].difficulty}] by ${pps[0].creator}`,
+        `${pps[0].gamemode}`,
+        `${pps[0].ranked}`,
+        `${pps[0].stars} ★`,
+        /*
         `${info.bpm} BPM`,
         `Length: ${formatAddZero(Math.trunc(info.length / 60), 2)}:${formatAddZero(info.length % 60, 2)}`,
         `${info.max_combo}x`,
@@ -79,6 +85,6 @@ const formatBeatmapInfoTwitch = (info) => {
         `CS: ${info.cs}`,
         `OD: ${info.od}`,
         `HP: ${info.hp}`,*/
-        info.pps.length > 0 ? info.pps.map( val => `${val.acc}%=${val.pp}pp`).join(' ▸'): 'no calc pp'
+        pps.length > 0 ? pps.map( val => `${val.accuracy}% > ${val.pp_total}pp`).join(' ▸'): 'no calc pp'
     ].join(' ▸');
 }

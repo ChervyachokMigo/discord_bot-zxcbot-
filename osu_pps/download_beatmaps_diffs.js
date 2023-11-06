@@ -1,37 +1,34 @@
-const get_beatmap_by_md5 = require('./get_beatmap_by_md5');
 
-const {get_beatmap_info_localy} = require('../modules/twitchchat/tools/Recommends');
 const { default: axios } = require('axios');
 const crypto = require('crypto');
-const fs = require('fs');
+const { writeFileSync } = require('fs');
 const path = require('path');
 const { osu_md5_stock } = require('../settings');
-const { MYSQL_DELETE } = require('../modules/DB/base');
+const { get_beatmap_id } = require('../modules/DB/beatmaps');
 
-const get_not_existed_beatmap = async (info, output_path, is_md5_check = true) => {
+const download_beatmap_content = async ({ beatmap_id, md5 }, output_path, is_md5_check = true) => {
     if (!output_path){
         throw 'set beatmap output path'
     }
+
     return new Promise( async (res) => {
-        const url = `https://osu.ppy.sh/osu/${info.id}`;
+        const url = `https://osu.ppy.sh/osu/${beatmap_id}`;
         await axios.get( url ).then( async (response) => {
             if (response && response.data && response.data.length > 0) {
-                const md5 = crypto.createHash('md5').update(response.data).digest("hex");
+                const downloaded_md5 = crypto.createHash('md5').update(response.data).digest("hex");
                 
-                fs.writeFileSync( path.join( output_path, `${md5}.osu` ), response.data);
+                writeFileSync( path.join( output_path, `${downloaded_md5}.osu` ), response.data);
 
-                if (is_md5_check && md5 === info.md5 || !is_md5_check){
+                if (is_md5_check && downloaded_md5 === md5 || !is_md5_check){
                     res({ data: response.data });
                 } else {
-                    await MYSQL_DELETE('beatmap_data', { md5: info.md5});
-                    res({ error: `[${info.md5}] > beatmap md5 not valid` });
+                    res({ error: `[${md5}] > beatmap md5 not valid` });
                 }
             } else {
-                await MYSQL_DELETE('beatmap_data', { md5: info.md5});
-                res({ error: `[${info.md5}] > no response from bancho` });
+                res({ error: `[${md5}] > no response from bancho` });
             }
         }).catch( err => {
-            res({ error: `[${info.md5}] > ${err.toString()}` });
+            res({ error: `[${md5}] > ${err.toString()}` });
         });
     });
 
@@ -43,10 +40,10 @@ module.exports = {
 
         for (let md5 of maps){
 
-            const val = await get_beatmap_info_localy( {md5} );
+            const { beatmap_id } = await get_beatmap_id({ md5 });
 
-            if (val) {
-                const result = await get_not_existed_beatmap( {id: val.beatmap_id, md5 }, osu_md5_stock );
+            if (beatmap_id) {
+                const result = await download_beatmap_content({ beatmap_id, md5 }, osu_md5_stock );
 
                 if (result.data) {
                     results.push({md5, data: result.data});

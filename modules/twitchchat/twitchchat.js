@@ -18,8 +18,6 @@ const BannedChannels = require('./tools/BannedChannels.js');
 
 const onMessage = require('./events/onMessage.js');
 
-const Recommends = require('./tools/Recommends.js');
-
 const moduleName = `Stalker Twitch Chat`;
 
 this.twitchchat_client = null;
@@ -49,8 +47,6 @@ const twitchchat_refresh_category = async () =>{
 
 const twitchchat_init = async() => {    
     log('Загрузка твич чатов', moduleName);
-    
-    await Recommends.init();
 
     const {TwitchChatNames, TwitchChatIgnoreChannels} = await get_twitch_channels_names();
 

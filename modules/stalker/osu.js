@@ -25,7 +25,7 @@ const { default: axios } = require('axios');
 const crypto = require('crypto');
 const { spawnSync, spawn } = require('child_process');
 const { saveError } = require('../logserver/index.js');
-const { get_beatmap_info_localy } = require('../twitchchat/tools/Recommends.js');
+const { GetGamemodeToInt, get_beatmap_pps_by_id } = require('../DB/beatmaps.js');
 
 const moduleName = `Stalker Osu`;
 
@@ -296,22 +296,21 @@ module.exports = {
             return {error: `ссылка не битмапсет`};
         }
 
+        
+
         const request = {
-            beatmapset_id: url_parts[1],
-            gamemode: url_parts[3],
-            beatmap_id: url_parts[4]
+            beatmapset_id: url_parts[1]? Number(url_parts[1]): null,
+            gamemode: url_parts[3]? GetGamemodeToInt(url_parts[3]): null,
+            beatmap_id: url_parts[4]? Number(url_parts[4]): null
         };
 
-        if ( ! (request.gamemode && request.beatmapset_id && request.beatmap_id) ){
-            return {error: `ссылка не полная`};
+        if ( ! (request.beatmapset_id && request.beatmap_id) ){
+            return { error: `ссылка не полная` };
         }
 
-        let beatmap = await get_beatmap_info_localy({ 
-            beatmapset_id: Number(request.beatmapset_id), 
-            beatmap_id: Number(request.beatmap_id) 
-        });
-
-        if (!beatmap){
+        let beatmap_pps = await get_beatmap_pps_by_id({...request });
+        beatmap_pps.sort( (a, b) => b.accuracy - a.accuracy );
+        /*if (!beatmap){
             const beatmapset_info = await get_beatmap_info_bancho( request.beatmapset_id );
 
             if (!beatmapset_info){
@@ -332,20 +331,13 @@ module.exports = {
             beatmap.gamemode = beatmap.mode;
             beatmap.ranked = beatmap.status;
             beatmap.md5 = beatmap.checksum;
-        }
+        }*/
         
-        const beatmap_pps = await get_performance_points_beatmap_mysql({ md5: beatmap.md5 });
+       // const beatmap_pps = await get_performance_points_beatmap_mysql({ md5: beatmap.md5 });
 
-        let  pps = [];
+        //let  pps = [];
 
-        if (beatmap_pps) {
-            for (const info of beatmap_pps){
-                const acc = info.accuracy;
-                const pp = info.pp_total;
-                pps.push({acc, pp});
-            }
-            pps.sort( (a, b) => b.acc - a.acc );
-        } else {
+        if (beatmap_pps.length === 0) {
             /*const result = await get_not_existed_beatmap({
                 id: Number(request.beatmap_id) , 
                 md5: md5, 
@@ -364,15 +356,15 @@ module.exports = {
         }
 
         return {success: {
-                url: url_parts[0],
-                id: beatmap.beatmap_id,
+                url: url_parts[0], pps: beatmap_pps
+                /*id: beatmap.beatmap_id,
                 md5: beatmap.md5,
                 artist: beatmap.artist, 
                 title: beatmap.title,
                 diff: beatmap.difficulty,
                 creator: beatmap.creator,
                 mode: beatmap.gamemode,
-                status: beatmap.ranked,
+                status: beatmap.ranked,*/
                 //length: beatmap.hit_length,
                 //max_combo: beatmap.max_combo,
                 //bpm: beatmap.bpm,
@@ -382,7 +374,7 @@ module.exports = {
                 //od: beatmap.accuracy,
                 //hp: beatmap.drain,
                 //beatmapset_mode: request.gamemode,
-                pps
+                //pps
             }
         }
     },

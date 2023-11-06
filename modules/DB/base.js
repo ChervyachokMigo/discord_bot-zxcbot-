@@ -6,18 +6,18 @@ const { select_mysql_model } = require("./defines.js");
 const { coins_max } = require("../../settings.js");
 
 function updateAll(Model, condition, values ){
-    return Model.update(values, {where : condition, logging: ''})
+    return Model.update(values, {where : condition, logging: false})
 }
 
 function upsert(Model, values, condition) {
-    const record = Model.findOne({ where: condition, logging: '', raw: true });
+    const record = Model.findOne({ where: condition, logging: false, raw: true });
 
     try{
 
         if (record === null) {
-            return Model.create(values, {logging: '', raw: true } );
+            return Model.create(values, {logging: false, raw: true } );
         } else {
-            return Model.update(values, {where : condition, logging: '', raw: true } );
+            return Model.update(values, {where : condition, logging: false, raw: true } );
         }
 
     } catch (e){
@@ -38,7 +38,7 @@ module.exports = {
     MYSQL_GET_ONE: async (action, condition) => {
         const MysqlModel = select_mysql_model(action);
         try {
-            return await MysqlModel.findOne({ where: condition , logging: '', raw: true});
+            return await MysqlModel.findOne({ where: condition , logging: false, raw: true});
         } catch (e){
             if (e.code === 'ECONNREFUSED' || e.name === `SequelizeConnectionRefusedError`){
                 throw new Error(`Нет доступа к базе данных.`);
@@ -100,7 +100,7 @@ module.exports = {
             break;
         }
         try{
-            return await MysqlModel.findAll ({ where: condition, logging: '', raw: true, attributes });//order: [['id', 'DESC']] 
+            return await MysqlModel.findAll ({ where: condition, logging: false, raw: true, attributes });//order: [['id', 'DESC']] 
         } catch (e){
             if (e.code === 'ECONNREFUSED' || e.name === `SequelizeConnectionRefusedError`){
                 throw new Error(`Нет доступа к базе данных.`);
@@ -140,7 +140,7 @@ module.exports = {
         const MysqlModel = select_mysql_model(action);
         try{
             return await MysqlModel.destroy({
-                where: condition, logging: ''
+                where: condition, logging: false
             });
         } catch (e){
             if (e.code === 'ECONNREFUSED' || e.name === `SequelizeConnectionRefusedError`){
@@ -189,7 +189,7 @@ module.exports = {
         }
         try {
             if (typeof values.length !== 'undefined' && values.length > 0){
-                return await MysqlModel.bulkCreate(values, {logging: '', ignoreDuplicates: true})
+                return await MysqlModel.bulkCreate(values, {logging: false, ignoreDuplicates: true})
             } else {
                 return upsert(MysqlModel, values , keys);
             }
