@@ -451,4 +451,6 @@ module.exports = {
     
         return MysqlModel.model;
     },
+
+    osu_beatmaps_mysql
 }

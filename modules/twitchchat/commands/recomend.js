@@ -58,22 +58,39 @@ module.exports = {
             aim = Number(args.aim);
         }
 
+        let speed = null
+        if (args.speed){
+            speed = Number(args.speed);
+        }
+
         let notify_chat = true;
         if(typeof args.notify_chat === 'string' && args.notify_chat === 'false' || typeof args.notify_chat === 'number' && args.notify_chat === 0){
             notify_chat = false;
         }
 
+        //кому отправить
+        let to_osu_user = null;
+        if(args.osuname){
+            to_osu_user = args.osuname;
+        }
+
         for (let i= 0; i < n ; i++){
-            const beatmap = await find({username: tags.username, acc, pp_min, pp_max, aim});
+            const beatmap = await find({username: tags.username, acc, pp_min, pp_max, aim, speed});
 
             if (!beatmap){
                 return {error: '[recomend] > error no founded beatmap'}
             }
 
-            const osu_bind = await GET_TWITCH_OSU_BIND(tags['user-id']);
+            //отправить себе, если не указано кому
+            if ( !to_osu_user ){
+                const osu_bind = await GET_TWITCH_OSU_BIND(tags['user-id']);
+                if(osu_bind){
+                    to_osu_user = osu_bind.osu_name
+                }
+            }
 
-            if (osu_bind) {
-                irc_say(osu_bind.osu_name, formatBeatmapInfoOsu(tags.username, beatmap) );
+            if (to_osu_user) {
+                irc_say(to_osu_user, formatBeatmapInfoOsu(tags.username, beatmap) );
             }
 
             if (n === 1) {

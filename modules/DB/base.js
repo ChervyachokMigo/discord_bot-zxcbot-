@@ -9,34 +9,10 @@ function updateAll(Model, condition, values ){
     return Model.update(values, {where : condition, logging: false})
 }
 
-function upsert(Model, values, condition) {
-    const record = Model.findOne({ where: condition, logging: false, raw: true });
-
-    try{
-
-        if (record === null) {
-            return Model.create(values, {logging: false, raw: true } );
-        } else {
-            return Model.update(values, {where : condition, logging: false, raw: true } );
-        }
-
-    } catch (e){
-        if (e.code === 'ECONNREFUSED' || e.name === `SequelizeConnectionRefusedError`){
-            throw new Error('Нет доступа к базе');
-        } else {
-            throw new Error(`ошибка базы: ${e}`);
-        }
-    }
-        
-}
-
-async function MYSQL_MERGE_KEYS_VALUES ( keys, values ){
-    return await Object.assign({},keys, values);
-}
-
 module.exports = {
     MYSQL_GET_ONE: async (action, condition) => {
         const MysqlModel = select_mysql_model(action);
+
         try {
             return await MysqlModel.findOne({ where: condition , logging: false, raw: true});
         } catch (e){
@@ -184,14 +160,16 @@ module.exports = {
             default:
                 break;
         }
-        if (keys !== 0){
-            values = await MYSQL_MERGE_KEYS_VALUES(keys, values)
+
+        if ( keys && Object.keys(keys).length > 0 ){
+            values = {...values, ...keys};
         }
+
         try {
             if (typeof values.length !== 'undefined' && values.length > 0){
                 return await MysqlModel.bulkCreate(values, {logging: false, ignoreDuplicates: true})
             } else {
-                return upsert(MysqlModel, values , keys);
+                return (await MysqlModel.upsert(values, { where: keys, logging: false, raw: true })).shift();
             }
         } catch (e){
             if (e.code === 'ECONNREFUSED' || e.name === `SequelizeConnectionRefusedError`){

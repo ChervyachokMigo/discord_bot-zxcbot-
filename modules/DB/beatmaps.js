@@ -1,9 +1,9 @@
 const { readdirSync } = require("fs");
 const { load_csv } = require("../../osu_pps/backup/mysql_import");
 const splitArray = require("../../osu_pps/tools/splitArray");
-const { select_mysql_model } = require("./defines");
+const { select_mysql_model, osu_beatmaps_mysql } = require("./defines");
 const path = require("path");
-const { Op } = require("@sequelize/core");
+const { Op, default: Sequelize, Attribute } = require("@sequelize/core");
 
 const GetGamemodeToInt = (mode) => {
     switch (mode) {
@@ -81,7 +81,7 @@ const get_beatmap_pps_by_id = async ({ beatmap_id, beatmapset_id, gamemode = 0, 
     beatmap_id > 0 && beatmapset_id > 0 ){
         return null;
     }
-
+    
     return await osu_beatmap_pp.findAll({
         where: { mods },
 
@@ -114,7 +114,26 @@ const get_beatmap_pps_by_id = async ({ beatmap_id, beatmapset_id, gamemode = 0, 
     });
 }
 
-const find_beatmap_pps = async ({ accuracy = 100, gamemode = 0, mods = 0, ranked = 4, pp_min = 0, pp_max = 0 }) => {
+const find_beatmap_pps = async ({ accuracy = 100, gamemode = 0, mods = 0, ranked = 4, pp_min = 0, pp_max = 0, aim = null, speed = null }) => {
+
+    let aim_condition = {};
+    let speed_condition = {};
+
+    if(aim){
+        aim_condition = {
+            pp_aim:{
+                 [Op.gte]: osu_beatmaps_mysql.literal(`pp_speed * ${aim}`)
+            }
+        }
+    }
+
+    if(speed){
+        speed_condition = {
+            pp_speed:{
+                [Op.gte]: osu_beatmaps_mysql.literal(`pp_aim * ${speed}`)
+            }
+        }
+    }
 
     return await osu_beatmap_pp.findAll({
         where: { 
@@ -122,8 +141,10 @@ const find_beatmap_pps = async ({ accuracy = 100, gamemode = 0, mods = 0, ranked
             mods,
             pp_total: { 
                 [Op.gte]: pp_min, 
-                [Op.lte]: pp_max  
-            }
+                [Op.lte]: pp_max
+            },
+            ...aim_condition,
+            ...speed_condition
         },
 
         include: [beatmaps_md5, 

@@ -22,6 +22,7 @@ module.exports = {
     
         let beatmap_url = url;
 
+        //если нет url - значит просто ссылка без команды
         if (!url){
             if (comargs.length == 0){
                 return {error: `[${channelname}] ${tags.username} > Нет ссылки `}

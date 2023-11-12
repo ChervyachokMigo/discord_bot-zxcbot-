@@ -12,7 +12,7 @@ this.commands = [];
 const sendLastCommands = async () => {
     if (this.commands.length > 0){
         const text = this.commands.map( val => formatCommandText(val)).join(`\n`);
-        emit('lastCommands', {text});
+        emit('lastCommands', {text, channelname: 'last commands'});
         this.commands = [];
     }
 }

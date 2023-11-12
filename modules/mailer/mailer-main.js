@@ -77,9 +77,9 @@ const smtp_options = {
             addressee: escaped_addressee,
             from: sender,
             subject: subject,
-            html: data.html,
-            textAsHtml: data.textAsHtml,
-            text: data.text,
+            html: data.html? data.html: null,
+            textAsHtml: data.textAsHtml? data.textAsHtml: null,
+            text: data.text? data.text: null,
             date: date_value
           });
 
