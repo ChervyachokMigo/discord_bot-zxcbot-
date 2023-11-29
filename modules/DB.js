@@ -12,8 +12,7 @@ const moduleName = 'Datebase';
 const { modules, modules_stalker } = require('../settings.js');
 const { emoji_twitch } = require("../constantes/emojis.js");
 const { getTwitchSteamsByCategory } = require("./stalker/requests.js");
-const BannedChannels = require("./twitchchat/tools/BannedChannels.js");
-const { game_category } = require("./twitchchat/constants/general.js");
+
 const { onlyUnique } = require("./tools.js");
 
 function GET_VALUES_FROM_OBJECT_BY_KEY (arrayobject, valuekey){
@@ -171,64 +170,9 @@ async function manageGuildServiceTracking (guildid, platform, action, value, tra
     }
 }
 
-const MYSQL_GET_TRACKING_TWITCH_CHATS = async () => {
-    const mysql_data = await MYSQL_GET_TRACKING_DATA_BY_ACTION('twitchchat', {tracking: true});
-    let usernames = [];
-    if (mysql_data.length > 0){
-        usernames = GET_VALUES_FROM_OBJECT_BY_KEY(mysql_data, 'username');
-    }
-    return usernames;
-}
-
-const MYSQL_GET_IGNORE_TWITCH_CHATS = async () => {
-    const mysql_data = await MYSQL_GET_ALL('twitchchat_ignores');
-    let usernames = [];
-    if (mysql_data.length > 0){
-        usernames = GET_VALUES_FROM_OBJECT_BY_KEY(mysql_data, 'channelname');
-    }
-    return usernames;
-}
-
-const MYSQL_GET_BANNED_TWITCH_CHATS = async () => {
-    const mysql_data = await MYSQL_GET_ALL('twitch_banned');
-    let usernames = [];
-    if (mysql_data.length > 0){
-        usernames = GET_VALUES_FROM_OBJECT_BY_KEY(mysql_data, 'channelname');
-    }
-    return usernames;
-}
-
 module.exports = {
 
-    GET_TWITCH_OSU_BIND: async (twitch_id) => {
-        const mysql_result = await MYSQL_GET_ONE('twitch_osu_binds', { twitch_id } );
-        if (mysql_result === null){
-            return null;
-        }
-        return mysql_result;
 
-    },
-
-    MYSQL_ADD_TWITCH_OSU_BIND: async ({twitch, osu}) => {
-        await MYSQL_SAVE('twitch_osu_binds', {twitch_id: twitch.id}, {
-            twitch_name: twitch.name,
-            osu_id: osu.id,
-            osu_name: osu.name
-        });
-    },
-
-    MYSQL_GET_IGNORE_TWITCH_CHATS: MYSQL_GET_IGNORE_TWITCH_CHATS,
-
-    MYSQL_GET_ENABLED_TWITCH_CHATS : async () => {
-        const mysql_data = await MYSQL_GET_ALL('twitchchat_enabled');
-        let usernames = [];
-        if (mysql_data.length > 0){
-            usernames = GET_VALUES_FROM_OBJECT_BY_KEY(mysql_data, 'channelname');
-        }
-        return usernames;
-    },
-
-    MYSQL_GET_TRACKING_TWITCH_CHATS: MYSQL_GET_TRACKING_TWITCH_CHATS,
 
     MYSQL_TWITCH_CHAT_TRACKING_CHANGE: async (message, username, option) => {
         //проверка юзера и создаание нового юзера
@@ -310,37 +254,6 @@ module.exports = {
                 text: `No tracking users`});
 
         }
-    },
-
-    
-    twitchchat_disable: async function  (channelname) {
-        //await MYSQL_SAVE( 'twitchchat_ignores' , {channelname}, {channelname});
-        await MYSQL_DELETE( 'twitchchat_enabled' , {channelname});
-    },
-
-    twitchchat_enable: async function  (channelname) {
-        await MYSQL_DELETE( 'twitchchat_ignores' , {channelname});
-        await MYSQL_SAVE( 'twitchchat_enabled' , {channelname}, {channelname});
-    },
-
-    get_twitch_channels_names: async() => {
-        const TwitchChatTrackingNames = await MYSQL_GET_TRACKING_TWITCH_CHATS();
-        /*const TwitchChatLiveNames = await getTwitchSteamsByCategory({
-            game_id: game_category.osu,
-            language: 'ru'
-        });*/
-        const TwitchChatLiveNames = ['sed_god']
-
-        const TwitchBanned = await MYSQL_GET_BANNED_TWITCH_CHATS();
-        const TwitchChatIgnoreChannels = await MYSQL_GET_IGNORE_TWITCH_CHATS();
-        const TwitchChatNames = onlyUnique([...TwitchChatTrackingNames, ...TwitchChatLiveNames])
-            .filter( chan => BannedChannels.isNotExists(chan) ).filter( x => TwitchBanned.indexOf(x) === -1)
-            .sort();
-
-        
-        
-    
-        return { TwitchChatNames, TwitchChatIgnoreChannels };
     },
     
     getTrackingInfo: getTrackingInfo,

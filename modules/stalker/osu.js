@@ -25,7 +25,8 @@ const { default: axios } = require('axios');
 const crypto = require('crypto');
 const { spawnSync, spawn } = require('child_process');
 const { saveError } = require('../logserver/index.js');
-const { GetGamemodeToInt, get_beatmap_pps_by_id } = require('../DB/beatmaps.js');
+
+//const { GetGamemodeToInt, get_beatmap_pps_by_id } = require('../DB/beatmaps.js');
 
 const moduleName = `Stalker Osu`;
 

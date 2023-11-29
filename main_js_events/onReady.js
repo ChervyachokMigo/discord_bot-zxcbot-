@@ -9,7 +9,7 @@ const { SendAnswer } = require("../tools/embed.js")
 const { dailyesTimers_onStart } = require (`../modules/Daily.js`);
 
 const { StalkerStartListeners, StalkerStartLoop } = require(`../modules/stalker.js`);
-const { twitchchat_init, twitchchat_refresh_category } = require(`../modules/twitchchat/twitchchat.js`);
+
 
 const { initLogServer } = require('../modules/logserver/index.js');
 
@@ -28,16 +28,14 @@ const webserver = require('../modules/webserver/index.js');
 
 const mailer_events = require('../modules/mailer/mailer-events.js');
 const mailer_main = require('../modules/mailer/mailer-main.js');
-const { setInfinityTimerLoop } = require("../modules/tools.js")
+
 const { svdgod_guild_id } = require("../constantes/general.js")
 const { prepareDB } = require("../modules/DB/defines.js")
-const { twitchchat_load_events } = require("../modules/twitchchat/tools/GuildEvents.js");
-const { loadTwitchChatCommands, viewCommands } = require("../modules/twitchchat/tools/AvailableCommands.js")
-const { init_osu_irc } = require("../modules/twitchchat/tools/ircManager.js")
-const beatmaps_db = require("../modules/beatmaps_db.js")
+
+
 const twitchchat_server = require("../modules/webserver/twitchchat_server.js")
 const twtchchat_router = require("../modules/twtchchat_router/index.js")
-
+ 
 module.exports = {
     initAll: async (client) =>{
         try{
@@ -58,12 +56,7 @@ module.exports = {
 
             if (settings.modules_stalker.twitchchat){
                 await twtchchat_router.init(client);
-                await beatmaps_db.init();
                 twitchchat_server.init();
-                init_osu_irc();
-                loadTwitchChatCommands();
-                await twitchchat_init();
-                setInfinityTimerLoop(twitchchat_refresh_category, 300); 
             }
 
             if (settings.modules.osu_replay){
@@ -86,10 +79,7 @@ module.exports = {
                     mailer_events.init(guild);
                     webserver.init();
 
-                    if (settings.modules_stalker && settings.modules_stalker.twitchchat){
-                        log('запуск событий чата', 'initialisation');
-                        twitchchat_load_events();
-                    }
+                   
                 }
                 
 

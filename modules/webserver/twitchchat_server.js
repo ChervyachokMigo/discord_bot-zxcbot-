@@ -25,26 +25,20 @@ module.exports = {
     
         app.use(express.static(path.join(__dirname,'/../../data/chat_server') ));
 
-        /*app.get('/', (req, res) => {
-            console.log(__dirname)
-            res.sendFile( path.join(public_path, '/index.html') );
-        });*/
+        app.post('/add_message',(req, res) => {
+            const {channelname, username, text} = req.body;
+            this.messages.unshift({channelname, username, text});
+            res.send( true );
+        });
 
         app.post('/', (req, res) => {
             res.send( render() );
         });
-
-
     
         app.listen(1111, ()=>{
             log(`Webserver listening on http://localhost:1111!`, 'Webserver');
         });
 
-
-    },
-
-    add_message: ({channelname, username, text}) => {
-        this.messages.unshift({channelname, username, text}) 
     }
 }
 
