@@ -16,7 +16,7 @@ const { osu_db_isLoaded } = require('./osu_replay/osu_db.js');
 const { loadReplayCache, loadAttachmentCache, saveAttachmentCache } = require('./osu_replay/osu_replay_cache.js');
 const { getReplayData } = require('./osu_replay/osu_replay_calculate.js');
 const replayDownload = require ('./osu_replay/osu_replay_download.js');
-const { DrawReplay } = require('./osu_replay/osu_replay_draw.js')
+//const { DrawReplay } = require('./osu_replay/osu_replay_draw.js')
 
 const settings = require('../settings.js');
 const GAMEMODE = require('../constantes/const_osu_gamemodes.js');
@@ -194,12 +194,13 @@ module.exports = {
 
                     //рисуем реплей из тайко
                     if (replaydata.gamemode == GAMEMODE.MODE_TAIKO){
-                        const imageAttachment = new MessageAttachment(
+                        const imageAttachment = null
+                        /*new MessageAttachment(
                             DrawReplay(
                                 replaydata,
                                 settings.osu_replay_time_start, 
                                 settings.osu_replay_zoom_start), 
-                                "image-attachment.png");
+                                "image-attachment.png");*/
 
                         let sended_embed = ReplayDataToText(replaydata);
                         
@@ -333,12 +334,13 @@ module.exports = {
                     break;
                 }
                 
-                const imageAttachment = new MessageAttachment(
+                const imageAttachment = null;
+                /*new MessageAttachment(
                     DrawReplay(
                         replaydata, 
                         attachment.time, 
                         attachment.zoom), 
-                        "image-attachment.png"); 
+                        "image-attachment.png"); */
 
                 let updatedmessage = await interaction.update({ 
                     fetchReply: true , 

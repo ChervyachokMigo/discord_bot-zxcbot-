@@ -179,5 +179,5 @@ function DrawReplay(osu_replay, drawTime = 0, zoom = settings.osu_replay_zoom_st
 
 
 module.exports = {
-    DrawReplay: DrawReplay,
+    DrawReplay,
 }
