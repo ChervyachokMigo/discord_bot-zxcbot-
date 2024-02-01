@@ -1,0 +1,17 @@
+﻿/node_modules
+/.trash
+/.vscode
+config.js
+/data/osu_pps/calc_error
+/data/osuReplays
+/data/osuNewBeatmaps
+/data/osu_pps/mysql_backups
+/data/beatmaps_data_backups
+/data/beatmaps_data
+/data/osuBeatmapDownloads
+/data/youtube
+data/data.7z
+data/osu_pps/beatmaps_md5_db.json
+data/osu_pps/osu.db.json
+logs/
+test.js
