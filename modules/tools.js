@@ -1,5 +1,3 @@
-const express = require('express');
-const express_subdomain = require('express-subdomain');
 const { existsSync, mkdirSync, readdirSync } = require(`fs`);
 const { SendAnswer, SendError } = require(`../tools/embed.js`);
 const { formatAddZero } = require(`../tools/time.js`);
@@ -380,12 +378,6 @@ module.exports = {
         router.get(link, (req, res) => {
             res.sendFile(absolute_filepath);
         });
-    },
-
-    set_router_subdomain: (app, subdomain) => {
-        var router = express.Router();
-        app.use(express_subdomain(subdomain, router));
-        return router;
     },
 
     getFullTimeString: function (time){
