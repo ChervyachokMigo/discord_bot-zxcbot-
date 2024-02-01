@@ -24,10 +24,6 @@ const { taiko_farming_maps_initialize } = require('../modules/taiko_recomend_map
 
 const websettings = require('../modules/websettings/index.js');
 
-const webserver = require('../modules/webserver/index.js');
-
-const mailer_events = require('../modules/mailer/mailer-events.js');
-const mailer_main = require('../modules/mailer/mailer-main.js');
 
 const { svdgod_guild_id } = require("../constantes/general.js")
 const { prepareDB } = require("../modules/DB/defines.js")
@@ -35,7 +31,7 @@ const { prepareDB } = require("../modules/DB/defines.js")
 
 const twitchchat_server = require("../modules/webserver/twitchchat_server.js")
 const twtchchat_router = require("../modules/twtchchat_router/index.js")
- 
+
 module.exports = {
     initAll: async (client) =>{
         try{
@@ -73,15 +69,6 @@ module.exports = {
             guilds.forEach( async( guild )=>{
 
                 log('Старт гильдии ['+guild.id+'] ' + guild.name, 'initialisation');
-
-                if ( guild.id.toString() === svdgod_guild_id ){
-                    mailer_main.init();
-                    mailer_events.init(guild);
-                    webserver.init();
-
-                   
-                }
-                
 
                 await initGuildSettings(guild.id);
 

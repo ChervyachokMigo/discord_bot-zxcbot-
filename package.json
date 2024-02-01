@@ -12,8 +12,7 @@
     "watch": "webpack --watch",
     "serve": "webpack serve",
     "webservertest": "nodemon webservertest.js --inspect --verbose",
-    "start_mailer": "node mailer_react/scripts/start.js",
-    "build_mailer": "node mailer_react/scripts/build.js",
+
     "calc_beatmaps": "node osu_pps/osu_pps_manager.js NODE_OPTIONS=\"--max-old-space-size=8192\" --verbose"
   },
   "repository": {
