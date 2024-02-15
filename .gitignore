@@ -1,4 +1,5 @@
 ﻿/node_modules
+/daemon/
 /.trash
 /.vscode
 config.js
@@ -14,4 +15,5 @@ data/data.7z
 data/osu_pps/beatmaps_md5_db.json
 data/osu_pps/osu.db.json
 logs/
+
 test.js

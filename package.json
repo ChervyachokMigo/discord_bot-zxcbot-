@@ -42,6 +42,7 @@
     "lzma": "^2.3.2",
     "md5-file": "^5.0.0",
     "mysql2": "^2.3.3",
+    "node-windows": "^1.0.0-beta.8",
     "osu-api-extended": "^2.5.12",
     "play-sound": "^1.1.5",
     "steamapi": "^2.2.0",

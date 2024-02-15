@@ -1146,6 +1146,13 @@ node-osr@^1.2.1:
     leb "^0.3.0"
     lzma "^2.3.2"
 
+"node-windows@file:C:/nvm/v21.4.0/node_modules/node-windows":
+  version "1.0.0-beta.8"
+  resolved "file:C:/nvm/v21.4.0/node_modules/node-windows"
+  dependencies:
+    xml "1.0.1"
+    yargs "^17.5.1"
+
 nodemon@^3.0.1:
   version "3.0.1"
   resolved "https://registry.npmjs.org/nodemon/-/nodemon-3.0.1.tgz"
