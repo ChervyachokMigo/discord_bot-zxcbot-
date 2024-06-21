@@ -1,10 +1,9 @@
 
-const { MYSQL_UPDATE, MYSQL_SAVE, MYSQL_GET_ALL, MYSQL_DELETE } = require("./DB/base.js");
-
 const { fetchVoiceChannel, comargQuotesStringJoin, getLinkFromRoleID } = require("./tools.js")
 const { checkArgsOfRole, isRoleBot, RoleToUser, fetchRole } = require("./roles.js")
 const { SendAnswer, SendError } = require("../tools/embed.js")
-const { LogString } = require("../tools/log.js")
+const { LogString } = require("../tools/log.js");
+const { MYSQL_UPDATE, MYSQL_SAVE, MYSQL_DELETE, MYSQL_GET_ALL } = require("mysql-tools");
 
 var VoicesRoles = [];
 
@@ -84,7 +83,7 @@ module.exports = {
         if (voicerole_completenum == 0){    
             await SendError(message, com_text, `Это не голосовой канал: ${voicerole_channelname}`);    
         } else {
-            await MYSQL_SAVE(`role`, {guildid: guildid, roleid: voicerole_role.id}, {chanid: NewVoicesRoles[0].chanid})
+            await MYSQL_SAVE(`role`, { guildid: guildid, roleid: voicerole_role.id, chanid: NewVoicesRoles[0].chanid })
             await module.exports.VoiceRolesClearFromUsers ( message.guild )
             await module.exports.AllVoiceRolesSet( message.guild.channels , message.guild)
             await SendAnswer( {channel: message.channel,
@@ -147,9 +146,8 @@ module.exports = {
         }
     },
 
-
     LOAD_ALL_VOICEROLES: async function(){
-        VoicesRoles = await MYSQL_GET_ALL(`voiceroles`);
+        VoicesRoles = await MYSQL_GET_ALL({ action: `voiceroles` });
     },
     
     VoiceRolesClearFromUsers: async function ( guild ){
@@ -180,12 +178,12 @@ module.exports = {
                 var chan = await guild.channels.cache.find(channelFind => channelFind.id == vr.chanid)
                 if (typeof role === 'undefined'){
                     await module.exports.removeVoicesRolesByRole( vr.roleid )
-                    await MYSQL_DELETE(`role`, {guildid: guild.id, roleid: vr.roleid})
+                    await MYSQL_DELETE(`role`, {guildid: guild.id, roleid: vr.roleid })
                     continue
                 }
                 if (typeof chan === 'undefined'){
                     await module.exports.removeVoicesRolesByChanID( vr.chanid )
-                    await MYSQL_SAVE( `role`, {guildid: guild.id, roleid: vr.roleid}, {chanid: 0})
+                    await MYSQL_SAVE( `role`, { guildid: guild.id, roleid: vr.roleid, chanid: '0' })
                 }
             }
         }

@@ -9,9 +9,9 @@ const express = require('express');
 const path = require('path');
 
 const { MYSQL_GET_TRACKING_DATA_BY_ACTION } = require("../DB.js");
-const { MYSQL_SAVE, MYSQL_GET_ALL, MYSQL_DELETE } = require("../DB/base.js");
 const { log } = require("../../tools/log.js");
 const { isJSON, groupBy, listenWebFile } = require('../tools.js');
+const { MYSQL_SAVE, MYSQL_DELETE, MYSQL_GET_ALL } = require('mysql-tools');
 
 var app = express();
 const webs = new WebSocket.WebSocketServer({ port: WEBSETTINGS_SOCKET_PORT });
@@ -214,7 +214,7 @@ async function update_db_user_value(tablename, action, db_data, user_key, value_
         console.error('undefined data', db_data, user_key, value_key);
         return false;
     }
-    await MYSQL_SAVE(tablename, { [user_key]: db_data.userid }, {[value_key]: db_data.value} );
+    await MYSQL_SAVE(tablename, { [user_key]: db_data.userid, [value_key]: db_data.value} );
 }
 
 function set_tracking_filter (ws_id, value_key, data) {
@@ -240,6 +240,6 @@ function get_tracking_multiply(obj, props){
 }
 
 async function send_db_data(conn, tablename, action, tracking_props) {
-    let data = await MYSQL_GET_ALL(tablename, get_tracking_multiply(conn.tracking_filter, tracking_props));
+    let data = await MYSQL_GET_ALL({ action: tablename, params: get_tracking_multiply(conn.tracking_filter, tracking_props) });
     conn.send(JSON.stringify({action, data}));
 }

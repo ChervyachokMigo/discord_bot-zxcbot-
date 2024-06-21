@@ -3,8 +3,6 @@ var player = require('play-sound')(opts = {player:'mplayer'});
 const { MYSQL_GET_TRACKING_DATA_BY_ACTION, manageGuildServiceTracking, getTrackingInfo, 
     getGuildidsOfTrackingUserService } = require("../DB.js");
 
-const { MYSQL_SAVE, MYSQL_GET_ONE } = require("../DB/base.js");
-
 const { getTrovoUserStatus, getTrovoUserID, getTrovoClips } = require (`../../modules/stalker/requests.js`);
 const { LogString, log } = require("../../tools/log.js");
 const { getNumberWithSign } = require("../../modules/tools.js");
@@ -15,6 +13,7 @@ const { modules_stalker } = require('../../settings.js');
 
 const { emoji_trovo } = require("../../constantes/emojis.js");
 const StreamDefault = require (`../../modules/stalker/const_stream_default.js`);
+const { MYSQL_SAVE, MYSQL_GET_ONE } = require('mysql-tools');
 
 const moduleName = `Stalker Trovo`;
 
@@ -88,7 +87,7 @@ module.exports = {
                                 trovoChanges.guildids = await getGuildidsOfTrackingUserService('trovo_followersTracking', userdata.userid);
                                 stalkerEvents.emit('TrovoFolowers', trovoChanges);
                             }
-                            await MYSQL_SAVE('trovodata', { username: userdata.username }, {followers: userdataNew.followers} );
+                            await MYSQL_SAVE('trovodata', { username: userdata.username, followers: userdataNew.followers });
                         }
                     }
                 }
@@ -100,7 +99,7 @@ module.exports = {
 
     checkTrovoStatus: async function (stalkerEvents){
         try{
-           
+
             //получаем всех юзеров у которых tracking = true и преобразовываем данные в обычный массив объектов
             let mysql_data = await MYSQL_GET_TRACKING_DATA_BY_ACTION('streamersTrovo');
             if (mysql_data.length > 0){
@@ -167,7 +166,7 @@ module.exports = {
                     //сохраняем в базу только когда он онлайн
                     if (userdataNew.status === 'online' || userdata.status === 'online'){
                         delete userdataNew.followers;
-                        await MYSQL_SAVE('trovodata', { username: userdata.username }, userdataNew );
+                        await MYSQL_SAVE('trovodata', { username: userdata.username, ...userdataNew });
                     }
 
                     //записи
@@ -223,7 +222,7 @@ module.exports = {
                                 clip.title = clip.title.replace(/[^А-яЁёA-z0-9 ]/g,'');
                                 clip.guildids = await getGuildidsOfTrackingUserService('trovo_clipsTracking', userdata.userid);
                                 stalkerEvents.emit( 'newClipTrovo', clip );
-                                await MYSQL_SAVE('trovoclips',{clipid: clip.clip_id},{userid: userdata.userid})
+                                await MYSQL_SAVE('trovoclips', {clipid: clip.clip_id, userid: userdata.userid })
                             }
                         }
                     }
@@ -241,7 +240,7 @@ async function checkUserID(userdata){
     if (userdata.userid == 0){
         try{
             userdata.userid = await getTrovoUserID(userdata.username);
-            await MYSQL_SAVE('trovodata', { username: userdata.username }, {userid: userdata.userid} );
+            await MYSQL_SAVE('trovodata', { username: userdata.username , userid: userdata.userid });
             return true
         } catch (e){
             LogString(`System`, `Error`, moduleName, `UNKNOWN USER: ${userdata.username}. CHECK DB!`);
@@ -261,5 +260,5 @@ async function MYSQL_TRACK_NEW_TROVO_USER(username){
     } catch (e){
         return false
     }
-    return await MYSQL_SAVE('trovodata', { username: newEntry.username }, newEntry);
+    return await MYSQL_SAVE('trovodata', newEntry);
 }

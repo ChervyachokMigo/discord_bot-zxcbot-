@@ -9,14 +9,13 @@ const { stalkerClipsCheckLastDays, twitchclipsTitleMinChars } = require('../sett
 
 const { MYSQL_GET_TRACKING_DATA_BY_ACTION } = require("../modules/DB.js");
 
-const { MYSQL_SAVE } = require("../modules/DB/base.js");
-
 const { LogString, log } = require("../tools/log.js");
 const { GET_VALUES_FROM_OBJECT_BY_KEY } = require("../modules/tools.js");
 
 const { getLastTwitchClips , getTwitchUserID } = require (`../modules/stalker/requests.js`);
 
 const { DownloadClip } = require (`../modules/stalker/records.js`);
+const { MYSQL_SAVE } = require("mysql-tools");
 
 module.exports = {
     command_name: `Twitch Clips`,
@@ -95,7 +94,7 @@ module.exports = {
                         if (comtype === 'new'){
                             await DownloadClip(clipdata, 'twitch');
                             await anounceNewClip(message, clipdata);
-                            await MYSQL_SAVE( 'twitchclips', {clipid: clipdata.id}, {userid: userid} );
+                            await MYSQL_SAVE( 'twitchclips', { clipid: clipdata.id, userid: userid });
                         }
                     }
                     if (comtype === 'last'){

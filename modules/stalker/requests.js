@@ -4,8 +4,7 @@ const { auth } = require ('osu-api-extended');
 const express = require('express');
 const bodyParser = require('body-parser');
 const { log, LogString } = require("../../tools/log.js");
-
-const { MYSQL_SAVE, MYSQL_GET_ONE } = require("../DB/base.js");
+const { MYSQL_SAVE, MYSQL_GET_ONE } = require('mysql-tools');
 
 const {
     TWITCH_CLIENT_ID,
@@ -19,6 +18,7 @@ const {
 
 const { stalkerTrovoClipsPeriod } = require('../../settings.js');
 const { GET_VALUES_FROM_OBJECT_BY_KEY } = require('../tools.js');
+
 
 var tokens = {
     twitch: {},
@@ -113,7 +113,7 @@ async function initOsu(){
             getdate: Math.trunc(new Date().valueOf()/1000),
             expires: token.expires_in
         };
-        await MYSQL_SAVE('token', {platform: 'osu'}, tokens.osu);
+        await MYSQL_SAVE('token', { platform: 'osu', ...tokens.osu });
         return token && token.access_token && token.expires_in?true:false;
     }
 }
@@ -128,7 +128,7 @@ async function initTwitch(){
             getdate: Math.trunc(new Date().valueOf()/1000),
             expires: token.expires_in
         };
-        await MYSQL_SAVE('token', {platform: 'twitch'}, tokens.twitch);
+        await MYSQL_SAVE('token', { platform: 'twitch', ...tokens.twitch });
     } catch (e){
         console.error('initTwitch', e)
         return false
@@ -485,7 +485,7 @@ async function initSteam(){
         getdate: Math.trunc(new Date().valueOf()/1000),
         expires: Math.trunc(steam.options.expires/1000)
     };
-    await MYSQL_SAVE('token', {platform: 'steam'}, tokens.steam);
+    await MYSQL_SAVE('token', { platform: 'steam', ...tokens.steam });
 }
 
 async function getSteamUserData(users){

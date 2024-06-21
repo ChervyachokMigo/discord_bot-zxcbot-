@@ -8,8 +8,6 @@ const { getBooleanFromString, messageDeleteAfter, getObjectKeyByValue } = requir
 const { getGuildSetting } = require('./guildSettings.js');
 const { getDiscordRelativeTime, WindowsTicksToUTC } = require('../tools/time.js');
 
-const { MYSQL_SAVE,  MYSQL_GET_ONE } = require("./DB/base.js");
-
 const { formatSecondsToTime } = require('../tools/time.js');
 
 const { osu_db_isLoaded } = require('./osu_replay/osu_db.js');
@@ -20,6 +18,7 @@ const replayDownload = require ('./osu_replay/osu_replay_download.js');
 
 const settings = require('../settings.js');
 const GAMEMODE = require('../constantes/const_osu_gamemodes.js');
+const { MYSQL_SAVE, MYSQL_GET_ONE } = require('mysql-tools');
 
 function ReplayDataToText(osu_replay){
     
@@ -259,7 +258,7 @@ module.exports = {
                         nibbers = mysql_data.nibbers + 1;
                     }
 
-                    await MYSQL_SAVE ('nibbers', {userid: interaction.user.id}, {nibbers});
+                    await MYSQL_SAVE ('nibbers', {userid: interaction.user.id, nibbers });
                     let nibbermessage = await interaction.message.reply('Убит один негр. '+`${interaction.user} всего убил ${nibbers} негров`);
                     
                     await interaction.channel.bulkDelete([interaction.message.id, interaction.message.reference.messageId])

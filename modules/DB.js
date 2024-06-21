@@ -1,5 +1,4 @@
 
-const { MYSQL_SAVE, MYSQL_GET_ONE, MYSQL_GET_ALL, MYSQL_DELETE } = require("./DB/base.js");
 const { log } = require("../tools/log.js");
 const { SendAnswer } = require("../tools/embed.js");
 
@@ -14,6 +13,7 @@ const { emoji_twitch } = require("../constantes/emojis.js");
 const { getTwitchSteamsByCategory } = require("./stalker/requests.js");
 
 const { onlyUnique } = require("./tools.js");
+const { MYSQL_SAVE, MYSQL_DELETE, MYSQL_GET_ONE, MYSQL_GET_ALL } = require("mysql-tools");
 
 function GET_VALUES_FROM_OBJECT_BY_KEY (arrayobject, valuekey){
     var res = [];
@@ -127,7 +127,17 @@ async function MYSQL_GET_TRACKING_DATA_BY_ACTION( action, custom_query_params = 
         default:
             throw new Error('undefined action');
     }
-    return await MYSQL_GET_ALL(query_action, query_params);
+
+	switch (action) {
+		case `twitchclips`:
+		case `trovoclips`:
+		case `vkfriend`:
+			if (typeof query_params.userid === 'undefined') 
+				throw new Error('unknown userid');
+		break;
+	}
+
+    return await MYSQL_GET_ALL({ action: query_action, params: query_params });
 }
 
 async function manageGuildServiceTracking (guildid, platform, action, value, trackingdata, mysql_tablename){
@@ -140,10 +150,10 @@ async function manageGuildServiceTracking (guildid, platform, action, value, tra
         await MYSQL_SAVE('guildServicesTracking', {
             guildid: guildid,
             platformaction: `${platform}_${action}`,
-            key: keyvalue
-        }, { key: keyvalue } );
+			key: keyvalue 
+		});
 
-        await MYSQL_SAVE( mysql_tablename, { [keyname]: keyvalue }, { [action]: value });
+        await MYSQL_SAVE( mysql_tablename, { [keyname]: keyvalue , [action]: value });
 
         log('Добавлен новый канал в тренкинг лист ' + keyvalue, moduleName);
 
@@ -164,7 +174,7 @@ async function manageGuildServiceTracking (guildid, platform, action, value, tra
         });
 
         if (foundedchannel === null){
-            await MYSQL_SAVE(mysql_tablename, { [keyname]: keyvalue }, { [action]: value });
+            await MYSQL_SAVE(mysql_tablename, { [keyname]: keyvalue , [action]: value });
             log( 'Будет отключен общий трекинг. Канал не отслеживается не одной гильдией ' + keyvalue, moduleName );
         };
     }
@@ -266,15 +276,15 @@ module.exports = {
         const query = guildid === 0? 
             { platformaction: platformaction }: 
             { platformaction: platformaction, guildid: guildid.toString() };
-        const mysql_data = await MYSQL_GET_ALL('guildServicesTracking', query);
+        const mysql_data = await MYSQL_GET_ALL({ action: 'guildServicesTracking', params: query });
         return GET_VALUES_FROM_OBJECT_BY_KEY(mysql_data, 'key');
     },
 
     getGuildidsOfTrackingUserService: async function (platformaction, key){
-        const mysql_data = await MYSQL_GET_ALL('guildServicesTracking', {
+        const mysql_data = await MYSQL_GET_ALL({ action: 'guildServicesTracking', params: {
             platformaction: platformaction,
             key: key.toString()
-        });
+        }});
         const guildids = GET_VALUES_FROM_OBJECT_BY_KEY( mysql_data, 'guildid' );
         return guildids.filter( (value, index, self) => self.indexOf(value) === index );
     },
@@ -288,7 +298,7 @@ module.exports = {
                 guildid: guildid,
                 platformaction: `${platform}_${action}`,
                 key: key
-            }, { key: key } );
+            });
 
             log('Добавлен новая криптопара в тренкинг лист '+key, moduleName);
 

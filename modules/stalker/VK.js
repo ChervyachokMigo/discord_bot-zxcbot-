@@ -44,8 +44,6 @@ userWallNew.groups[i].name
 const { MYSQL_GET_TRACKING_DATA_BY_ACTION, manageGuildServiceTracking, getTrackingInfo, 
     getGuildidsOfTrackingUserService } = require("../DB.js");
 
-const { MYSQL_SAVE, MYSQL_GET_ONE, MYSQL_DELETE } = require("../DB/base.js");
-
 const { LogString, log } = require("../../tools/log.js");
 const { GET_VALUES_FROM_OBJECT_BY_KEY, getNumberWithSign } = require("../../modules/tools.js");
 
@@ -53,6 +51,7 @@ const { getVKUsersData, getVKUserFriendsCount, getVKUserWall, getVKClubWall } = 
 const { getTimeMSKToStringFormat, getDiscordRelativeTime, timeAgo } = require('../../tools/time.js');
 
 const { emoji_vk } = require("../../constantes/emojis.js");
+const { MYSQL_SAVE, MYSQL_DELETE, MYSQL_GET_ONE } = require("mysql-tools");
 
 const moduleName = `Stalker VK`;
 
@@ -166,7 +165,7 @@ module.exports = {
                             statustext: VKUserDataNew.statustext
                         };
                         VKUserChanges.guildids = await getGuildidsOfTrackingUserService('vkprofile_tracking',VKUserDataNew.userid);
-                        await MYSQL_SAVE('vkuser', {userid: SAVE_DATA.userid}, SAVE_DATA);
+                        await MYSQL_SAVE('vkuser', SAVE_DATA);
                         stalkerEvents.emit('VKProfileChanges', VKUserChanges);
                     }
                 }
@@ -259,7 +258,7 @@ async function MYSQL_TRACK_NEW_VK_USER (userid){
     const new_record = CONVERT_TO_VKUSER_OBJECT(userdata);
     const friends_data = await getVKUserFriendsCount(userid);
 
-    await MYSQL_SAVE('vkuser', {userid: userid}, new_record);
+    await MYSQL_SAVE('vkuser', { userid: userid, ...new_record });
     await REWRITE_VK_FRIENDS(new_record, friends_data);
 
     return new_record;
@@ -303,6 +302,6 @@ async function REWRITE_VK_FRIENDS(userdata, friendsData){
     for (let friendid of friendsData.items){
         saveValues.push ({userid: userdata.userid, friendid: friendid});
     }
-    await MYSQL_SAVE('vkfriend', 0, saveValues);
-    await MYSQL_SAVE('vkuser', {userid: userdata.userid}, {friends: userdata.friends});
+    await MYSQL_SAVE('vkfriend', saveValues);
+    await MYSQL_SAVE('vkuser', {userid: userdata.userid, friends: userdata.friends });
 }

@@ -1,19 +1,17 @@
 const { checkArgsOfRole } = require("./roles.js")
 const { checkArgsOfUser } = require("./tools.js")
-const { MYSQL_SAVE,  MYSQL_GET_ONE } = require("./DB/base.js");
 
 const { getGuildChannelDB } = require (`./GuildChannel.js`)
 const { SendAnswer, SendError } = require("../tools/embed.js")
+const { MYSQL_SAVE, MYSQL_GET_ONE } = require("mysql-tools")
 
 module.exports = {
     CheckUser: async function ( channel, userid ){
         
-        const balancedb = await MYSQL_GET_ONE(`user`,{guildid:channel.guild.id, userid:userid });
+        const balancedb = await MYSQL_GET_ONE(`user`,{ guildid:channel.guild.id, userid:userid });
 
         if (balancedb === null){
-            const result = await MYSQL_SAVE( `user`, 
-                {guildid: channel.guild.id, userid: userid}, 
-                {coins: 0})
+            const result = await MYSQL_SAVE( `user`, { guildid: channel.guild.id, userid: userid, coins: 0 });
             if (result === null) {
                 var channel = await getGuildChannelDB( message.guild, `system` )
                 await SendAnswer( {channel: channel,
@@ -46,7 +44,7 @@ module.exports = {
         const roledb = await MYSQL_GET_ONE(`role`, role_key);
 
         if (roledb === null){
-            const result = await MYSQL_SAVE( `role`, role_key, {price: -1});
+            const result = await MYSQL_SAVE( `role`, { role_key, price: -1 });
             return result;
         } else {
             return roledb;
@@ -67,9 +65,7 @@ module.exports = {
         var userdb = await module.exports.CheckUser ( message.channel, userid )
         userdb.restricted = blockState
 
-        await MYSQL_SAVE( `user`, 
-            {guildid: message.channel.guild.id, userid: userid}, 
-            {restricted: userdb.restricted})
+        await MYSQL_SAVE( `user`, { guildid: message.channel.guild.id, userid: userid, restricted: userdb.restricted });
 
         if (blockState == true) {
             await SendAnswer( {channel: message.channel,

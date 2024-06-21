@@ -1,12 +1,10 @@
-
-const { MYSQL_SAVE, MYSQL_GET_ALL, MYSQL_DELETE } = require("./DB/base.js");
-
 const { checkArgsOfValue } = require("./tools")
 const { getGuildChannelDB } = require (`./GuildChannel.js`)
 
 const { LogString } = require("../tools/log.js")
 const { formatTime, getCurrentTimeMs } = require("../tools/time.js")
 const { SendAnswer, SendError } = require("../tools/embed.js")
+const { MYSQL_SAVE, MYSQL_DELETE, MYSQL_GET_ALL } = require("mysql-tools")
 
 var Timers = [];
 
@@ -15,8 +13,11 @@ module.exports = {
         var firstArg = await comargs.shift();
 
         if (!firstArg){
+			if (typeof message.guild.id === 'undefined') 
+				throw new Error('unknown guildid');
+
             //показать все
-            const mysql_data = await MYSQL_GET_ALL(`remind`, { guildid: message.guild.id, messageid: message.author.id } );
+            const mysql_data = await MYSQL_GET_ALL({ action: `remind`, params: { guildid: message.guild.id, messageid: message.author.id }});
             
             let reminds_out = [];            
             
@@ -87,18 +88,14 @@ module.exports = {
         let new_remind = module.exports.CreateRemind(  message.guild.id , message.author.id, remindType==='infinity'?true:false, 
             getCurrentTimeMs()+remindTimeMin*60000, remindTimeMin, remindText)
 
-        const new_remind_key = {
+        let mysql_newremind = await MYSQL_SAVE( `remind`, {
             guildid: new_remind.guildid,
             userid: new_remind.userid, 
-            text: new_remind.text
-        };
-
-        const new_remind_value = {time: new_remind.time,
+            text: new_remind.text,
+			time: new_remind.time,
             timeMin: new_remind.timeMin,
             infinity: new_remind.infinity
-        };
-
-        let mysql_newremind = await MYSQL_SAVE( `remind`, new_remind_key, new_remind_value );
+        });
 
         if (mysql_newremind){
             new_remind.id = mysql_newremind.id;
@@ -118,7 +115,10 @@ module.exports = {
     },
 
     StartAllRemindes: async function( guild ) {
-        const mysql_data = await MYSQL_GET_ALL(`remind`, { guildid: guild.id } );
+		if (typeof guild.id === 'undefined') 
+				throw new Error('unknown guildid');
+                
+        const mysql_data = await MYSQL_GET_ALL({ action: `remind`, params: { guildid: guild.id }});
 
         if (mysql_data.length === 0) return;
 
@@ -225,14 +225,15 @@ module.exports = {
             }
         }      
                 
-       reminddb.time = getCurrentTimeMs()+reminddb.timeMin*60000   
-       await module.exports.RemindTimerStart (guild, reminddb)
+		reminddb.time = getCurrentTimeMs()+reminddb.timeMin*60000   
+		await module.exports.RemindTimerStart (guild, reminddb)
 
-        var mysql_newremind = await MYSQL_SAVE(`remind`,
-            {guildid: reminddb.guildid, 
-                userid: reminddb.userid, 
-                id: reminddb.id}, 
-            {time: reminddb.time})
+        await MYSQL_SAVE(`remind`, {
+			guildid: reminddb.guildid, 
+            userid: reminddb.userid, 
+            id: reminddb.id, 
+            time: reminddb.time
+		});
 
     }
 }

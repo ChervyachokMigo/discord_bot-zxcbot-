@@ -5,10 +5,9 @@ const { formatSecondsToTime, getCurrentTimeMs } = require("../tools/time.js");
 
 const { CheckUser } = require("./DB_tools.js");
 
-const { MYSQL_SAVE,  MYSQL_GET_ALL } = require("./DB/base.js");
-
 const { LogString } = require("../tools/log.js");
 const { SendAnswer } = require("../tools/embed.js");
+const { MYSQL_SAVE, MYSQL_GET_ALL } = require("mysql-tools");
 
 var DailyTimers = [];
 
@@ -22,8 +21,10 @@ module.exports = {
     },
 
     dailyesTimers_onStart: async function ( guild ){
-        
-        const results = await MYSQL_GET_ALL ( `daily`, { guildid: guild.id } );
+        if (typeof guild.id === 'undefined') 
+			throw new Error('unknown guildid');
+
+        const results = await MYSQL_GET_ALL ({ action: `daily`, params: { guildid: guild.id, dailynotified: false }});
 
         for (let userdaily of results){
             if (userdaily.dailynotified === false){
@@ -76,7 +77,7 @@ module.exports = {
             
         const user_key = { guildid: message.guild.id, userid: message.author.id };
 
-        if (await MYSQL_SAVE( `user`, user_key, user_values )){
+        if (await MYSQL_SAVE( `user`, {...user_key, ...user_values} )){
                 await SendAnswer( {channel: message.channel,
                     guildname: message.guild.name,
                     messagetype: `info`,
@@ -124,9 +125,7 @@ module.exports = {
     },
 
     DB_Daily_SetNotified: async function ( guild, userid ){
-        await MYSQL_SAVE(`user`, 
-            {guildid: guild.id, userid:userid },
-            {dailynotified: true })
+        await MYSQL_SAVE(`user`, { guildid: guild.id, userid:userid , dailynotified: true });
     },
 
     isTimeOver: async function( guild, userid, lastdaily ){

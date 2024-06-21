@@ -1,9 +1,9 @@
 const { checkReply, getMessageDiscordURL, checkArgsOfEmoji } = require("./tools.js")
 const { checkArgsOfRole, fetchRole, RoleToUser } = require("./roles.js")
 
-const { MYSQL_SAVE, MYSQL_DELETE, MYSQL_GET_ONE } = require("./DB/base.js");
 const { SendAnswer, SendError } = require("../tools/embed.js")
 const { getGuildChannelDB } = require (`./GuildChannel.js`)
+const { MYSQL_SAVE, MYSQL_DELETE, MYSQL_GET_ONE } = require("mysql-tools")
 
 const log = console.log.bind(console)
 
@@ -46,20 +46,16 @@ module.exports = {
 
         const reactionrole_role = await checkArgsOfRole(comargs[1], com_text, message)
         if (!reactionrole_role) return
-
-        const new_record_key = {
-            guildid: message.guild.id,
-            messageid: message.reference.messageId,
-            emoji: reactionrole_emoji.id
-        }
-        const new_record_value = {
-            emojitype: reactionrole_emoji.emojitype,
-            roleid: reactionrole_role.id
-        }
         
         //должна быть проверка на права роли
 
-        if ( await MYSQL_SAVE(`reactionrole`, new_record_key, new_record_value) ){
+        if ( await MYSQL_SAVE(`reactionrole`, {
+				guildid: message.guild.id,
+				messageid: message.reference.messageId,
+				emoji: reactionrole_emoji.id,
+				emojitype: reactionrole_emoji.emojitype,
+				roleid: reactionrole_role.id
+			}) ){
             await SendAnswer({
                 channel: message.channel,
                 guildname: message.guild.name,

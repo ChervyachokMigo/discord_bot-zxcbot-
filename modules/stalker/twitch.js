@@ -1,8 +1,6 @@
 const { MYSQL_GET_TRACKING_DATA_BY_ACTION, manageGuildServiceTracking, getTrackingInfo, 
     getGuildidsOfTrackingUserService } = require("../DB.js");
 
-const { MYSQL_SAVE, MYSQL_GET_ONE } = require("../DB/base.js");
-
 const { LogString, log } = require("../../tools/log.js");
 const { GET_VALUES_FROM_OBJECT_BY_KEY } = require("../../modules/tools.js");
 
@@ -16,6 +14,7 @@ const { modules_stalker } = require('../../settings.js');
 
 const StreamDefault = require (`../../modules/stalker/const_stream_default.js`);
 const { emoji_twitch } = require("../../constantes/emojis.js");
+const { MYSQL_SAVE, MYSQL_GET_ONE } = require("mysql-tools");
 
 const moduleName = `Stalker Twitch`;
 
@@ -90,7 +89,7 @@ module.exports = {
                     //если отсутствует id - получение id и сохранение
                     if (userdata.userid == 0) {
                         userdata.userid = await getTwitchUserID(userdata.username);
-                        await MYSQL_SAVE('twitchdata', { username: userdata.username }, {userid: userdata.userid});
+                        await MYSQL_SAVE('twitchdata', { username: userdata.username, userid: userdata.userid });
                     }
 
                     
@@ -175,7 +174,7 @@ module.exports = {
                     
                     //сохраняем в базу только когда он онлайн
                     if (userdataNew.status === 'online' || userdata.status === 'online'){
-                        await MYSQL_SAVE('twitchdata', { username: userdata.username }, userdataNew);
+                        await MYSQL_SAVE('twitchdata', { username: userdata.username , userdataNew });
                     }
 
                     
@@ -243,7 +242,7 @@ module.exports = {
         
                             //если значение изменилось - записать в базу
                             if (userdata.followers !== twitch_followers){
-                                await MYSQL_SAVE('twitchdata', { username: userdata.username }, {followers: twitch_followers} );
+                                await MYSQL_SAVE('twitchdata', { username: userdata.username, followers: twitch_followers });
                             }
                         }
                     }
@@ -314,7 +313,7 @@ module.exports = {
                                 }
                                 
                                 stalkerEvents.emit( 'newClipTwitch', clipdata );
-                                await MYSQL_SAVE( 'twitchclips', {clipid: clipdata.id}, {userid: Number(userdata.userid) } );
+                                await MYSQL_SAVE('twitchclips', { clipid: clipdata.id, userid: Number(userdata.userid) });
                                 N++;
                             }
                         } else{
@@ -340,5 +339,5 @@ async function MYSQL_TRACK_NEW_TWITCH_USER (username){
     } catch (e){
         return false
     }
-    return await MYSQL_SAVE('twitchdata', { username: newEntry.username }, newEntry);
+    return await MYSQL_SAVE('twitchdata', newEntry );
 }

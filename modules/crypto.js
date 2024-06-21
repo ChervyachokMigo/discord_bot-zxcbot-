@@ -6,8 +6,8 @@ const { setInfinityTimerLoop, getBooleanFromString } = require("../modules/tools
 const { getGuildChannelDB } = require("../modules/GuildChannel.js")
 const { getGuildSetting } = require('../modules/guildSettings.js');
 
-const { MYSQL_SAVE,  MYSQL_GET_ONE } = require("./DB/base.js");
 const { manageGuildCryptoTracking,  getGuildidsOfTrackingUserServiceByGuildId} = require("./DB.js");
+const { MYSQL_SAVE, MYSQL_GET_ONE } = require('mysql-tools');
 
 async function crypto_check_start(guild){
     await crypto_check(guild);
@@ -171,9 +171,9 @@ function coinpair_display(pair){
 
 async function save_coinpairs (coinpairs){
     for (const coinpair of coinpairs){
-        const pair_key = {first: coinpair.first, second: coinpair.second};
-
-        await MYSQL_SAVE('cryptopairs', pair_key, {
+        await MYSQL_SAVE('cryptopairs', {
+			first: coinpair.first, 
+			second: coinpair.second,
             value: coinpair.value,
             value_change: coinpair.value_change,
             is_online: coinpair.is_online,

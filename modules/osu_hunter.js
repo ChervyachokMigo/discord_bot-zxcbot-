@@ -14,8 +14,7 @@ const { checkTokenExpires } = require (`./stalker/requests.js`);
 
 const { OsuHunter_updateTime } = require('../settings.js');
 const { getYMD, formatSecondsToTime } = require('../tools/time.js');
-
-const { MYSQL_SAVE,  MYSQL_GET_ONE } = require("./DB/base.js");
+const { MYSQL_SAVE, MYSQL_GET_ONE } = require('mysql-tools');
 
 async function hunter(user, mode = 'taiko'){
     if (!await checkTokenExpires('osu')){
@@ -39,7 +38,7 @@ async function hunter(user, mode = 'taiko'){
     console.log(user_position_in_list, res[user_position_in_list]);
     console.log(res);
 
-    await MYSQL_SAVE('osuHunterTrackingUser', {userid: userid}, {lastUpdated: getYMD()});
+    await MYSQL_SAVE('osuHunterTrackingUser', {userid: userid, lastUpdated: getYMD()});
 }
 
 async function hunter_init(playername){

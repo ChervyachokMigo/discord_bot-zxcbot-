@@ -1,11 +1,10 @@
 
-const { MYSQL_SAVE,  MYSQL_GET_ALL, MYSQL_DELETE } = require("./DB/base.js");
-
 const { LogString } = require("../tools/log.js")
 
 const { SendAnswer, SendError } = require("../tools/embed.js")
 
 const { AllowedNamesOfGuildChannels, AllowedChannelsStartedWith } = require("../settings.js")
+const { MYSQL_SAVE, MYSQL_DELETE, MYSQL_GET_ALL } = require("mysql-tools")
 
 module.exports = {
 
@@ -23,7 +22,7 @@ module.exports = {
     getGuildChannelDB: async function ( guild , channeltype ){
         if (!channeltype) throw new Error ('wrong channel type: ' + channeltype)
 
-        const BotChannelsDB = await MYSQL_GET_ALL(`botchannel`, { guildid: guild.id } );
+        const BotChannelsDB = await MYSQL_GET_ALL({ action: `botchannel`, params: { guildid: guild.id }});
 
         var botchannel = false;
         var channelSet = false;
@@ -108,7 +107,11 @@ module.exports = {
             await module.exports.setGuildChannelDB(guild, channeltype, guild.systemChannelId)
             return guild.systemChannel
         }
-        if (await MYSQL_SAVE(`botchannel`, {channeltype: channeltype, guildid: guild.id}, {channelid: BotChannelID})){
+        if (await MYSQL_SAVE(`botchannel`, { 
+				channeltype: channeltype, 
+				guildid: guild.id, 
+				channelid: BotChannelID 
+			})){
             await SendAnswer( {channel: channel,
                 guildname: guild.name,
                 messagetype: `info`,
@@ -139,7 +142,7 @@ module.exports = {
         //показать текущий или установить стандартный
         if (typeof comargs === 'undefined' || comargs.length == 0) {
 
-            const BotChannelsDB = await MYSQL_GET_ALL(`botchannel`, { guildid: message.guild.id } );
+            const BotChannelsDB = await MYSQL_GET_ALL({ action: `botchannel`, params:{ guildid: message.guild.id }});
 
             if ( BotChannelsDB.length === 0 ){
                 await module.exports.setGuildChannelDB( message.guild, 'system', message.channel.id );

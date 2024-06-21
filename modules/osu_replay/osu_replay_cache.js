@@ -1,4 +1,5 @@
-const { MYSQL_SAVE, MYSQL_GET_ONE } = require("../DB/base.js");
+
+const { MYSQL_SAVE, MYSQL_GET_ONE } = require("mysql-tools");
 
 var beatmaps_cached = [];
 var ReplaysCache = [];
@@ -36,14 +37,14 @@ async function loadReplayCache(replay_md5){
 
 async function saveReplayCache(osu_replay){
     ReplaysCache.push(osu_replay);
-    await MYSQL_SAVE('replaycache', { replay_md5: osu_replay.replay_md5 }, { replayJSONdata: JSON.stringify(osu_replay) });
+    await MYSQL_SAVE('replaycache', { replay_md5: osu_replay.replay_md5 , replayJSONdata: JSON.stringify(osu_replay) });
 }
 
 async function saveAttachmentCache(dataObj){
     //dataObj {imageid, userid, beatmapid, replayid, time, zoom}
     UserAttachmentsCache.push(dataObj);
-    await MYSQL_SAVE('replayattachment', 
-        {imageid: dataObj.imageid}, {
+    await MYSQL_SAVE('replayattachment', {
+		imageid: dataObj.imageid, 
         userid: dataObj.userid, 
         beatmap_md5: dataObj.beatmapid,
         replay_md5: dataObj.replayid, 

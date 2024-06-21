@@ -1,10 +1,10 @@
 const { coins_name, coins_max } = require("../settings.js")
 const { checkArgsOfUser, checkArgsOfValue } = require("./tools.js")
-const { MYSQL_SAVE } = require("./DB/base.js");
 const { RoleToUser } = require("./roles.js")
 const { CheckUser, CheckRole } = require("./DB_tools.js")
 const { SendAnswer, SendError } = require("../tools/embed.js")
 const { getGuildChannelDB } = require (`./GuildChannel.js`)
+const { MYSQL_SAVE } = require("mysql-tools")
 
 module.exports = {
 
@@ -47,16 +47,19 @@ module.exports = {
 
         
         if (userdb_reward.coins + moneyreward >= coins_max){
-            moneyreward = coins_max - userdb_reward.coins
-            userdb_reward.coins = coins_max
-            
+            moneyreward = coins_max - userdb_reward.coin            
         } else {
             userdb_reward.coins = userdb_reward.coins + moneyreward
         }
-        
 
-        if (await MYSQL_SAVE( `user`, {guildid: message.guild.id, userid:userid_reward },
-        {coins: userdb_reward.coins })){
+		if (userdb_reward.coins < 0){
+            userdb_reward.coins = 0;
+        }
+		if (userdb_reward.coins > coins_max){
+            userdb_reward.coins = coins_max;
+        }
+
+        if (await MYSQL_SAVE( `user`, { guildid: message.guild.id, userid:userid_reward, coins: userdb_reward.coins })){
             
             if (moneyreward>0){
                 await SendAnswer( {channel: message.channel,
@@ -92,15 +95,23 @@ module.exports = {
 
         
         userdb_to.coins = userdb_to.coins + moneygive
-        userdb_from.coins = userdb_from.coins - moneygive
+		userdb_from.coins = userdb_from.coins - moneygive
+		if (userdb_to.coins > coins_max){
+            userdb_to.coins = coins_max
+        }
+		if (userdb_from.coins > coins_max){
+            userdb_from.coins = coins_max
+        }
+		if (userdb_to.coins < 0){
+            userdb_to.coins = 0
+        }
+		if (userdb_from.coins < 0){
+            userdb_from.coins = 0
+        }
 
-        await MYSQL_SAVE( `user`,
-            {guildid: message.guild.id, userid:message.author.id },
-            {coins: userdb_from.coins })
+        await MYSQL_SAVE( `user`, { guildid: message.guild.id, userid:message.author.id, coins: userdb_from.coins });
         
-        if (await MYSQL_SAVE( `user`, 
-        {guildid: message.guild.id, userid:userid_to },
-        {coins: userdb_to.coins })){
+        if (await MYSQL_SAVE( `user`, { guildid: message.guild.id, userid:userid_to, coins: userdb_to.coins })){
             let channel = await getGuildChannelDB( message.guild, 'general' )
             await SendAnswer( {channel: message.channel,
                 guildname: message.guild.name,
@@ -160,10 +171,8 @@ module.exports = {
                 roledb.price = -1
             }
 
-            if (await MYSQL_SAVE( `role`, 
-                {guildid: message.guild.id, roleid:Role.id },
-                {price: roledb.price })){
-                 
+            if (await MYSQL_SAVE( `role`, { guildid: message.guild.id, roleid:Role.id, price: roledb.price })){
+
                 var newpricetext;
                 if (roledb.price>0){
                     newpricetext = `Роли ${Role} установлена новая цена в ${roledb.price} ${coins_name}`;
@@ -207,10 +216,14 @@ module.exports = {
         let buyingRole = await message.guild.roles.cache.find(role => role.id === roledb.roleid)
 
         userdb.coins = userdb.coins-roledb.price
+		if (userdb.coins > coins_max){
+            userdb.coins = coins_max
+        }
+		if (userdb.coins < 0){
+            userdb.coins = 0
+        }
 
-        if (await MYSQL_SAVE( `user`, 
-                {guildid: message.guild.id, userid:message.author.id },
-                {coins: userdb.coins })){
+        if (await MYSQL_SAVE( `user`, { guildid: message.guild.id, userid:message.author.id, coins: userdb.coins })){
 
             if (await RoleToUser('add', await message.guild.members.fetch(message.author.id), buyingRole.id, com_text.name)){
                     await SendAnswer( {channel: message.channel,

@@ -9,15 +9,13 @@ const { YOUTUBE_TOKEN_CALLBACK_HTTP_PORT } = require('../../config.js');
 const { MYSQL_GET_TRACKING_DATA_BY_ACTION, manageGuildServiceTracking, getTrackingInfo, 
     getGuildidsOfTrackingUserService } = require("../DB.js");
 
-const { MYSQL_SAVE, MYSQL_GET_ONE } = require("../DB/base.js");
-
-
 const { CreateFolderSync_IsNotExists } = require('../../modules/tools.js');
 const { getDiscordRelativeTime } = require('../../tools/time.js');
 const { log } = require("../../tools/log.js");
 
 const { youtube_scopes } = require('../../settings.js');
 const { emoji_youtube } = require("../../constantes/emojis.js");
+const { MYSQL_SAVE, MYSQL_GET_ONE } = require('mysql-tools');
 
 const moduleName = `Stalker Youtube`;
 
@@ -258,7 +256,8 @@ function getVideoListResultsOfPlaylistItems(response_data){
 }
 
 async function MYSQL_TRACK_NEW_YOUTUBE_USER (channeldata){
-    return await MYSQL_SAVE('youtubechannel', { channelid: channeldata.id }, {
+    return await MYSQL_SAVE('youtubechannel', {
+		channelid: channeldata.id,
         channelname: channeldata.title, 
         icons_default: channeldata.icons.default.url, 
         icons_medium: channeldata.icons.medium.url, 
@@ -324,7 +323,7 @@ module.exports = {
                         log('no uploads playlist for '+YoutubeChannelData.channelname, moduleName);
                         continue;
                     }
-                    await MYSQL_SAVE('youtubechannel', { channelid: YoutubeChannelData.channelid }, {updoads_playlistid: playlistid});
+                    await MYSQL_SAVE('youtubechannel', { channelid: YoutubeChannelData.channelid, updoads_playlistid: playlistid });
                 }
                 var videos = await getVideosByPlaylistId(playlistid);
                 if (!videos){
@@ -338,7 +337,8 @@ module.exports = {
                         let newVideoText = `Канал **[${videodata.channel.title}](https://www.youtube.com/channel/${videodata.channel.id})** выпустил новое видео!\n`;
                         newVideoText += `Название: **[${videodata.title}](https://www.youtube.com/watch?v=${videodata.id})**\n`;
                         newVideoText += `Дата: ${getDiscordRelativeTime( videodata.date*1000 )}\n`;
-                        await MYSQL_SAVE('youtubevideos', {videoid: videodata.id}, {
+                        await MYSQL_SAVE('youtubevideos', {
+							videoid: videodata.id,
                             videotitle: videodata.channel.title,
                             preview_default: videodata.previews.default.url,
                             preview_medium: videodata.previews.medium.url,

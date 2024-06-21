@@ -1,13 +1,13 @@
 const {  MYSQL_GET_TRACKING_DATA_BY_ACTION, manageGuildServiceTracking, getTrackingInfo, 
     getGuildidsOfTrackingUserService } = require("../DB.js");
 
-const { MYSQL_SAVE, MYSQL_GET_ONE } = require("../DB/base.js");
 const { getSteamUserData } = require (`../../modules/stalker/requests.js`);
 const { LogString, log } = require("../../tools/log.js");
 const { getTimeMSKToStringFormat, getDiscordRelativeTime } = require('../../tools/time.js');
 const { GET_VALUES_FROM_OBJECT_BY_KEY } = require("../../modules/tools.js");
 
 const { emoji_steam } = require("../../constantes/emojis.js");
+const { MYSQL_SAVE, MYSQL_GET_ONE } = require("mysql-tools");
 
 const moduleName = `Stalker Steam`;
 
@@ -25,7 +25,7 @@ module.exports = {
                 return {success: false, text: `Steam user **${userid}** not exists`}
             }
             userdata.tracking = Boolean(option.value);
-            await MYSQL_SAVE('steamuser', { steamid: userdata.steamid }, userdata);
+            await MYSQL_SAVE('steamuser', { steamid: userdata.steamid, ...userdata });
         }
 
         option.value = Boolean(option.value);
@@ -99,7 +99,7 @@ module.exports = {
                         steamChanges.isChanges = true;
                     }
                                 
-                    await MYSQL_SAVE('steamuser', {steamid: steamDataOld.steamid}, steamData);
+                    await MYSQL_SAVE('steamuser', { steamid: steamDataOld.steamid, ...steamData });
                 
                     if (steamChanges.isChanges){
                         steamChanges.guildids = await getGuildidsOfTrackingUserService('steamprofile_tracking', steamDataOld.steamid);

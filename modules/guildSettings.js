@@ -1,8 +1,8 @@
 const { MYSQL_GET_TRACKING_DATA_BY_ACTION} = require (`./DB.js`)
-const { MYSQL_SAVE } = require("./DB/base.js");
 
 const { log } = require("../tools/log.js")
-const { available_guildSettings } = require('../settings.js')
+const { available_guildSettings } = require('../settings.js');
+const { MYSQL_SAVE } = require("mysql-tools");
 var guildSettingsCache = [];
 
 async function initGuildSettings(guildid){
@@ -31,7 +31,7 @@ async function changeGuildSetting(guildid, settingname, value){
         guildSettingsCache[i].value = value;
     }
     try{
-        await MYSQL_SAVE(`guildSettings`, { guildid: guildid, settingname: settingname}, {value: value});
+        await MYSQL_SAVE(`guildSettings`, { guildid: guildid, settingname: settingname, value: value});
     } catch (e){
         console.log(e)
         return false;

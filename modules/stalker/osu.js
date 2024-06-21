@@ -3,8 +3,6 @@ const { v2 } = require ('osu-api-extended');
 const {  MYSQL_GET_TRACKING_DATA_BY_ACTION, manageGuildServiceTracking, 
     getTrackingInfo, getGuildidsOfTrackingUserService } = require("../DB.js");
 
-const { MYSQL_SAVE, MYSQL_GET_ONE, MYSQL_GET_ALL } = require("../DB/base.js");
-
 const { getTimeMSKToStringFormat, timeAgo, getDiscordRelativeTime } = require('../../tools/time.js');
 const { getNumberWithSign, getFixedFloat } = require("../../modules/tools.js");
 const { LogString, log } = require("../../tools/log.js");
@@ -25,6 +23,7 @@ const { default: axios } = require('axios');
 const crypto = require('crypto');
 const { spawnSync, spawn } = require('child_process');
 const { saveError } = require('../logserver/index.js');
+const { MYSQL_SAVE, MYSQL_GET_ONE } = require('mysql-tools');
 
 //const { GetGamemodeToInt, get_beatmap_pps_by_id } = require('../DB/beatmaps.js');
 
@@ -195,49 +194,6 @@ const get_beatmap_info_by_md5 = (md5) => {
     return null;
 }
 
-const get_performance_points_beatmap = ( md5 ) => {
-    const filepath = path.join('.\\data\\beatmaps_data', `${md5}.json`);
-    if (fs.existsSync(filepath)){
-        return JSON.parse(fs.readFileSync(filepath));
-    }
-    return null;
-}
-
-const get_performance_points_beatmap_mysql = async ({ md5, mods = 0 }) => {
-    const maps = await MYSQL_GET_ALL('osu_beatmap_pp', { md5, mods });
-
-    if (!maps || maps.length === 0) {
-        return null;
-    }
-
-    return maps;
-}
-
-const get_not_existed_beatmap = async (info) => {
-    
-    return new Promise( async (res) => {
-        //const url = `https://osu.ppy.sh/${info.beatmapset_mode}/${info.id}`;
-        const url = `https://osu.ppy.sh/osu/${info.id}`;
-        await axios.get( url ).then( response => {
-            if (response && response.data) {
-                const md5 = crypto.createHash('md5').update(response.data).digest("hex");
-                if (md5 === info.md5){
-                    fs.writeFileSync(path.join(osu_md5_stock,`${md5}.osu`), response.data);
-                    const mode = info.mode === 'fruits'? 'catch': info.mode;
-                    res( calc_diffs({ md5, mode }) );
-                } else {
-                    res({ error: 'beatmap md5 not valid' });
-                }
-            } else {
-                res({ error: 'no response from bancho' });
-            }
-        }).catch( err => {
-            res({ error: err.toString() });
-        });
-    });
-
-}
-
 const actions = [
     {acc: '100'}, 
     {acc: '99'}, 
@@ -245,54 +201,15 @@ const actions = [
     {acc: '95'}
 ]
 
-const output_path = '.\\data\\beatmaps_data\\';
-
-const calc_diffs = (args) => {
-    
-    const results = actions.map( (val) => calc_acc( {...args, ...val} ));
-
-    if (results.length === actions.length){
-        fs.writeFileSync(path.join(output_path, `${args.md5}.json`), JSON.stringify( results.map( val => val ) ), { encoding: 'utf8' });
-        return { pps: results };
-    };
-
-}
-
-const calc_exe = path.join(__dirname,'../../bin/pp_calculator/PerformanceCalculator.exe');
-
-const calc_acc = ({md5, mode, acc}) => {
-    let acc_args = `-a ${acc}`;
-
-    if (mode === 'mania'){
-        acc_args = `-s ${acc * 10000}`
-    }
-
-    const { stdout, stderr } = spawnSync( calc_exe, [
-        'simulate', 
-        mode, 
-        '-j',
-        `${path.join(osu_md5_stock, `${md5}.osu`)}`,
-        acc_args,
-    ], {windowsHide: true});
-
-    if (stderr && stderr.length > 0) {
-        console.error(md5, mode, acc);
-        console.log(stderr.toString());
-        saveError(['beatmaps_info.js','calc_acc',md5, mode, acc, stderr.toString()].join(' > '));
-        throw 'error';
-    }
-
-    return JSON.parse(stdout);
-}
 
 module.exports = {
     getOsuUserData: getOsuUserData,
     get_beatmap_info_by_md5:get_beatmap_info_by_md5,
 
     getBeatmapInfoByUrl: async (url) => {
-
+		
         const url_parts = url.match(/https:\/\/osu\.ppy\.sh\/beatmapsets\/([0-9]+)(\#([A-Za-z]+)\/([0-9]+)?)*/i );
-
+		/*
         if (url_parts === null) {
             return {error: `ссылка не битмапсет`};
         }
@@ -311,7 +228,7 @@ module.exports = {
 
         let beatmap_pps = await get_beatmap_pps_by_id({...request });
         beatmap_pps.sort( (a, b) => b.accuracy - a.accuracy );
-        /*if (!beatmap){
+        if (!beatmap){
             const beatmapset_info = await get_beatmap_info_bancho( request.beatmapset_id );
 
             if (!beatmapset_info){
@@ -332,14 +249,14 @@ module.exports = {
             beatmap.gamemode = beatmap.mode;
             beatmap.ranked = beatmap.status;
             beatmap.md5 = beatmap.checksum;
-        }*/
+        }
         
-       // const beatmap_pps = await get_performance_points_beatmap_mysql({ md5: beatmap.md5 });
+        const beatmap_pps = await get_performance_points_beatmap_mysql({ md5: beatmap.md5 });
 
-        //let  pps = [];
+        let  pps = [];
 
         if (beatmap_pps.length === 0) {
-            /*const result = await get_not_existed_beatmap({
+            const result = await get_not_existed_beatmap({
                 id: Number(request.beatmap_id) , 
                 md5: md5, 
                 mode: request.gamemode });
@@ -352,39 +269,40 @@ module.exports = {
                     pp: Math.round(calc_info.performance_attributes.pp)
                 }});
                 
-            }*/
+            }
             return {error: `карта ${request.beatmap_id} не найдена`};
         }
 
         return {success: {
-                url: url_parts[0], pps: beatmap_pps
-                /*id: beatmap.beatmap_id,
+                url: url_parts[0], pps: beatmap_pps,
+                id: beatmap.beatmap_id,
                 md5: beatmap.md5,
                 artist: beatmap.artist, 
                 title: beatmap.title,
                 diff: beatmap.difficulty,
                 creator: beatmap.creator,
                 mode: beatmap.gamemode,
-                status: beatmap.ranked,*/
-                //length: beatmap.hit_length,
-                //max_combo: beatmap.max_combo,
-                //bpm: beatmap.bpm,
-                //stars: beatmap.difficulty_rating,
-                //ar: beatmap.ar,
-                //cs: beatmap.cs,
-                //od: beatmap.accuracy,
-                //hp: beatmap.drain,
-                //beatmapset_mode: request.gamemode,
-                //pps
+                status: beatmap.ranked,
+                length: beatmap.hit_length,
+                max_combo: beatmap.max_combo,
+                bpm: beatmap.bpm,
+                stars: beatmap.difficulty_rating,
+                ar: beatmap.ar,
+                cs: beatmap.cs,
+                od: beatmap.accuracy,
+                hp: beatmap.drain,
+                beatmapset_mode: request.gamemode,
+                pps
             }
         }
+		*/
     },
 
     getScoreInfoByUrl: async (url) => {
         
         const url_parts = url.match(/https:\/\/osu\.ppy\.sh\/scores\/([A-Za-z]+)\/([0-9]+)*/i );
 
-        if (url_parts === null) {
+        /*if (url_parts === null) {
             return {error: `ссылка не скор`};
         }
 
@@ -424,7 +342,7 @@ module.exports = {
                 beatmap_diff: score_info.beatmap.version,
                 beatmap_creator: score_info.beatmapset.creator,
             }
-        }
+        }*/
     },
 
 
@@ -487,9 +405,8 @@ module.exports = {
                 return {success: false, text: `Osu user **${userid}** not exists`}
             }
             osuserdata.tracking = Boolean(option.value);
-            await MYSQL_SAVE('osuprofile', { userid: osuserdata.userid }, osuserdata);
+            await MYSQL_SAVE('osuprofile', osuserdata );
             userdata = osuserdata;
-            
         }
 
         option.value = Boolean(option.value);
@@ -531,7 +448,7 @@ module.exports = {
                     var trackingsGuildsOsuProfile = await getGuildidsOfTrackingUserService('osuprofile_followersTracking',osuUserDataNew.userid);
                     var text = `**[${osuUserDataNew.username}](https://osu.ppy.sh/users/${osuUserDataNew.userid})** имеет изменения:\n`;
                     text += `Изменения фоловеров: **${osuUserDataNew.followers} ${getNumberWithSign(changesIsNan(osuUserDataNew.followers - osuUserDataOld.followers))}**\n`;
-                    await MYSQL_SAVE('osuprofile', { userid: osuUserDataNew.userid }, {followers: osuUserDataNew.followers} );
+                    await MYSQL_SAVE('osuprofile', { userid: osuUserDataNew.userid, followers: osuUserDataNew.followers });
                     stalkerEvents.emit('osuFollowersChanges', {guildids: trackingsGuildsOsuProfile, userid: osuUserDataNew.userid, text: text});
                 }
             }
@@ -575,7 +492,7 @@ module.exports = {
                     var ProfileChanges = getOsuProfileChanges(osuUserDataNew, osuUserDataOld);
                     
                     if (ProfileChanges.ischanges === 'yes'){
-                        await MYSQL_SAVE('osuprofile', { userid: osuUserDataNew.userid }, osuUserDataNew );
+                        await MYSQL_SAVE('osuprofile', osuUserDataNew );
                         if (isSilent == false){
                             stalkerEvents.emit('osuProfileChanges', {guildids: trackingsGuildsOsuProfile, userid: ProfileChanges.userid, text: ProfileChanges.text, image: typeof ProfileChanges.avatar==='undefined'?'':ProfileChanges.avatar});
                         }
@@ -703,7 +620,7 @@ async function addNewScore(scoreobj){
     var scoredata = await MYSQL_GET_ONE('osuscore', {scoreid: scoreobj.scoreid});
     if (scoredata === null){
         let newscore = {id: scoreobj.scoreid, score: scoreobj, text: getScoreText(scoreobj)};
-        await MYSQL_SAVE('osuscore', { scoreid: scoreobj.scoreid }, scoreobj );
+        await MYSQL_SAVE('osuscore', scoreobj );
         return newscore;
     }
     return false;
@@ -794,7 +711,7 @@ async function cheackAndSaveNewActivity(userid, activitydata){
             type: activitydata.type,
             userid: userid
         }
-        await MYSQL_SAVE('osuactivity', { activityid: activitydata.id }, activity_data_save );
+        await MYSQL_SAVE('osuactivity', activity_data_save );
         return activity_data_save;
     }
     return false;
