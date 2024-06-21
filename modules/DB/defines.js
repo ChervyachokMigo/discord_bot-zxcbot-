@@ -1,13 +1,14 @@
 const { DataTypes } = require('@sequelize/core');
 
-const { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME } = require("../../config.js");
+const { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, DB_NAME_TWITCHCHAT } = require("../../config.js");
 const { prepareDB, prepareEND, add_model_names } = require('mysql-tools');
 
 module.exports = {
     prepareDB: async () => {
-        const connections = await prepareDB({ DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DATABASES: [DB_NAME] });
+        const connections = await prepareDB({ DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DATABASES: [DB_NAME, DB_NAME_TWITCHCHAT] });
 
 		const mysql_connection = connections[0];
+		const twitch_chat_connection = connections[1];
 
 		const User = mysql_connection.define ('user', {
 			guildid: { type: DataTypes.STRING, unique: `guilduser`, allowNull: false },
@@ -122,7 +123,7 @@ module.exports = {
 
 		});*/
 
-		const TwitchChatData = mysql_connection.define ('twitchchat', {
+		const TwitchChatData = twitch_chat_connection.define ('twitchchat', {
 			username: {type: DataTypes.STRING,  defaultvalue: '', allowNull: false},
 			tracking: {type: DataTypes.BOOLEAN,  defaultvalue: true, allowNull: false},
 		});

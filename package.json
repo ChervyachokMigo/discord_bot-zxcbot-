@@ -42,7 +42,6 @@
     "lzma": "^2.3.2",
     "md5-file": "^5.0.0",
     "mysql-tools": "github:ChervyachokMigo/MYSQL-tools",
-    "mysql2": "^3.10.1",
     "node-windows": "^1.0.0-beta.8",
     "osu-api-extended": "^2.5.12",
     "play-sound": "^1.1.5",
