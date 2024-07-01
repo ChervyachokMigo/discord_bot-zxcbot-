@@ -31,8 +31,8 @@ module.exports = {
     DB_PORT: `3306`, 
     DB_USER: ``, 
     DB_PASSWORD: ``, 
-    DB_NAME: `zxcbot`,
-	DB_NAME_TWITCHCHAT: `twitchchat`,
+    DB_DISCORD: `zxcbot`,
+	DB_TWITCHCHAT: `twitchchat`,
 
     YOUTUBE_APIKEY: '', //unused
 
