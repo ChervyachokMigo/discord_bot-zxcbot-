@@ -44,7 +44,7 @@ module.exports = {
         const roledb = await MYSQL_GET_ONE(`role`, role_key);
 
         if (roledb === null){
-            const result = await MYSQL_SAVE( `role`, { role_key, price: -1 });
+            const result = await MYSQL_SAVE( `role`, { ...role_key, price: -1 });
             return result;
         } else {
             return roledb;

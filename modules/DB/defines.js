@@ -9,7 +9,9 @@ module.exports = {
 				
 		try {
 
-			const connections = await prepareDB({ DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DATABASES: { DB_DISCORD, DB_TWITCHCHAT } });
+			const connections = await prepareDB({ 
+				DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DATABASES: { DB_DISCORD, DB_TWITCHCHAT } 
+			});
 			
 			const discord_connection = 		connections.find( x=> x.name === DB_DISCORD )?.connection;
 			const twitchchat_connection = 	connections.find( x=> x.name === DB_TWITCHCHAT )?.connection;

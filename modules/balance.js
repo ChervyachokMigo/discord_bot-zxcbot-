@@ -128,7 +128,7 @@ module.exports = {
         if (!roledb) return
         
         let Role = await message.guild.roles.cache.find(role => role.id === roledb.roleid);
-            
+
         if (typeof comargs[1] === 'undefined'){
             let rolePriceText = roledb.price
             if (typeof roledb.price === 'undefined'){
@@ -223,7 +223,7 @@ module.exports = {
             userdb.coins = 0
         }
 
-        if (await MYSQL_SAVE( `user`, { guildid: message.guild.id, userid:message.author.id, coins: userdb.coins })){
+        if (await MYSQL_SAVE( `user`, { guildid: message.guild.id, userid: message.author.id, coins: userdb.coins, lastdaily: userdb.lastdaily })){
 
             if (await RoleToUser('add', await message.guild.members.fetch(message.author.id), buyingRole.id, com_text.name)){
                     await SendAnswer( {channel: message.channel,

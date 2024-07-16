@@ -89,7 +89,7 @@ module.exports = {
     
     dailyCreateTimer: async function( guild, userid, lastdailyTimestamp ){
 
-        if (!guild.member.fetch(userid)) {
+        if (!guild.members.fetch(userid)) {
             console.log('невозможно создать таймер, нет юзера')
             return
         }

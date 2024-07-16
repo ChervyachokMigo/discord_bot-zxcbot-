@@ -216,11 +216,21 @@ module.exports = {
     },
 
     AllVoiceRolesSet: async function ( channels, guild ){
-        for (var vr of VoicesRoles){
-            var chan = await channels.fetch(vr.chanid)
-            await chan.members.forEach(async function (member){
-                await module.exports.UpdateVoiceRoles('connected', vr.chanid, member)
-            })
+        for (const vr of VoicesRoles){
+			if (!vr.chanid || vr.chanid == 0){
+				console.error('unknown channel', vr.chanid);
+				continue;	
+			}
+			
+			const chan = await channels.fetch(vr.chanid);
+			if (chan) {
+				await chan.members.forEach(async function (member){
+					await module.exports.UpdateVoiceRoles('connected', chan.id, member)
+				})
+			} else {
+				throw new Error('unknown channel')
+			}
+			
         }
         
         LogString(guild.name, `info`, `Voices Roles`,`Все роли назначены`);
